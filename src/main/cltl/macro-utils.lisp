@@ -26,5 +26,5 @@
 (defmacro intern-formatted (ctrl &rest args)
   `(intern* (read-from-string (format* ,ctrl ,@args))))
 
-;; (intern-formatted "g-~a-foo" 'widget)
+;; (intern-formatted "#:g-~a-foo" 'widget)
 		   
