@@ -45,6 +45,8 @@
 ;;; * Interfaces onto ASDF Component Search
 
 (defgeneric find-component* (component context &optional errorp)
+  ;; FIXME: The order of arguments in this function
+  ;; differs substantially from that in ASDF:FIND-COMPONENT
   (:method (system (context null) &optional (errorp t))
     (let ((s (find-system system nil)))
       (cond
@@ -52,7 +54,7 @@
 	(errorp (error 'system-not-found :component system))
 	(t (values nil)))))
   (:method (component (context module) &optional (errorp t))
-    (let ((c  (find-component component context)))
+    (let ((c  (find-component context component)))
       (cond
 	(c (values c))
 	(errorp (error 'module-component-absent
