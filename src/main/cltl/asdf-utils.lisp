@@ -65,7 +65,7 @@
     (:method (component (path cons) &optional (errorp t))
       (frob-c component path errorp))
 
-    (:method (component (path module) &optional (errorp t))
+    (:method (component (location module) &optional (errorp t))
       (frob-c component path errorp))
 
     (:method (component (location string) &optional (errorp t))
