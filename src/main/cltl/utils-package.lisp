@@ -15,7 +15,6 @@
 
   #+ASDF
   (:export
-   #:coerce-name
    #:component-designator
 
    #:component-condition
