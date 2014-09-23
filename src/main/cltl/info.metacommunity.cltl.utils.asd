@@ -13,6 +13,8 @@
   :description 
   "Generic utilities for programming with Common Lisp and ASDF"
   :version "1.0"
+  :homepage "https://github.com/MetaCommunity/mci-cltl-utils"
+  :license "https://github.com/MetaCommunity/mci-cltl-utils/blob/master/LICENSE"
   :components 
   ((:file "utils-package")
    (:file "fn-utils"
