@@ -43,3 +43,8 @@
 				    ))))))
 		       specs))
 	 ,@body))))
+
+
+;; (macroexpand-1 '(with-safe-frefs ((l list)) (funcall l 1 2)))
+;; (with-safe-frefs ((l list)) (funcall l 1 2))
+;;; => (1 2)
