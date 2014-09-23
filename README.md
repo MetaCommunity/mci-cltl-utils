@@ -50,7 +50,7 @@ within the  `info.metacommunity.cltl.utils` _system_.
 
 #### Type Specifiers
 
-#### `component-designator` [Type Specifier]
+##### `component-designator` [Type Specifier]
 
 **Compound Type Specifier Description:**
 
