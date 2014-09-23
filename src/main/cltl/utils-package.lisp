@@ -7,6 +7,9 @@
   (:use #:asdf #:cl)
 
   (:export
+   #:format*
+   #:with-gensym
+
    #:file-name
    #:file-designator
 
@@ -14,6 +17,8 @@
    #:simple-program-error
 
    #:with-safe-frefs
+
+   #:call-next-method*
    )
 
   #+ASDF
@@ -23,14 +28,19 @@
    #:component-condition
    #:component-condition-component
 
-   #:component-container-condition
-   #:component-container-condition-container
+   #:component-location-condition
+   #:component-location-condition-location
 
    #:module-component-absent
    #:system-not-found
 
    #:find-component*
    #:find-system*
+
+   #:resource
+   #:resource-file
+   #:resource-module
+   #:resource-system
   )
   )
 
