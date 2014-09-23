@@ -15,7 +15,7 @@
   ())
 
 (defmacro simple-program-error (fmt-ctrl &rest args)
-  `(warn 'simple-program-error
-	 :format-control ,fmt-ctrl
-	 :format-arguments (list ,@args)))
+  `(error 'simple-program-error
+	  :format-control ,fmt-ctrl
+	  :format-arguments (list ,@args)))
 
