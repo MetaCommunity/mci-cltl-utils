@@ -7,6 +7,9 @@
   (:use #:asdf #:cl)
 
   (:export
+   #:file-name
+   #:file-designator
+
    #:simple-style-warning
    #:simple-program-error
 
