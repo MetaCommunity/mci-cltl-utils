@@ -66,7 +66,7 @@
       (frob-c component path errorp))
 
     (:method (component (location module) &optional (errorp t))
-      (frob-c component path errorp))
+      (frob-c component location errorp))
 
     (:method (component (location string) &optional (errorp t))
       (let ((sys (find-component* location nil errorp)))
