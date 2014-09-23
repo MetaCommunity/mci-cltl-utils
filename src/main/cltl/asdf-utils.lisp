@@ -8,6 +8,8 @@
 (deftype component-designator ()
   '(or string symbol component))
 
+;;; * Component Condition Types
+
 (define-condition component-condition ()
   ((component
     :initarg :component
@@ -39,6 +41,8 @@
 		     (component-container-condition-container c)
 		     (component-condition-component c)))))
 
+
+;;; * Interfaces onto ASDF Component Search
 
 (defgeneric find-component* (component context &optional errorp)
   (:method ((component symbol) context &optional (errorp t))
