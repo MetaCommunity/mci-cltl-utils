@@ -1,0 +1,34 @@
+
+(in-package #:cl-user)
+
+
+(defpackage #:info.metacommunity.cltl.utils
+  (:nicknames #:utils)
+  (:use #:asdf #:cl)
+
+  (:export
+   #:simple-style-warning
+   #:simple-program-error
+
+   #:with-safe-frefs
+   )
+
+  #+ASDF
+  (:export
+   #:coerce-name
+   #:component-designator
+
+   #:component-condition
+   #:component-condition-component
+
+   #:component-container-condition
+   #:component-container-condition-container
+
+   #:module-component-absent
+   #:system-not-found
+
+   #:find-component*
+   #:find-system*
+  )
+  )
+
