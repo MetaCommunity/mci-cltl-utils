@@ -9,6 +9,8 @@
   (:export
    #:format*
    #:with-gensym
+   #:intern*
+   #:intern-formatted
 
    #:file-name
    #:file-designator

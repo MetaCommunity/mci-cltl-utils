@@ -12,7 +12,19 @@
 		   names))
      ,@body))
 
-
-
 ;; (macroexpand-1 '(with-gensym (a b) `(let ((,a 1) (,b 2)) (list ,a ,b 3 4))))
 ;; (with-gensym (a b) `(let ((,a 1) (,b 2)) (list ,a ,b 3 4)))
+
+
+(defmacro intern* (s &optional (package *package*))
+  `(intern (symbol-name ,s)
+	   ,package))
+
+;; (intern* (quote #:foo))
+
+
+(defmacro intern-formatted (ctrl &rest args)
+  `(intern* (read-from-string (format* ,ctrl ,@args))))
+
+;; (intern-formatted "g-~a-foo" 'widget)
+		   
