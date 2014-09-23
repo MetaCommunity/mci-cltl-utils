@@ -25,7 +25,7 @@
 					   component-container-condition)
   ()
   (:report (lambda (c s)
-	     (format s "Module ~A does not contain a component ~A"
+	     (format s "Module ~S does not contain a component ~S"
 		     (component-container-condition-container c)
 		     (component-condition-component c)))))
 
@@ -37,7 +37,7 @@
   ()
   (:default-initargs :container asdf::*source-registry*)
   (:report (lambda (c s)
-	     (format s "Source registry ~A does not contain a system ~S"
+	     (format s "Source registry ~S does not contain a system ~S"
 		     (component-container-condition-container c)
 		     (component-condition-component c)))))
 
@@ -45,17 +45,13 @@
 ;;; * Interfaces onto ASDF Component Search
 
 (defgeneric find-component* (component context &optional errorp)
-  (:method ((component symbol) context &optional (errorp t))
-    (find-component* (coerce-name component) context errorp))
-  (:method (component (context symbol) &optional (errorp t))
-    (find-component* component (coerce-name context) errorp))
-  (:method ((system string) (context null) &optional (errorp t))
+  (:method (system (context null) &optional (errorp t))
     (let ((s (find-system system nil)))
       (cond
 	(s (values s))
 	(errorp (error 'system-not-found :component system))
 	(t (values nil)))))
-  (:method ((component component) (context module) &optional (errorp t))
+  (:method (component (context module) &optional (errorp t))
     (let ((c  (find-component component context)))
       (cond
 	(c (values c))
@@ -69,8 +65,25 @@
 (defun find-system* (name &optional (errorp t))
   (declare (type component-designator name)
 	   (values (or component null)))
-  (find-component* name nil errorp))
+  (values (find-component* name nil errorp)))
 
 ;; (find-system* "mcclim")
 
+
+;;; * RESOURCE-SYSTEM
+
+
+(defclass resource (component) 
+  ())
+
+(defclass resource-file (resource static-file)
+  ())
+
+(defclass resource-module (resource module)
+  ()
+  (:default-initargs
+   :default-component-class 'resource))
+
+(defclass resource-system (resource system)
+  ())
 
