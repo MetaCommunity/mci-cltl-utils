@@ -17,6 +17,13 @@
   :license "https://github.com/MetaCommunity/mci-cltl-utils/blob/master/LICENSE"
   :components 
   ((:file "utils-package")
+   (:file "macro-utils"
+	  :depends-on ("utils-package"))
+   (:file "type-utils"
+	  :depends-on ("utils-package"))
+   (:file "clos-utils"
+	  :depends-on ("utils-package"
+		       "macro-utils"))
    (:file "fn-utils"
 	  :depends-on ("utils-package"))
    (:file "condition-utils"
