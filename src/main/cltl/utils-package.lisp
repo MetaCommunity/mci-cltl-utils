@@ -14,6 +14,8 @@
 
    #:file-name
    #:file-designator
+   #:class-designator
+   #:compute-class
 
    #:simple-style-warning
    #:simple-program-error
