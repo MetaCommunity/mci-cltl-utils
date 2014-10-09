@@ -98,20 +98,3 @@
 ;; (find-system* "mcclim")
 
 
-;;; * RESOURCE-SYSTEM
-
-
-(defclass resource (component) 
-  ())
-
-(defclass resource-file (resource static-file)
-  ())
-
-(defclass resource-module (resource module)
-  ()
-  (:default-initargs
-   :default-component-class 'resource))
-
-(defclass resource-system (resource system)
-  ())
-

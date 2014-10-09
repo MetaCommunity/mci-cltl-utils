@@ -39,10 +39,11 @@
    #:find-component*
    #:find-system*
 
-   #:resource
-   #:resource-file
-   #:resource-module
-   #:resource-system
+   ;;; moved into defsys-ex.lisp
+   ;; #:resource
+   ;; #:resource-file
+   ;; #:resource-module
+   ;; #:resource-system
   )
   )
 
