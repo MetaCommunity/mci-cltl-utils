@@ -53,7 +53,7 @@
 		       (,%c  (find-component ,%loc ,%comp)))
 		  (cond
 		    (,%c (values ,%c))
-		    (,%ep (error 'module-component-absent
+		    (,%ep (error 'component-not-found
 				 :location ,%loc
 				 :component ,%comp))
 		    (t (values nil)))))))
