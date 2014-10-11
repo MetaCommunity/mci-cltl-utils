@@ -23,6 +23,7 @@
    #:with-safe-frefs
 
    #:call-next-method*
+   #:slot-value*
    )
 
   #+ASDF
