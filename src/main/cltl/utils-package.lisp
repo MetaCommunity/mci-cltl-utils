@@ -20,6 +20,11 @@
    #:simple-style-warning
    #:simple-program-error
 
+
+   #:setf-function-designator
+   #:lambda-function-designator
+   #:function-designator
+   #:compute-function
    #:with-safe-frefs
 
    #:call-next-method*

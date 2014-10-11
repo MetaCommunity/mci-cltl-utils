@@ -1,8 +1,69 @@
 
 (in-package #:utils)
 
+(deftype setf-function-designator ()
+  '(cons (eql setf) (cons symbol null)))
+
+(deftype lambda-function-designator ()
+  '(cons (eql lambda) (cons list t)))
+
+(deftype function-designator ()
+  '(or symbol function 
+    setf-function-designator
+    lambda-function-designator))
+
+(defun compute-function (form)
+  "Evaluate FORM as a function designator, returning the function designated by FORM.
+
+Valid Syntax of FORM:
+* <SYMBOL>, denoting a function name
+* (SETF <SYMBOL>), denoting a funtional SETF name
+* (LAMBDA () <BODY>) as a list, denoting an anonymous function
+* FUNCTION, denoting itself"
+  (declare (type function-designator form)
+           (values function &optional))
+  (etypecase form
+    (symbol (values (fdefinition form)))
+    (function
+     (values form))
+    (cons
+     (let ((type (car form)))
+       (ecase type
+         (setf
+          (values (fdefinition form)))
+         (lambda
+          (values (coerce form 'function))))))))
+
+;; Instance tests:
+;; (compute-function 'print)
+;; (compute-function (quote (lambda () (list 1 2 3))))
+;; (compute-function '(setf gethash)) ;; implementation-dependent
+;; (compute-function #'function)
+;; Instance "Fail Tests"
+;; (compute-function (gentemp))
+;; (compute-function (list 'setf (gentemp)))
+
+
 (defmacro with-safe-frefs (specs &body body)
-  ;; NB : "Not applicable" for (SETF FOO) function names
+  "Evaluate BODY in a lexiccal environment in which each element of SPECS denotes a function 
+
+Syntax:
+>    WITH-SAFE-FREFS ({SPECIFIER}*) {DECLARATION} {FORM}*
+> 
+>    SPECIFIER: A _safe function reference_
+
+>    DECLARATION, FORM: Like as in [CLHS]
+
+A _safe function reference_ denotes a function name with optional pacakge specifier, as well as a symbol to which the function denoted by the function name is to be bound when the FORMS are evaluated.
+
+Example:
+
+    (with-safe-frefs 
+        ((l #:list #:cl)
+         (c #:compute-function))
+      (funcall l c 2))
+    => "
+  ;; NOTE : "Not applicable" for (SETF FOO) function names
   (let ((%s (gentemp "%s-"))
 	(%foundp (gentemp "%foundp-")))
     (flet ((s-name (s)
@@ -46,5 +107,13 @@
 
 
 ;; (macroexpand-1 '(with-safe-frefs ((l list)) (funcall l 1 2)))
-;; (with-safe-frefs ((l list)) (funcall l 1 2))
+;; (with-safe-frefs ((l #:list #:cl)) (funcall l 1 2))
 ;;; => (1 2)
+
+#+NIL ;; Instance Test
+(macroexpand (quote
+(with-safe-frefs 
+    ((l #:list #:cl)
+     (c #:compute-function))
+  (funcall l (funcall c 'expt) 2))
+))
