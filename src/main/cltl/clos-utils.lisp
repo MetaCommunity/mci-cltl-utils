@@ -41,7 +41,7 @@ Example use case:
    specialized onto SHARED-INITIALIZE
 
  (defclass %eval ()
-   ((a-form :accessor %eval-a-form :type list)
+   ((a-form :initarg :a :accessor %eval-a-form :type list)
     (a-function :accessor %eval-a-function :type function)))
 
  (defmethod shared-initialize :after ((instance %eval)
@@ -49,9 +49,15 @@ Example use case:
                                       &rest initargs
                                       &key &allow-other-keys)
 
-   (when-slot-init (a-function sl-names-var)
+   (when-slot-init (instance a-function sl-names-var)
       (setf (%eval-a-function instance) 
             (compile nil (%eval-a-form instance)))))
+
+ 
+ (let ((inst (make-instance '%eval :a '(lambda () (+ 2 2)))))
+   (funcall (%eval-a-function inst)))
+
+ => 4
 
 Footnotes
  [1] i.e when SL-NAMES-VAR is T or when SL-NAMES-VAR is a CONS and NAME is
@@ -63,7 +69,8 @@ Footnotes
            (,%sl-names-var ,sl-names-var))
        (when (and (or (eq ,%sl-names-var t)
                       (and (consp ,%sl-names-var)
-                           (find %name ,%sl-names-var :test #'eq)))
+                           (find %name (the cons ,%sl-names-var)
+                                 :test #'eq)))
                   (not (slot-boundp ,%inst ,%name)))
          ,@body))))
   
