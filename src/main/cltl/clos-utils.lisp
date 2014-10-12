@@ -19,7 +19,7 @@
          ((slot-boundp ,o ,s)
           (values (slot-value ,o ,s)
                   t))
-         (t (values nil nil))))))
+         (t (values nil ,default))))))
          
 
 
@@ -69,7 +69,7 @@ Footnotes
            (,%sl-names-var ,sl-names-var))
        (when (and (or (eq ,%sl-names-var t)
                       (and (consp ,%sl-names-var)
-                           (find %name (the cons ,%sl-names-var)
+                           (find ,%name (the cons ,%sl-names-var)
                                  :test #'eq)))
                   (not (slot-boundp ,%inst ,%name)))
          ,@body))))
