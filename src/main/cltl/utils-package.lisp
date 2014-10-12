@@ -19,7 +19,7 @@
 
    #:simple-style-warning
    #:simple-program-error
-
+   #:format-condition
 
    #:setf-function-designator
    #:lambda-function-designator

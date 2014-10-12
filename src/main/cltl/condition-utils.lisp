@@ -19,3 +19,8 @@
 	  :format-control ,fmt-ctrl
 	  :format-arguments (list ,@args)))
 
+
+(defgeneric format-condition (condition stream)
+  (:method ((condition simple-condition) (stream stream))
+    (format stream (simple-condition-format-control condition)
+            (simple-condition-format-arguments condition))))
