@@ -29,6 +29,7 @@
 
    #:call-next-method*
    #:slot-value*
+   #:when-slot-init
    )
 
   #+ASDF
