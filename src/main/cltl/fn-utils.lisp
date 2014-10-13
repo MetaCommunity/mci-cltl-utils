@@ -117,3 +117,20 @@ Example:
      (c #:compute-function))
   (funcall l (funcall c 'expt) 2))
 ))
+
+(defun function-name (fn)
+  (declare (type function-designator fn)
+           (values function-designator))
+  (multiple-value-bind (lambda closure-p name)
+           (function-lambda-expression (compute-function fn))
+    (declare (ignore lambda closure-p))
+    (values name)))
+
+;; (function-name #'(setf gethash))
+;; => (SETF GETHASH)
+
+;; (function-name #'print)
+;; => PRINT
+
+;; (function-name (lambda () (+ 1 1 )))
+;; => (LAMBDA ())

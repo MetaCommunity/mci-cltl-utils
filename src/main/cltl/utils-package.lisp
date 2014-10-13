@@ -26,6 +26,7 @@
    #:function-designator
    #:compute-function
    #:with-safe-frefs
+   #:function-name
 
    #:call-next-method*
    #:slot-value*
