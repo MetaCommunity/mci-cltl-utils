@@ -31,4 +31,9 @@
    (:file "asdf-utils"
 	  :depends-on ("condition-utils"
 		       "utils-package"))
+   (:file "stream-utils"
+          :depends-on ("utils-package"))
+   (:file "misc-utils" 
+          :depends-on ("stream-utils" 
+                       "utils-package"))
    ))

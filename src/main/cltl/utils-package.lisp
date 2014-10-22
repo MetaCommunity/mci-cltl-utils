@@ -31,6 +31,11 @@
    #:call-next-method*
    #:slot-value*
    #:when-slot-init
+
+   #:stream-designator
+   #:format-control
+
+   #:print-hash-table
    )
 
   #+ASDF
