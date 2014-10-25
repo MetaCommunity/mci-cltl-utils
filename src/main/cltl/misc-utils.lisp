@@ -13,3 +13,12 @@
              (format stream format-control k v))
            table))
 
+(defmacro defconstant* (name value &optional docstring)
+  `(defconstant ,name
+     (cond
+       ((boundp (quote ,name))
+        (values ,name))
+       (t ,value))
+     ,@(when docstring
+             (list docstring))))
+

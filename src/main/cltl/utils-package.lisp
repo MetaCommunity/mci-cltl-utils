@@ -36,6 +36,7 @@
    #:format-control
 
    #:print-hash-table
+   #:defconstant*
    )
 
   #+ASDF
