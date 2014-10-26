@@ -14,11 +14,12 @@
            table))
 
 (defmacro defconstant* (name value &optional docstring)
-  `(defconstant ,name
-     (cond
-       ((boundp (quote ,name))
-        (values ,name))
-       (t ,value))
-     ,@(when docstring
-             (list docstring))))
+  `(cond
+     ((boundp (quote ,name))
+      (values (quote ,name)))
+     (t 
+      (defconstant ,name
+        ,value
+        ,@(when docstring
+                (list docstring))))))
 
