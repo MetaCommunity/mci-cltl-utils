@@ -112,6 +112,9 @@ See also: `object-print-name'")
 ;; => "CL:STREAM"
 
 (defclass pretty-printable-object ()
+  ;; The 'label' and 'name' arguments might seem redundant.
+  ;; This class was defined, originally, as a mixin for
+  ;; application in the igneous-math system
   ((print-label
     :initarg :print-label
     :type simple-string
@@ -119,12 +122,13 @@ See also: `object-print-name'")
    (print-name 
     :initarg :print-name
     :type simple-string
-    :accessor object-print-name)
+    :accessor object-print-name))
    (:documentation 
-    "Mixin class for OBJECT-PRINT-LABEL, OBJECT-PRINT-NAME functions")))
+    "Mixin class for OBJECT-PRINT-LABEL, OBJECT-PRINT-NAME functions"))
 
 
 (defgeneric format-label (stream arg colon-p at-p)
+  ;;; FIXME: Handle pprint-dipstach, etc
   (:method (stream arg colon-p at-p)
     (declare (ignore colon-p))
     (cond
