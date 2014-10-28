@@ -44,8 +44,11 @@
    #:compile*
    #:symbol-status
 
+   #:print-name
+   #:print-label
    #:object-print-name
    #:object-print-label
+   #:pretty-printable-object
    #:format-label
    #:print-hash-table
    )
