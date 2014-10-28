@@ -108,13 +108,14 @@ See also: `object-print-name'")
 ;; (object-print-label (find-class 'stream))
 ;; => "CL:STREAM"
 
-(defun format-label (stream arg colon-p at-p)
-  (declare (ignore colon-p))
-  (cond
-    (at-p 
-     (princ (object-print-name arg) stream))
-    (t
-     (princ (object-print-label arg) stream))))
+(defgeneric format-label (stream arg colon-p at-p)
+  (:method (stream arg colon-p at-p)
+    (declare (ignore colon-p))
+    (cond
+      (at-p 
+       (princ (object-print-name arg) stream))
+      (t
+       (princ (object-print-label arg) stream)))))
 
 (defun print-hash-table (table 
                          &key
@@ -130,4 +131,4 @@ See also: `object-print-name'")
              (format stream format-control k v))
            table))
 
-;; (print-hash-table asdf::*defined-systems*)
+;; (with-output-to-string (*standard-output*) (print-hash-table asdf::*defined-systems*))
