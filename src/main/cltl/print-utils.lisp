@@ -2,6 +2,9 @@
 
 (in-package #:utils)
 
+(defgeneric (setf object-print-name) (new-value object))
+(defgeneric (setf object-print-label) (new-value object))
+
 (defgeneric object-print-name (object)
   ;; FIXME: #I18N
 
@@ -108,6 +111,19 @@ See also: `object-print-name'")
 ;; (object-print-label (find-class 'stream))
 ;; => "CL:STREAM"
 
+(defclass pretty-printable-object ()
+  ((print-label
+    :initarg :print-label
+    :type simple-string
+    :accessor object-print-label)
+   (print-name 
+    :initarg :print-name
+    :type simple-string
+    :accessor object-print-name)
+   (:documentation 
+    "Mixin class for OBJECT-PRINT-LABEL, OBJECT-PRINT-NAME functions")))
+
+
 (defgeneric format-label (stream arg colon-p at-p)
   (:method (stream arg colon-p at-p)
     (declare (ignore colon-p))
@@ -116,6 +132,7 @@ See also: `object-print-name'")
        (princ (object-print-name arg) stream))
       (t
        (princ (object-print-label arg) stream)))))
+
 
 (defun print-hash-table (table 
                          &key
