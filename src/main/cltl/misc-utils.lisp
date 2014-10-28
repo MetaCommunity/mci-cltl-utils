@@ -2,17 +2,6 @@
 
 (in-package #:utils)
 
-(defun print-hash-table (table 
-                         &key
-			   (stream *standard-output*)
-			   (format-control 
-			    (load-time-value 
-			     (compile nil (formatter "~%~S : ~S")))))
-  (declare (type hash-table table)
-           (type stream-designator stream))
-  (maphash (lambda (k v)
-             (format stream format-control k v))
-           table))
 
 (defmacro defconstant* (name value &optional docstring)
   `(defconstant ,name

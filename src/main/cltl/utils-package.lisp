@@ -35,7 +35,6 @@
    #:stream-designator
    #:format-control
 
-   #:print-hash-table
    #:defconstant*
    #:compilation-condition
    #:compilation-condition-function-name
@@ -44,6 +43,11 @@
    #:errors-during-compile
    #:compile*
    #:symbol-status
+
+   #:object-print-name
+   #:object-print-label
+   #:format-label
+   #:print-hash-table
    )
 
   #+ASDF

@@ -22,18 +22,17 @@
    (:file "type-utils"
 	  :depends-on ("utils-package"))
    (:file "clos-utils"
-	  :depends-on ("utils-package"
-		       "macro-utils"))
+	  :depends-on ("macro-utils"))
    (:file "fn-utils"
 	  :depends-on ("utils-package"))
    (:file "condition-utils"
 	  :depends-on ("utils-package"))
    (:file "asdf-utils"
-	  :depends-on ("condition-utils"
-		       "utils-package"))
+	  :depends-on ("condition-utils"))
    (:file "stream-utils"
           :depends-on ("utils-package"))
    (:file "misc-utils" 
-          :depends-on ("stream-utils" 
-                       "utils-package"))
+          :depends-on ("stream-utils" ))
+   (:file "print-utils"
+	  :depends-on ("misc-utils"))
    ))
