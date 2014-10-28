@@ -101,8 +101,7 @@
 	   (write-char #\: stream)
 	   (write-char #\: stream)))
 	(write-string (symbol-name object) stream))))
-  (:method ((object pretty-printable-object) (stream stream))
-    (princ (object-print-name object) stream)))
+  )
 
 ;; (with-output-to-string (*terminal-io*) (print-name (find-class 'string) t))
 ;; => "COMMON-LISP:STRING"
@@ -138,9 +137,7 @@
 	  ((:internal :inherited)
 	   (write-char #\: stream)
 	   (write-char #\: stream)))
-	(write-string (symbol-name object) stream))))
-  (:method ((object pretty-printable-object) (stream stream))
-    (princ (object-print-label object) stream)))
+	(write-string (symbol-name object) stream)))))
 
 ;; (with-output-to-string (*terminal-io*) (print-label (find-class 'string) t))
 ;; => "CL:STRING"
