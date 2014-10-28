@@ -37,6 +37,13 @@
 
    #:print-hash-table
    #:defconstant*
+   #:compilation-condition
+   #:compilation-condition-function-name
+   #:compilation-condition-lambda-form
+   #:warnings-during-compile
+   #:errors-during-compile
+   #:compile*
+   #:symbol-status
    )
 
   #+ASDF
