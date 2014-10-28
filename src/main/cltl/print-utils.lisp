@@ -122,9 +122,8 @@ See also: `object-print-name'")
 			   (stream *standard-output*)
 			   (format-control 
 			    (load-time-value 
-			     (compile nil (formatter 
-					   #-NIL "~%~/utils:format-label/ : ~/utils:format-label/"
-					   #+NIL "~%~S : ~S")))))
+			     (compile nil 
+				      (formatter "~%~/utils:format-label/ : ~/utils:format-label/")))))
   (declare (type hash-table table)
            (type stream-designator stream))
   (maphash (lambda (k v)
