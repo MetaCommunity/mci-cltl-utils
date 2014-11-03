@@ -7,7 +7,8 @@
     (and string (satisfies array-has-fill-pointer-p))))
 
 
-;; (typep (make-array 20 :fill-pointer 0 :element-type 'base-char) 'stream-designator)
+#+NIL (typep (make-array 20 :fill-pointer 0 :element-type 'base-char)
+	     'stream-designator)
 ;; => T
 
 

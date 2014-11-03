@@ -275,6 +275,7 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 			     (compile nil 
 				      (formatter "~%~/utils:format-label/ : ~/utils:format-label/")))))
   (declare (type hash-table table)
+	   (type format-control format-control)
            (type stream-designator stream))
   (maphash (lambda (k v)
              (format stream format-control k v))
