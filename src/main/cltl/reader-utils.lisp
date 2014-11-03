@@ -107,10 +107,21 @@
 (defun read-characters (stream n &key (element-type 'character)
 				   (eof-error-p t)
 				   eof-value)
+  "Read N many characters from STREAM, returning a string of length N,
+NIL, and the value of N   
+
+If end of file is encountered on the STREAM before N many characters
+have been read: 
+ 1. If EOF-ERROR-P is NON-NIL then an END-OF-FILE error is signaled
+ 2. Otherwise, if EOF-ERROR-P is NIL then EOF-VALUE is returned as the
+    first value, with the second return value being the string as
+    initalized until EOF, and as the third return value, the number of
+    characters read from STREAM until EOF."
   (declare (type stream-designator stream)
 	   (type array-dimension-designator n)
 	   (type type-designator element-type)
-	   (values t (or simple-string null)))
+	   (values t (or simple-string null)
+		   array-dimension-designator))
   #+NIL ;; FIXME: Implement this as a compiler warning?
   (when (and eof-value (null eof-error-p))
     (simple-style-warning "EOF-VALUE specified with EOF-ERROR-P NIL: ~S"
@@ -119,20 +130,21 @@
 	(eof (load-time-value (gensym "EOF-") t)))
     (declare (type simple-string buff)
 	     (type symbol eof))
-    (dotimes (%n n (values buff nil))
+    (dotimes (%n n (values buff nil n))
       (declare (type array-dimension-designator %n))
       (let ((c (read-char stream nil eof)))
 	(cond
-	  ((eq c eof)	   (cond (eof-error-p
+	  ((eq c eof)	   
+	   (cond (eof-error-p
 		  (error 'end-of-file :stream stream))
-		 (t (return (values eof-value buff)))))
+		 (t (return (values eof-value buff %n)))))
 	  (t (setf (schar buff %n) c)))))))
 
 ;; (with-input-from-string (s "42FOO42") (read-characters s 2))
-;; => "42", NIL
+;; => "42", NIL, 2
 ;; (with-input-from-string (s "42FOO42") (read-characters s 42))
 ;; --> EOF-ERROR
-;; (with-input-from-string (s "42FOO42") (read-characters s 42 :eof-error-p nil ))
-;; => NIL, <long string with null chars>
-;; (with-input-from-string (s "42FOO42") (read-characters s 42 :eof-error-p nil :eof-value 42))
-;; => 42, <long string with null chars>
+;; (with-input-from-string (s "42FOO42") (read-characters s 8 :eof-error-p nil ))
+;; => NIL, <string with null char>, 7
+;; (with-input-from-string (s "42FOO42") (read-characters s 8 :eof-error-p nil :eof-value 42))
+;; => 42, <string with null char>, 7
