@@ -81,17 +81,14 @@ contents of STRING."
 	   (zerop (length (the string str))))))
     
 
-(deftype simple-str ()
-  '(or simple-string simple-base-string))
-
 (deftype array-dimension-designator ()
   '(integer 0 (#.array-dimension-limit)))
 
 (defun split-string-1 (char str &key (start 0) end from-end 
 				key (test #'char=) test-not )
   (declare (type string str)
-	   (values simple-str 
-		   (or simple-str null)
+	   (values simple-string 
+		   (or simple-string null)
 		   (or array-dimension-designator null)))
   (let ((n (string-position char str 
 	     :start start :end end 

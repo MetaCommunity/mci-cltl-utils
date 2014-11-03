@@ -60,7 +60,6 @@
    #:string-position
    #:null-string
    #:string-null-p
-   #:simple-str
    #:array-dimension-designator
    #:split-string-1
    #:split-string
