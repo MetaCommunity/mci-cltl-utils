@@ -57,6 +57,7 @@
    #:with-tail-recursion
    
    #:push-last
+   #:simplify-vector
    #:simplify-string
    #:string-position
    #:null-string

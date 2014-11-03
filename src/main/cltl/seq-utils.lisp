@@ -22,9 +22,18 @@
 ;; (let ((l '(1 2))) (eq (push-last 3 l) l))
 ;; => T
 
+;;; % Vector Utilities
 
+(defun simplify-vector (vector)
+  (declare (type vector vector)
+	   (values simple-array))
+  (coerce vector (list 'simple-array (array-element-type vector)
+		       (list (length vector)))))
 
-;;; % String Utilities
+;; (simplify-vector (make-array 1 :fill-pointer 1 :element-type 'fixnum :initial-element 0))
+;; => #(0)
+
+;;; %% String Utilities
 
 (defun simplify-string (string)
   "If STRING can be coereced to a SIMPLE-BASE-STRING then, return a
