@@ -2,6 +2,7 @@
 
 (in-package #:utils)
 
+
 (deftype character-code ()
   '(integer 0 (#.char-code-limit)))
 
@@ -102,3 +103,36 @@
 ;; (with-input-from-string (s "") (read-name-string s nil ':KEYWORD))
 ;; => :KEYWORD
 
+
+(defun read-characters (stream n &key (element-type 'character)
+				   (eof-error-p t)
+				   eof-value)
+  (declare (type stream-designator stream)
+	   (type array-dimension-designator n)
+	   (type type-designator element-type)
+	   (values t (or simple-string null)))
+  #+NIL ;; FIXME: Implement this as a compiler warning?
+  (when (and eof-value (null eof-error-p))
+    (simple-style-warning "EOF-VALUE specified with EOF-ERROR-P NIL: ~S"
+			  eof-value))
+  (let ((buff (make-array n :element-type element-type))
+	(eof (load-time-value (gensym "EOF-") t)))
+    (declare (type simple-string buff)
+	     (type symbol eof))
+    (dotimes (%n n (values buff nil))
+      (declare (type array-dimension-designator %n))
+      (let ((c (read-char stream nil eof)))
+	(cond
+	  ((eq c eof)	   (cond (eof-error-p
+		  (error 'end-of-file :stream stream))
+		 (t (return (values eof-value buff)))))
+	  (t (setf (schar buff %n) c)))))))
+
+;; (with-input-from-string (s "42FOO42") (read-characters s 2))
+;; => "42", NIL
+;; (with-input-from-string (s "42FOO42") (read-characters s 42))
+;; --> EOF-ERROR
+;; (with-input-from-string (s "42FOO42") (read-characters s 42 :eof-error-p nil ))
+;; => NIL, <long string with null chars>
+;; (with-input-from-string (s "42FOO42") (read-characters s 42 :eof-error-p nil :eof-value 42))
+;; => 42, <long string with null chars>

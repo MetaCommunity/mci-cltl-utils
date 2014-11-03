@@ -71,6 +71,7 @@
    #:name-star-char-p
    #:name-char-p
    #:read-name-string
+   #:read-characters
    )
 
   #+ASDF

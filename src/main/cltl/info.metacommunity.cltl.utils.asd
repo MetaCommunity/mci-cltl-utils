@@ -40,5 +40,6 @@
    (:file "seq-utils"
 	  :depends-on ("opt-utils"))
    (:file "reader-utils"
-	  :depends-on ("utils-package"))
+	  :depends-on ("type-utils"
+		       "stream-utils"))
    ))
