@@ -15,6 +15,7 @@
    #:file-name
    #:file-designator
    #:class-designator
+   #:type-designator
    #:compute-class
 
    #:simple-style-warning

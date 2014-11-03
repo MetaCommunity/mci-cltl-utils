@@ -10,6 +10,10 @@
 (deftype class-designator ()
   '(or symbol class))
 
+(deftype type-designator ()
+  '(or symbol class (cons symbol t)))
+		 
+
 (defun compute-class (ident &optional (errorp t)
                               environment)
   (declare (type class-designator ident)
