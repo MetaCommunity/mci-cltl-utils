@@ -108,8 +108,8 @@
 				   (eof-error-p t)
 				   eof-value)
   "Read N many characters from STREAM, returning a string of length N
-and of the specified ELEMENT-TYPE, second value NIL, and third value,
-the value N
+and of the specified ELEMENT-TYPE as a sequence of those characters,
+second value NIL, and third value, the value N
 
 If end of file is encountered on the STREAM before N many characters
 have been read: 
