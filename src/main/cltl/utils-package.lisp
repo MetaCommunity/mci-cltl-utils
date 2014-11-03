@@ -51,6 +51,19 @@
    #:pretty-printable-object
    #:format-label
    #:print-hash-table
+
+   #:with-optimization
+   #:with-tail-recursion
+   
+   #:push-last
+   #:simplify-string
+   #:string-position
+   #:null-string
+   #:string-null-p
+   #:simple-str
+   #:array-dimension-designator
+   #:split-string-1
+   #:split-string
    )
 
   #+ASDF

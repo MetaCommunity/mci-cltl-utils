@@ -35,4 +35,8 @@
           :depends-on ("stream-utils" ))
    (:file "print-utils"
 	  :depends-on ("misc-utils"))
+   (:file "opt-utils"
+	  :depends-on ("utils-package"))
+   (:file "seq-utils"
+	  :depends-on ("opt-utils"))
    ))
