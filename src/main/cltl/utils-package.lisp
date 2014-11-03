@@ -58,6 +58,7 @@
    
    #:push-last
    #:simplify-vector
+   #:do-vector
    #:simplify-string
    #:string-position
    #:null-string

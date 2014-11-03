@@ -33,6 +33,23 @@
 ;; (simplify-vector (make-array 1 :fill-pointer 1 :element-type 'fixnum :initial-element 0))
 ;; => #(0)
 
+(defmacro do-vector ((elt v return) &body body)
+  (with-gensym (%v len n)
+    `(let* ((,%v ,v)
+	    (,len (length ,%v)))
+       (declare (type vector ,%v)
+		(type array-dimension-designator ,len))
+       (dotimes (,n ,len ,return)
+	 (declare (type array-dimension-designator n))
+	 (let ((,elt (aref ,%v ,n)))
+	   ,@body)))))
+
+#+NIL ;;inline test
+(let (buff)
+  (do-vector (c "FOO" buff)
+    (push c buff)))
+;; => (#\O #\O \#F)
+
 ;;; %% String Utilities
 
 (defun simplify-string (string)
