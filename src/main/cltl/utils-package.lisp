@@ -63,6 +63,13 @@
    #:array-dimension-designator
    #:split-string-1
    #:split-string
+
+   #:character-code
+   #:code-in-range
+   #:code=
+   #:name-star-char-p
+   #:name-char-p
+   #:read-name-string
    )
 
   #+ASDF
