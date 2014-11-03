@@ -46,7 +46,7 @@
 
 (defun name-char-p (c)
   ;; cf. http://www.w3.org/TR/xml/#NT-NameChar
-  (declare (type character c)
+  (declare (type (or character character-code) c)
 	   (values boolean)
 	   (inline name-start-char-p))
   (let ((cc (etypecase c
