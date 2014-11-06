@@ -21,6 +21,7 @@
 
 
 (defgeneric format-condition (condition stream)
+  (:documentation "CLOS Utility for application within condition class REPORT forms")
   (:method ((condition condition) (stream symbol))
     (format-condition condition
                       (ecase stream
