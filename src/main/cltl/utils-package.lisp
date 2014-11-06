@@ -21,6 +21,8 @@
    #:simple-style-warning
    #:simple-program-error
    #:format-condition
+   #:compute-output-stream
+   #:compute-input-stream
 
    #:setf-function-designator
    #:lambda-function-designator
