@@ -28,8 +28,8 @@ See also: `compute-input-stream'"
            (values stream))
   (etypecase s
     (stream (values s))
-    ((nil) (values *standard-output*))
-    ((t) (values *terminal-io*))))
+    (null (values *standard-output*))
+    ((eql t) (values *terminal-io*))))
   
 
 (defun compute-input-stream (s)
@@ -44,6 +44,6 @@ See also: `compute-output-stream'"
            (values stream))
   (etypecase s
     (stream (values s))
-    ((nil) (values *standard-input*))
-    ((t) (values *terminal-io*))))
+    (null (values *standard-input*))
+    ((eql t) (values *terminal-io*))))
 
