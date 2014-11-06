@@ -26,10 +26,10 @@
 See also: `compute-input-stream'"
   (declare (type stream-designator s)
            (values stream))
-  (etypecase s
-    (stream (values s))
-    (null (values *standard-output*))
-    ((eql t) (values *terminal-io*))))
+  (cond
+    ((streamp s) (values s))
+    ((eq s nil) (values *standard-output*))
+    ((eq s t) (values *terminal-io*))))
   
 
 (defun compute-input-stream (s)
@@ -42,8 +42,8 @@ See also: `compute-input-stream'"
 See also: `compute-output-stream'"
   (declare (type stream-designator s)
            (values stream))
-  (etypecase s
-    (stream (values s))
-    (null (values *standard-input*))
-    ((eql t) (values *terminal-io*))))
+  (cond
+    ((streamp s) (values s))
+    ((eq s nil) (values *standard-input*))
+    ((eq s t) (values *terminal-io*))))
 
