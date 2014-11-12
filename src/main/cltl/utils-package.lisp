@@ -18,6 +18,8 @@
    #:type-designator
    #:compute-class
 
+   #:unsigned-fixnum
+
    #:simple-style-warning
    #:simple-program-error
    #:format-condition

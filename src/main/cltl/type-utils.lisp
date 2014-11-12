@@ -26,3 +26,6 @@
 ;; (compute-class 'string)
 ;; (compute-class (find-class 'ratio))
 ;; (compute-class (class-of (1+ most-positive-fixnum)))
+
+(deftype unsigned-fixnum ()
+  '(integer 0 #.most-positive-fixnum))
