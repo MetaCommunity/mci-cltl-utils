@@ -32,7 +32,7 @@
    (:file "stream-utils"
           :depends-on ("utils-package"))
    (:file "misc-utils" 
-          :depends-on ("stream-utils" ))
+          :depends-on ("stream-utils" "macro-utils"))
    (:file "print-utils"
 	  :depends-on ("misc-utils"))
    (:file "opt-utils"
@@ -40,6 +40,5 @@
    (:file "seq-utils"
 	  :depends-on ("opt-utils"))
    (:file "reader-utils"
-	  :depends-on ("type-utils"
-		       "stream-utils"))
+	  :depends-on ("type-utils" "stream-utils"))
    ))

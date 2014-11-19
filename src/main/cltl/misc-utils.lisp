@@ -4,14 +4,32 @@
 
 
 (defmacro defconstant* (name value &optional docstring)
-  `(defconstant ,name
-     (cond
-       ((boundp (quote ,name))
-	(symbol-value (quote ,name)))
-       (t ,value))
-     ,@(when docstring
-	     (list docstring))))
+  "Define NAME as a constant variable with value VALUE and optional
+DOCSTRING
 
+If NAME denotes an existing variable and its value is EQUALP
+to the specified VALUE, then the value previously bound to NAME will
+be reused. Otheriwse, the new VALUE will be used for defining the
+constant variable NAME. This differs from the behavior of
+`CL:DEFCONSTANT' in that EQUALP is applied as the comparison, rather
+than EQL, and that the previous value is reused when possible.
+
+If NAME does not denote an existing variable, then this macro's
+behavior is equivalent to `CL:DEFCONSTANT'"
+  (with-gensym (%value %previous)
+    `(defconstant ,name
+       (cond
+         ((boundp (quote ,name))
+          (let ((,%value ,value)
+                (,%previous (symbol-value (quote ,name))))
+            (cond
+              ((equalp ,%value ,%previous) ,%previous)
+              (t ,%value))))
+         (t ,value))
+       ,@(when docstring
+               (list docstring)))))
+
+;; (defconstant* foo 'foo)
 
 
 ;;; % COMPILE*
