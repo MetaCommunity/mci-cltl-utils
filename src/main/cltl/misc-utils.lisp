@@ -8,12 +8,12 @@
   "Define NAME as a constant variable with value VALUE and optional
 DOCSTRING
 
-If NAME denotes an existing variable and its value is EQUALP
-to the specified VALUE, then the value previously bound to NAME will
-be reused. Otheriwse, the new VALUE will be used for defining the
-constant variable NAME. This differs from the behavior of
-`CL:DEFCONSTANT' in that EQUALP is applied as the comparison, rather
-than EQL, and that the previous value is reused when possible.
+If NAME denotes an existing variable and its value is not EQUALP
+to the specified VALUE, then a `SIMPLE-STYLE-WARNING` will be emitted,
+and the previous value will be retained. This differs from the
+behavior of `CL:DEFCONSTANT' in that EQUALP is applied as the
+comparison, rather than EQL, and that the previous value is retained
+in all instances of BOUNDP NAME.
 
 If NAME does not denote an existing variable, then this macro's
 behavior is equivalent to `CL:DEFCONSTANT'"
@@ -43,21 +43,28 @@ behavior is equivalent to `CL:DEFCONSTANT'"
       ;;
       ;; Issue encountered in:
       ;;  * SBCL 1.2.5 Linux 64 bit
-      ;;  * SBCL "1.2.5.76-65a44db" Linux 64 bit
+      ;;  * SBCL 1.2.5.76-65a44db Linux 64 bit
       `(defconstant ,name 
          (cond
            ((boundp (quote ,%name))
             (let ((,%previous (symbol-value (quote ,%name)))
                   (,%value ,value))
-              (cond
-                ((equalp ,%value ,%previous) ,%previous)
-                ;; pass through for debugger
-                (t ,%value))))
+              (unless (equalp ,%value ,%previous)
+                (simple-style-warning 
+                 "~<Ignoring non-EQUALP redefintion of constant ~S,~> ~
+~<existing value ~S~> ~<ignored value ~S~>"
+                 (quote ,%name) ,%previous ,%value))
+              (values ,%previous)))
            (t ,value))
          ,@(when docstring
                  (list docstring))))))
 
+;; (defconstant* quux "foo")
+;;
 ;; (defconstant* foo 'foo)
+;; (defconstant* foo '"foo") ;; note style warning
+;; (symbol-value 'foo)
+;; => FOO
 
 
 ;;; % COMPILE*
