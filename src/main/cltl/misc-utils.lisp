@@ -3,7 +3,8 @@
 (in-package #:utils)
 
 
-(defmacro defconstant* (name value &optional docstring)
+(defmacro defconstant* (name value &optional docstring
+                                     &environment env)
   "Define NAME as a constant variable with value VALUE and optional
 DOCSTRING
 
@@ -17,17 +18,44 @@ than EQL, and that the previous value is reused when possible.
 If NAME does not denote an existing variable, then this macro's
 behavior is equivalent to `CL:DEFCONSTANT'"
   (with-gensym (%value %previous)
-    `(defconstant ,name
-       (cond
-         ((boundp (quote ,name))
-          (let ((,%value ,value)
-                (,%previous (symbol-value (quote ,name))))
-            (cond
-              ((equalp ,%value ,%previous) ,%previous)
-              (t ,%value))))
-         (t ,value))
-       ,@(when docstring
-               (list docstring)))))
+    (let ((%name (nth-value 4  (get-setf-expansion name env))))
+      ;; Ed. note: SBCL 1.2.5 was not handling a simpler form
+      ;; when a certain file in McCLIM was compiled and loaded. So,
+      ;; rather than using SYMBOL-VALUE directly on the NAME, this
+      ;; will now try to wrap the reference to the symbol-value of
+      ;; NAME around a return value from GET-SETF-EXPANSION w/ ENV
+      ;; ...and still it doesn't work out. Effectively, it must be
+      ;; that the BOUNDP call returns true (how?) but the SYMBOL-VALUE
+      ;; call fails.
+      ;;
+      ;; So, EVAL instead of SYMBOL-VALUE ? Still, "Doesn't work out".
+      ;; The 1th item in the backtrace is a FOP-FUNCALL, moreover,
+      ;; preventing a complete debug of this particular issue.
+      ;;
+      ;; affected forms (McCLIM MCi fork)
+      ;; * AUTOMATON::+MIN-CHAR-CODE+ (Drei state-and-transition.lisp) 
+      ;; * AUTOMATON::+INTERSECTION+ and later constants (Drei regexp.lisp)
+      ;; 
+      ;; Each of those symbols is bound to FIXNUM.
+      ;; 
+      ;; Workaround: Use DEFCONSTANT instead, in those
+      ;; bindings, considering: A FIXNUM is always EQL to itself
+      ;;
+      ;; Issue encountered in:
+      ;;  * SBCL 1.2.5 Linux 64 bit
+      ;;  * SBCL "1.2.5.76-65a44db" Linux 64 bit
+      `(defconstant ,name 
+         (cond
+           ((boundp (quote ,%name))
+            (let ((,%previous (symbol-value (quote ,%name)))
+                  (,%value ,value))
+              (cond
+                ((equalp ,%value ,%previous) ,%previous)
+                ;; pass through for debugger
+                (t ,%value))))
+           (t ,value))
+         ,@(when docstring
+                 (list docstring))))))
 
 ;; (defconstant* foo 'foo)
 
