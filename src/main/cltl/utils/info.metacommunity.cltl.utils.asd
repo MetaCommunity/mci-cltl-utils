@@ -32,9 +32,9 @@
    (:file "stream-utils"
           :depends-on ("utils-package"))
    (:file "misc-utils" 
-          :depends-on ("stream-utils" "macro-utils"))
+          :depends-on ("stream-utils" "macro-utils" "condition-utils"))
    (:file "print-utils"
-	  :depends-on ("misc-utils"))
+	  :depends-on ("misc-utils" "fn-utils"))
    (:file "opt-utils"
 	  :depends-on ("utils-package"))
    (:file "seq-utils"
