@@ -59,6 +59,13 @@
 
    #:with-optimization
    #:with-tail-recursion
+
+   #:compilation-condition
+   #:compilation-warning
+   #:simple-compilation-warning
+   #:compilation-error
+   #:simple-compilation-error
+   #:compile*
    
    #:push-last
    #:simplify-vector

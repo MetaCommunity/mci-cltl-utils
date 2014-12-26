@@ -34,3 +34,47 @@
   (values (test-tail  (debug 2) (speed 3) (safety 2) (space 2))
 	  (test-tail  (debug 3) (speed 0) (safety 3) (space 0))))
 ;; #+CCL => #<CCL::LEXICAL-ENVIRONMENT ...> , ...
+
+(define-condition compilation-condition ()
+  ())
+
+(define-condition compilation-warning  (warning compilation-condition)
+  ())
+
+(define-condition simple-compilation-warning (simple-condition compilation-warning)
+  ())
+
+(define-condition compilation-error (error compilation-condition)
+  ())
+
+(define-condition simple-compilation-error (simple-condition compilation-error)
+  ())
+
+
+(defmacro compile* (form &optional optimization)
+  (with-gensym (%form fn warnedp failurep)
+    `(with-optimization (,@optimization)
+       (let ((,%form ,form))
+         (multiple-value-bind  (,fn ,warnedp ,failurep)
+             (compile nil ,%form)
+           (when ,warnedp
+             (warn 'simple-compilation-warning
+                   :format-control
+                   "~<Compiler warned while compiling ~S~>~
+~@[ ~<[optimization ~S]~>~]" 
+                   :format-arguments (list ,%form (quote ,optimization))))
+           (cond
+             (,failurep
+              (error 'simple-compilation-error
+                     :format-control
+                     "~<Compiler erred while compiling ~S~>~
+~@[ ~<[optimization ~S]~>~]" 
+                     :format-arguments (list ,%form (quote ,optimization))))
+             (t (values ,fn))))))))
+
+
+;; (compile* '(lambda () (foo bar)) (debug 3))
+
+;; (compile* '(lambda () (cl:print)) (debug 3))
+
+;; (compile* '(lambda () (foo bar)))

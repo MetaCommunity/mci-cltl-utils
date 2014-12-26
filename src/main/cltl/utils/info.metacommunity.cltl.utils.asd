@@ -36,7 +36,7 @@
    (:file "print-utils"
 	  :depends-on ("misc-utils" "fn-utils"))
    (:file "opt-utils"
-	  :depends-on ("utils-package"))
+	  :depends-on ("utils-package" "macro-utils"))
    (:file "seq-utils"
 	  :depends-on ("opt-utils"))
    (:file "reader-utils"
