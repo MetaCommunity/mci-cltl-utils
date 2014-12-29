@@ -84,12 +84,14 @@ contents of STRING."
     `(let ((,%char ,char)
 	   (,%str ,str))
        (declare (inline position))
-       (etypecase ,%str
-	 (simple-base-string (position ,%char (the simple-base-string ,%str)))
+       (typecase ,%str
+	 (simple-base-string (position ,%char (the simple-base-string ,%str)
+                                       ,@rest))
 	 (simple-string (position ,%char (the simple-string ,%str)
 				  ,@rest))
 	 (string (position ,%char (the string ,%str) ,@rest))
-	 (t (position ,%char ,%str ,@rest))))))
+	 (t (position ,%char (coerce ,%str 'simple-string)
+                      ,@rest))))))
 
 
 (defconstant* +null-string+ 
@@ -102,7 +104,7 @@ contents of STRING."
 (defun string-null-p (str)
   (declare (type string str)
 	   (values boolean))
-  (or(eq str +null-string+)
+  (or (eq str +null-string+)
       (and (typep str 'string)
 	   (zerop (length (the string str))))))
     
