@@ -64,12 +64,14 @@
 ~@[ ~<[optimization ~S]~>~]" 
                    :format-arguments (list ,%form (quote ,optimization))))
            (cond
-             (,failurep
-              (error 'simple-compilation-error
-                     :format-control
-                     "~<Compiler erred while compiling ~S~>~
+             (,failurep 
+              (cerror  (format nil "Continue, returning ~s"  ,fn)
+                       'simple-compilation-error
+                       :format-control
+                       "~<Compiler erred while compiling ~S~>~
 ~@[ ~<[optimization ~S]~>~]" 
-                     :format-arguments (list ,%form (quote ,optimization))))
+                       :format-arguments (list ,%form (quote ,optimization)))
+              (values ,fn))
              (t (values ,fn))))))))
 
 
@@ -78,3 +80,5 @@
 ;; (compile* '(lambda () (cl:print)) (debug 3))
 
 ;; (compile* '(lambda () (foo bar)))
+
+;; (compile* '(lambda () (+ 1 a)))
