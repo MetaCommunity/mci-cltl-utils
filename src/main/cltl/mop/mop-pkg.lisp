@@ -21,7 +21,15 @@
    #:standard-generic-function
    #:defmethod
    #:defgeneric
-   )
+   ) 
   (:export
    #:validate-class
+   #:associative-class
+   #:class-object-table-lock
+   #:class-object-table
+   #:class-object-key-slot
+   #:register-object
+   #:find-object
+   #:remove-object
+   #:map-objects
    ))
