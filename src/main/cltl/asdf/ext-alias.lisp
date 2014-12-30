@@ -5,7 +5,7 @@
 (defgeneric alias-system-alias-to (system))
 (defgeneric (setf alias-system-alias-to) (component system))
 
-(defclass alias-system (system)
+(defclass alias-system (system*)
   ((alias-to
     :initarg :alias-to
     :type (or simple-string symbol component)
