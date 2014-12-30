@@ -56,7 +56,7 @@
    #:pretty-printable-object
    #:format-label
    #:print-hash-table
-   #:assocaitive-object
+   #:associative-object
    #:object-name
 
    #:with-optimization
