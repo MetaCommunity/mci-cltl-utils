@@ -24,12 +24,16 @@
    ) 
   (:export
    #:validate-class
-   #:associative-class
-   #:class-object-table-lock
-   #:class-object-table
-   #:class-object-key-slot
+   #:associative-index
+   #:object-table-lock
+   #:object-table
+   #:simple-associative-index
+   #:object-table-key-function
+   #:compute-key
    #:register-object
    #:find-object
    #:remove-object
    #:map-objects
+   #:associative-class
+   #:object-key-slot
    ))
