@@ -1,8 +1,5 @@
-
-
-;; depends-on : condition-utils
-
-(in-package #:utils)
+;; ext-utils.lisp - utilitis onto ASDF
+(in-package #:utils.asdf)
 
 
 (deftype component-designator ()
@@ -13,12 +10,12 @@
 (define-condition component-condition ()
   ((component
     :initarg :component
-    :accessor component-condition-component)))
+    :reader component-condition-component)))
 
 (define-condition component-location-condition ()
   ((location
     :initarg :location
-    :accessor component-location-condition-location)))
+    :reader component-location-condition-location)))
 
 (define-condition component-not-found (program-error
 				       component-condition
@@ -60,7 +57,7 @@
 
   (defgeneric find-component* (component location &optional errorp)
     ;; NOTE: The order of arguments in this function
-    ;; differs substantially from that in ASDF:FIND-COMPONENT
+    ;; differs from that in ASDF:FIND-COMPONENT
 
     (:method (component (path cons) &optional (errorp t))
       (frob-c component path errorp))

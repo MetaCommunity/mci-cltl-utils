@@ -85,29 +85,5 @@
    #:name-char-p
    #:read-name-string
    #:read-characters
-   )
-
-  #+ASDF
-  (:export
-   #:component-designator
-
-   #:component-condition
-   #:component-condition-component
-
-   #:component-location-condition
-   #:component-location-condition-location
-
-   #:module-component-absent
-   #:system-not-found
-
-   #:find-component*
-   #:find-system*
-
-   ;;; moved into defsys-ex.lisp
-   ;; #:resource
-   ;; #:resource-file
-   ;; #:resource-module
-   ;; #:resource-system
-  )
-  )
+   ))
 

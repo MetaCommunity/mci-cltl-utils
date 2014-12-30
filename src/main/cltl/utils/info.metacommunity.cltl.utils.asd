@@ -27,8 +27,6 @@
 	  :depends-on ("utils-package"))
    (:file "condition-utils"
 	  :depends-on ("utils-package"))
-   (:file "asdf-utils"
-	  :depends-on ("condition-utils"))
    (:file "stream-utils"
           :depends-on ("utils-package"))
    (:file "misc-utils" 
