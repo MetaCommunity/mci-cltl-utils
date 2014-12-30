@@ -286,3 +286,22 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
            table))
 
 ;; (with-output-to-string (*standard-output*) (print-hash-table asdf::*defined-systems*))
+
+(defgeneric object-name (object))
+(defgeneric (setf object-name) (object))
+
+(defclass associative-object ()
+  ((name
+    :accessor object-name
+    :type symbol
+    :initarg :name))
+  (:documentation
+   "Analogy of an associatve list element, onto CLOS"))
+
+(defmethod print-name ((object associative-object) (stream stream))
+  (princ (object-name object) stream))
+
+(defmethod print-label ((object associative-object) (stream stream))
+  ;; NB: Applications inheriting ASSOCIATIVE-OBJECT should specialize
+  ;; at least this method
+  (princ (object-name object) stream))

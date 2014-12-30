@@ -56,6 +56,8 @@
    #:pretty-printable-object
    #:format-label
    #:print-hash-table
+   #:assocaitive-object
+   #:object-name
 
    #:with-optimization
    #:with-tail-recursion
