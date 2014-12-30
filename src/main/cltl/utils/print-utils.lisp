@@ -288,7 +288,7 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 ;; (with-output-to-string (*standard-output*) (print-hash-table asdf::*defined-systems*))
 
 (defgeneric object-name (object))
-(defgeneric (setf object-name) (object))
+(defgeneric (setf object-name) (new-value object))
 
 (defclass associative-object ()
   ((name
