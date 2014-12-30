@@ -23,6 +23,15 @@
    #:simple-style-warning
    #:simple-program-error
    #:format-condition
+   #:entity-condition
+   #:entity-condition-name
+   #:entity-not-found
+   #:redefinition-condition
+   #:redefinition-condition-previous-object
+   #:redefinition-condition-new-object
+   #:container-condition
+   #:container-condition-container
+
    #:compute-output-stream
    #:compute-input-stream
 

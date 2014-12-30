@@ -30,3 +30,36 @@
   (:method ((condition simple-condition) (stream stream))
     (format stream (simple-condition-format-control condition)
             (simple-condition-format-arguments condition))))
+
+(define-condition entity-condition ()
+  ((name
+    :initarg :name
+    :reader entity-condition-name)))
+
+(define-condition entity-not-found (error entity-condition)
+  ()
+  (:report #'format-condition))
+
+(defmethod format-condition ((c entity-not-found) (s stream))
+  (format stream "Not found: ~S"
+          (entity-condition-name c)))
+
+(define-condition redefinition-condition (style-warning)
+  ((previous-object
+    :initarg :previous
+    :accessor redefinition-condition-previous-object)
+   (new-object
+    :initarg :new
+    :accessor redefinition-condition-new-object))
+  (:report #'format-condition))
+
+(defmethod format-condition ((c redefinition-condition) (s stream))
+  (format stream "Redefinition ~<~S~> => ~<~S~>"
+          (redefinition-condition-previous-object c)
+          (redefinition-condition-new-object c)))
+
+(define-condition container-condition ()
+  ((container
+    :initarg :container
+    :reader container-condition-container)))
+
