@@ -38,10 +38,10 @@
 
 (define-condition entity-not-found (error entity-condition)
   ()
-  (:report #'format-condition))
+  (:report format-condition))
 
 (defmethod format-condition ((c entity-not-found) (s stream))
-  (format stream "Not found: ~S"
+  (format s "Not found: ~S"
           (entity-condition-name c)))
 
 (define-condition redefinition-condition (style-warning)
@@ -51,10 +51,10 @@
    (new-object
     :initarg :new
     :accessor redefinition-condition-new-object))
-  (:report #'format-condition))
+  (:report format-condition))
 
 (defmethod format-condition ((c redefinition-condition) (s stream))
-  (format stream "Redefinition ~<~S~> => ~<~S~>"
+  (format s "Redefinition ~<~S~> => ~<~S~>"
           (redefinition-condition-previous-object c)
           (redefinition-condition-new-object c)))
 
