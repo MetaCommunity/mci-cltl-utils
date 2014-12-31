@@ -8,6 +8,10 @@
   (:use #:info.metacommunity.cltl.utils
         #:asdf
         #:cl)
+  (:shadowing-import-from
+   #:asdf/find-system
+   #:register-system
+   )
   (:export
    #:component-designator
    
