@@ -1,6 +1,6 @@
 ;; seq-utils.lisp - utilities for Common Lisp sequences
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 ;;; % List Utilities
 

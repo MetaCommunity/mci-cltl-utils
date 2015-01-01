@@ -1,6 +1,6 @@
 ;; print-utils.lisp - utilities for object printing
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 (defgeneric (setf object-print-name) (new-value object))
 (defgeneric (setf object-print-label) (new-value object))

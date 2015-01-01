@@ -1,6 +1,6 @@
 ;; opt-utils.lisp - selected compiler optimizations (prototype)
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 (defmacro with-optimization ((&rest policy) &body body)
   `(locally (declare (optimize ,@policy))

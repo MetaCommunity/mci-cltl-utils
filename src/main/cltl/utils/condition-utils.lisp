@@ -1,6 +1,6 @@
 
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 (define-condition simple-style-warning (style-warning simple-condition)
   ())

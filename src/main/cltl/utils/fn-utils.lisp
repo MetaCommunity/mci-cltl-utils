@@ -1,5 +1,5 @@
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 (deftype setf-function-designator ()
   '(cons (eql setf) (cons symbol null)))

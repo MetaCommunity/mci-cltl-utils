@@ -1,5 +1,5 @@
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 (defmacro format* (ctrl &rest args)
   `(format nil ,ctrl ,@args))

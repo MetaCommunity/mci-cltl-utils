@@ -1,6 +1,6 @@
 ;; misc-utils.lisp - assorted utility forms
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 
 (defmacro defconstant* (name value &optional docstring

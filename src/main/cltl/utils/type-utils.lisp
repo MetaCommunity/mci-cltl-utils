@@ -1,5 +1,5 @@
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 (deftype file-name ()
   `(or string pathname))

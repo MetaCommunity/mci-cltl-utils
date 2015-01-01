@@ -1,6 +1,6 @@
 ;; reader-utils.lisp - reader utilities
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 
 (deftype character-code ()

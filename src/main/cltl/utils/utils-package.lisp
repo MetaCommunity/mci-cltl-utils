@@ -3,7 +3,7 @@
 
 
 (defpackage #:info.metacommunity.cltl.utils
-  (:nicknames #:utils)
+  (:nicknames #:mcicl.utils)
   (:use #:asdf #:cl)
 
   (:export

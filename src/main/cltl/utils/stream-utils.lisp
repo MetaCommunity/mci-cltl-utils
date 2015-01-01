@@ -1,6 +1,6 @@
 ;; stream-utils.lisp - stream utilities
 
-(in-package #:utils)
+(in-package #:mcicl.utils)
 
 (deftype stream-designator ()
   '(or (and symbol (member nil t)) stream 
