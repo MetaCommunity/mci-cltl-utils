@@ -33,5 +33,6 @@
    #:remove-object
    #:map-objects
    #:associative-class
+   #:simple-associative-class
    #:object-key-slot
    ))

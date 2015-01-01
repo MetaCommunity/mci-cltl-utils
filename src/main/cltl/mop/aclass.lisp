@@ -125,15 +125,18 @@
 
 ;;; % Associative Class
 
-(defclass associative-class (associative-table-index standard-class)
+(defclass associative-class (associative-index standard-class)
+  ;; protocol class
   ((key-slot
     :initarg :key-slot
     :accessor object-key-slot
     :type symbol
     )))
 
-(validate-class associative-class)
+(defclass simple-associative-class (associative-table-index associative-class)
+  ())
 
+(validate-class simple-associative-class)
 
 (defmethod finalize-inheritance :after ((class associative-class))
   (let ((ks (object-key-slot class))
@@ -158,7 +161,7 @@
 (defclass afoo ()
   ((fie :initarg :fie :type symbol)
    (fum :initarg :fum))
-  (:metaclass associative-class)
+  (:metaclass simple-associative-class)
   (:key-slot . fie))
 
 
