@@ -1,4 +1,4 @@
-;; info.metacommunity.cltl.asdf.asd			-*-lisp-*-
+;; info.metacommunity.cltl.sysdef.asdf.asd		-*-lisp-*-
 
 (in-package #:cl-user)
 
@@ -9,7 +9,7 @@
 (in-package #:utils-system)
 
 
-(defsystem #:info.metacommunity.cltl.utils.asdf
+(defsystem #:info.metacommunity.cltl.sysdef.asdf
   ;; :description ""
   :version "1.0"
   :homepage "https://github.com/MetaCommunity/mci-cltl-utils"
