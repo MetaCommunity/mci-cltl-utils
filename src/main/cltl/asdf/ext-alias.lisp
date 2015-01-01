@@ -7,6 +7,7 @@
 
 (defclass alias-system (system*)
   ((alias-to
+    ;; source of alias - should denote an existing system definition
     :initarg :alias-to
     :type (or simple-string symbol component)
     :accessor alias-system-alias-to)))

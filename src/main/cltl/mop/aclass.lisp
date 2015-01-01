@@ -23,6 +23,8 @@
     ;; FIXME: This slot should be defined in a subclass,
     ;;  as to not require that every ASSOCIATIVE-INDEX would store a
     ;;  HASH-TABLE
+    ;;
+    ;; e.g within (DEFCLASS TABULAR-INDEX ...)
     :initarg :object-table
     :accessor object-table
     :type hash-table
@@ -169,5 +171,6 @@
             (frob-test '|2|))))
 ;;; => T, T
 
+;; FIXME: Define more tests - application of AFFTA
 
 |#
