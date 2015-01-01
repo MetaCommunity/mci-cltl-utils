@@ -12,11 +12,12 @@
   ;; cf. :CLASS initarg to DEFSYSTEM
   ())
 
-(defvar *component* nil)
-(defvar *operation* nil)
+(defvar *component*)
+(defvar *operation*)
 
-(defmethod operate :arond ((operation operation)
-                           (component component* ))
+(defmethod operate :around ((operation operation)
+                            (component component*)
+                            &key &allow-other-keys)
   ;; make OPERATION and COMPONENT avaialble to more specialized methods
   (let ((*component* component)
         (*operation* operation))
