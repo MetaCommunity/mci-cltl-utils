@@ -18,8 +18,10 @@
   ((object-table-lock
     :initarg :object-table-lock
     ;; :type lock ;; FIXME: Define type `LOCK' in bordeaux-threads
-    :accessor object-table-lock)
-   (object-table
+    :accessor object-table-lock)))
+
+(defclass associative-table-index (associative-index)
+  ((object-table
     ;; FIXME: This slot should be defined in a subclass,
     ;;  as to not require that every ASSOCIATIVE-INDEX would store a
     ;;  HASH-TABLE
@@ -28,8 +30,7 @@
     :initarg :object-table
     :accessor object-table
     :type hash-table
-    :initform (make-hash-table :test 'eq))
-   ))
+    :initform (make-hash-table :test 'eq))))
 
 
 (defmethod shared-initialize :after ((instance associative-index)
@@ -48,7 +49,7 @@
 (defgeneric object-table-key-function (index))
 (defgeneric (setf object-table-key-function) (new-value index))
 
-(defclass simple-associative-index (associative-index)
+(defclass simple-associative-index (associative-table-index)
   ((key-function
     :initarg :key-function
     :type function
@@ -124,7 +125,7 @@
 
 ;;; % Associative Class
 
-(defclass associative-class (associative-index standard-class)
+(defclass associative-class (associative-table-index standard-class)
   ((key-slot
     :initarg :key-slot
     :accessor object-key-slot
@@ -150,6 +151,10 @@
 
 #| Instance tests
 
+;;; % Instance Tests - REGISTER-OBJECT / FIND-OBJECT 
+
+;;; test setup
+
 (defclass afoo ()
   ((fie :initarg :fie :type symbol)
    (fum :initarg :fum))
@@ -157,7 +162,8 @@
   (:key-slot . fie))
 
 
-;; test REGISTER-OBJECT / FIND-OBJECT ...
+;;; test main
+
 (let ((af1 (make-instance 'afoo :fie '|1| :fum "One"))
       (af2 (make-instance 'afoo :fie '|2| :fum "Two"))
       (c (find-class 'afoo))

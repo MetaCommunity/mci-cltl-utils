@@ -22,6 +22,7 @@
   (:export
    #:validate-class
    #:associative-index
+   #:associative-table-index
    #:object-table-lock
    #:object-table
    #:simple-associative-index
