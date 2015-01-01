@@ -1,6 +1,6 @@
-;; ext-star.lisp
+;; ext-star.lisp - platform-specific subclasses for components
 
-(in-package #:utils.asdf)
+(in-package #:mcicl.sysdef.asdf)
 
 (defclass component* (component)
   ())

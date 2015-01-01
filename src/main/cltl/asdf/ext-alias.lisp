@@ -1,6 +1,6 @@
 ;; ext-alis.lisp - system aiasing extension for ASDF
 
-(in-package #:utils.asdf)
+(in-package #:mcicl.sysdef.asdf)
 
 (defgeneric alias-system-alias-to (system))
 (defgeneric (setf alias-system-alias-to) (component system))

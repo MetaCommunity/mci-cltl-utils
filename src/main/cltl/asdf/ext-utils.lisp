@@ -1,5 +1,6 @@
-;; ext-utils.lisp - utilitis onto ASDF
-(in-package #:utils.asdf)
+;; ext-utils.lisp - utilities onto ASDF
+
+(in-package #:mcicl.sysdef.asdf)
 
 
 (deftype component-designator ()

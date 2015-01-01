@@ -3,8 +3,8 @@
 (in-package #:cl-user)
 
 
-(defpackage #:info.metacommunity.cltl.utils.adsf
-  (:nicknames #:utils.asdf)
+(defpackage #:info.metacommunity.cltl.sysdef.asdf
+  (:nicknames #:mcicl.sysdef.asdf)
   (:use #:info.metacommunity.cltl.utils
         #:asdf
         #:cl)
