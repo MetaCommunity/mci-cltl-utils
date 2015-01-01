@@ -277,7 +277,7 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 			   (format-control 
 			    (load-time-value 
 			     (compile nil 
-				      (formatter "~%~/utils:format-label/ : ~/utils:format-label/")))))
+				      (formatter "~%~/mcicl.utils:format-label/ : ~/mcicl.utils:format-label/")))))
   (declare (type hash-table table)
 	   (type format-control format-control)
            (type stream-designator stream))
