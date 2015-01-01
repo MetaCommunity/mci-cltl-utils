@@ -14,15 +14,11 @@
    #+CCL #:CCL
    #+ALLEGRO #:MOP
    #:validate-superclass
-   )
-  #+SBCL
-  (:shadowing-import-from
-   ;; prefer implementation's own forms to those defined in C2MOP
-   #:cl
    #:standard-generic-function
    #:defmethod
    #:defgeneric
-   ) 
+   #:standard-class
+   )
   (:export
    #:validate-class
    #:associative-index
