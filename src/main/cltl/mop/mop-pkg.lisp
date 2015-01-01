@@ -1,6 +1,7 @@
 ;; mop-pkg.lisp - package definition for info.metacommunity.cltl.utils.mop
 
 (defpackage #:info.metacommunity.cltl.utils.mop
+  (:nicknames #:mcicl.mop)
   (:use  #:info.metacommunity.cltl.utils
          #:c2mop
          #:bordeaux-threads

@@ -1,6 +1,6 @@
 ;; aclass.lisp - protocol for generic tabular indexing onto CLOS
 
-(in-package #:info.metacommunity.cltl.utils.mop)
+(in-package #:mcicl.mop)
 
 
 ;;; % Associative Index

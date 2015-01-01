@@ -1,6 +1,6 @@
 ;; mop-utils.lisp - utilities onto MOP implementations
 
-(in-package #:info.metacommunity.cltl.utils.mop)
+(in-package #:mcicl.mop)
 
 
 (defmacro validate-class (class &optional (superclass 'standard-class))
