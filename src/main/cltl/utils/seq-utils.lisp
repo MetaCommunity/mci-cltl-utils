@@ -112,6 +112,9 @@ contents of STRING."
 (deftype array-dimension-designator ()
   '(integer 0 (#.array-dimension-limit)))
 
+(deftype array-length ()
+    '(integer 0 #.array-dimension-limit))
+
 (defun split-string-1 (char str &key (start 0) end from-end 
 				key (test #'char=) test-not )
   (declare (type string str)

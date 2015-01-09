@@ -86,6 +86,7 @@
    #:null-string
    #:string-null-p
    #:array-dimension-designator
+   #:array-length
    #:split-string-1
    #:split-string
 
