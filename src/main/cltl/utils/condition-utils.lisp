@@ -21,15 +21,81 @@
 
 
 (defgeneric format-condition (condition stream)
-  (:documentation "CLOS Utility for application within condition class REPORT forms")
+  (:documentation 
+   "CLOS Utility for application within condition class REPORT forms
+
+Example:
+
+ (define-condition weather-condition ()
+    ((weather
+       :initarg :weather
+       :accessor weather-condition-weather))
+    (:report format-condition))
+
+ (defmethod format-condition ((c weather-condition) (s stream))
+   (format s \"The weather is ~S\"
+      (weather-condition-weather c))
+   (when (next-method-p)
+      (terpri s)
+      (call-next-method)))
+ 
+ (define-condition weather-error (error weather-condition)
+   ())
+
+ (define-condition rain-error (weather-error)
+   ((weather
+     :initform \"Rainy\")))
+
+ (define-condition rainy-locomotion-error (rain-error)
+   ((quality
+     :initarg :quality
+     :accessor ece-quality)
+    (vehicle-type
+     :initarg :vehicle-type 
+     :accessor ece-vtype)
+    (vehicle-applicaiton
+     :initarg :vehicle-application
+     :accessor ece-vapplication)))
+
+ (defmethod format-condition :around ((c rainy-locomotion-error) 
+                                      (s stream))
+  (call-next-method)
+  (terpri s)
+  (format s \"Caution: ~A for ~A ~A\"
+     (ece-quality c)
+     (ece-vtype c)
+     (ece-vapplication c)))
+
+ (error 'rainy-locomotion-error
+   :quality \"Unsafe\"
+   :vehicle-type \"Formula 1\"
+   :vehicle-application \"Racing\")")
+
   (:method ((condition condition) (stream symbol))
+"Dispatch for FORMAT-CONDITION onto a symbolic output stream designator. 
+
+This method allows for symbolic indication of an output stream STREAM
+as per interpretation of symbolic stream designators in ANSI CL (CLtL2)"
     (format-condition condition
                       (ecase stream
                         ((t) *terminal-io*)
                         ((nil) *standard-output*))))
+
   (:method ((condition simple-condition) (stream stream))
+    "Apply the format control and format arguments for the CONDITION
+onto the specified STREAM.
+
+If a next method is defined in the effective method chain after this
+method, then that next method will be evaluated subsequent to a TERPRI
+call onto STREAM"
     (format stream (simple-condition-format-control condition)
-            (simple-condition-format-arguments condition))))
+            (simple-condition-format-arguments condition))
+    (when (next-method-p)
+      (terpri s)
+      (call-next-method)))
+  (:method :after ((condition simple-condition) (stream stream))
+           "Ensure FINISH-OUTPUT is called onto STREAM"
+           (finish-output stream)))
 
 (define-condition entity-condition ()
   ((name
@@ -53,7 +119,9 @@
     :accessor redefinition-condition-new-object))
   (:report format-condition))
 
-(defmethod format-condition ((c redefinition-condition) (s stream))
+
+ (defmethod format-condition ((c redefinition-condition) (s stream))
+
   (format s "Redefinition ~<~S~> => ~<~S~>"
           (redefinition-condition-previous-object c)
           (redefinition-condition-new-object c)))
