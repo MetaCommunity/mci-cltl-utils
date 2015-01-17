@@ -155,3 +155,21 @@ In other instances, the compiled function is returned."
 ;; (symbol-status '#:foo)
 ;; => NIL, NIL
 
+(deftype string-designator ()
+  '(or symbol string))
+
+(deftype package-designator ()
+  ;; cf. DEFPACKAGE [CLtL2]
+  '(or string-designator package))
+
+(defun package-exports-symbols (pkg)
+  (declare (type package-designator pkg)
+           (values list))
+  (let ((buffer 
+         (make-array 8 :fill-pointer 0)))
+    (declare (type (array t (*)) buffer))
+    (do-external-symbols (s pkg  (coerce buffer 'list))
+      (vector-push-extend s buffer))))
+
+;; Test form (ad hoc): 
+;; (package-exports-symbols '#:c2mop)
