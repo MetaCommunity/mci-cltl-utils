@@ -19,6 +19,29 @@
    #:defgeneric
    #:standard-class
    )
+  #+(or SBCL CMU CCL ALLEGRO) 
+  ;; TO DO: Keep this synchronized onto PCL-PORT
+  ;;
+  ;; TBD: Why C2MOP shadows MOP implementations?
+  ;;
+  ;;     Possible issue: When shadowing a MOP implementaion, an
+  ;;       application may also effectively be shadowing any compiler
+  ;;       optimizaitons defined for the MOP implementation, such as
+  ;;       may be defined in a manner specific to the individual MOP
+  ;;       implementation.
+  (:export
+   #:validate-superclass ;; PCL
+   #:standard-generic-function
+   #:defmethod
+   #:defgeneric
+   #:standard-class
+   )
+
+  ;; TBD: Does the return value for the following form differ per
+  ;; implementation? [A Review of C2MOP]
+  ;;
+  ;;   (package-shadowing-symbols (find-package '#:c2mop))
+  
   (:export
    #:validate-class
    #:associative-index
@@ -35,4 +58,14 @@
    #:associative-class
    #:simple-associative-class
    #:object-key-slot
-   ))
+   )
+
+
+  )
+
+(let* ((p (find-package '#:mcicl.mop))
+       (s (package-shadowing-symbols p)))
+  (do-external-symbols (xs '#:c2mop)
+    (unless (find (the symbol xs) (the list s) 
+                  :test #'eq)
+      (export s p))))
