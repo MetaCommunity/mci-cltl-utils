@@ -73,9 +73,8 @@ Example:
 
   (:method ((condition condition) (stream symbol))
 "Dispatch for FORMAT-CONDITION onto a symbolic output stream designator. 
-
-This method allows for symbolic indication of an output stream STREAM
-as per interpretation of symbolic stream designators in ANSI CL (CLtL2)"
+This method allows for symbolic indication of an output stream to
+FORMAT-CONDITION, with a syntax conformant onto ANSI CL (CLtL2)"
     (format-condition condition
                       (ecase stream
                         ((t) *terminal-io*)
@@ -86,16 +85,22 @@ as per interpretation of symbolic stream designators in ANSI CL (CLtL2)"
 onto the specified STREAM.
 
 If a next method is defined in the effective method chain after this
-method, then that next method will be evaluated subsequent to a TERPRI
-call onto STREAM"
-    (format stream (simple-condition-format-control condition)
-            (simple-condition-format-arguments condition))
+method, then that next method will be evaluated before the
+format-control and format-arguments for the CONDITION are applied to  
+the stream. A TERPRI call will be evaluted after the next methods"
     (when (next-method-p)
-      (terpri s)
-      (call-next-method)))
-  (:method :after ((condition simple-condition) (stream stream))
+      (call-next-method)
+      (terpri stream))
+    (format stream (simple-condition-format-control condition)
+            (simple-condition-format-arguments condition)))
+  (:method :after ((condition condition) (stream stream))
            "Ensure FINISH-OUTPUT is called onto STREAM"
            (finish-output stream)))
+
+#+NIL ;; Test for print function
+(error 'simple-condition :format-control "Random event ~S at ~S"
+       :format-arguments (list (gensym "e-") 
+                               (get-universal-time)))
 
 (define-condition entity-condition ()
   ((name
