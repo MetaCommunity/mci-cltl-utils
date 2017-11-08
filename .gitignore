@@ -1,5 +1,9 @@
 *~
 *#
 .#*
+## impls
+*.FASL
+*.fasl
+*.lisp-temp
 ## Eratosthenes
 *.bib.bak
