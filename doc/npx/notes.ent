@@ -13,7 +13,15 @@
 	"&prod,st;"
 >
 <!ENTITY proj.et
-	"prod.et;"
+	"&prod.et;"
+>
+
+
+<!ENTITY ansicl
+	"Common Lisp"
+>
+<!ENTITY ansicl.p;
+	"&prod.st;Common Lisp&prod.et;"
 >
 
 
