@@ -1,6 +1,17 @@
 ;; misc-utils.lisp - assorted utility forms
+;;------------------------------------------------------------------------------
+;;
+;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
+;;
+;; This program and the accompanying materials are made available under the
+;; terms of the Eclipse Public License v1.0 which accompanies this distribution
+;; and is available at http://www.eclipse.org/legal/epl-v10.html
+;; 
+;; Contributors: Sean Champ - Initial API and implementation
+;;
+;;------------------------------------------------------------------------------
 
-(in-package #:mcicl.utils)
+(in-package #:utils.ltp)
 
 
 (defmacro defconstant* (name value &optional docstring
@@ -9,34 +20,36 @@
 DOCSTRING
 
 If NAME denotes an existing variable and its value is not EQUALP
-to the specified VALUE, then a `SIMPLE-STYLE-WARNING` will be emitted,
+to the specified VALUE, then a `SIMPLE-STYLE-WARNING' will be emitted,
 and the previous value will be retained. This differs from the
 behavior of `CL:DEFCONSTANT' in that EQUALP is applied as the
-comparison, rather than EQL, and that the previous value is retained
-in all instances of BOUNDP NAME.
+comparison, rather than EQL, moreover that the previous value will bex
+retained in all instances of BOUNDP NAME.
 
 If NAME does not denote an existing variable, then this macro's
-behavior is equivalent to `CL:DEFCONSTANT'"
+behavior is analogous onto `CL:DEFCONSTANT'"
   (with-gensym (%value %previous)
+    ;; FIXME arbitrary discard of return values from GET-SETF-EXPANSION
     (let ((%name (nth-value 4  (get-setf-expansion name env))))
       ;; Ed. note: SBCL 1.2.5 was not handling a simpler form
-      ;; when a certain file in McCLIM was compiled and loaded. So,
+      ;; when a certain file when McCLIM was compiled and loaded. So,
       ;; rather than using SYMBOL-VALUE directly on the NAME, this
       ;; will now try to wrap the reference to the symbol-value of
       ;; NAME around a return value from GET-SETF-EXPANSION w/ ENV
-      ;; ...and still it doesn't work out. Effectively, it must be
+      ;; ...and still it doesn't work out. Effectively, it may be
       ;; that the BOUNDP call returns true (how?) but the SYMBOL-VALUE
-      ;; call fails.
+      ;; call fails (how?) in "Some instances"
       ;;
       ;; So, EVAL instead of SYMBOL-VALUE ? Still, "Doesn't work out".
-      ;; The 1th item in the backtrace is a FOP-FUNCALL, moreover,
-      ;; preventing a complete debug of this particular issue.
+      ;; The 1st item in the backtrace is a FOP-FUNCALL, moreover,
+      ;; as may serve to suggest a matter of some complexity towards
+      ;; any complete debug of this particular issue.
       ;;
       ;; affected forms (McCLIM MCi fork)
       ;; * AUTOMATON::+MIN-CHAR-CODE+ (Drei state-and-transition.lisp) 
       ;; * AUTOMATON::+INTERSECTION+ and later constants (Drei regexp.lisp)
       ;; 
-      ;; Each of those symbols is bound to FIXNUM.
+      ;; Each of those symbols is bound to a FIXNUM.
       ;; 
       ;; Workaround: Use DEFCONSTANT instead, in those
       ;; bindings, considering: A FIXNUM is always EQL to itself

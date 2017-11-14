@@ -1,6 +1,21 @@
+;; codition-utils.lisp
+;;------------------------------------------------------------------------------
+;;
+;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
+;;
+;; This program and the accompanying materials are made available under the
+;; terms of the Eclipse Public License v1.0 which accompanies this distribution
+;; and is available at http://www.eclipse.org/legal/epl-v10.html
+;; 
+;; Contributors: Sean Champ - Initial Implementation
+;;
+;;------------------------------------------------------------------------------
 
 
-(in-package #:mcicl.utils)
+(in-package #:utils.ltp)
+
+;; NOTE analogous definitions in CMUCL, SBCL
+;; NOTE portability (is not privatization)
 
 (define-condition simple-style-warning (style-warning simple-condition)
   ())
@@ -51,10 +66,12 @@ Example:
      :initarg :quality
      :accessor ece-quality)
     (vehicle-type
-     :initarg :vehicle-type 
+     :initarg :vehicle-type
+     :initform '(airplane paper) 
      :accessor ece-vtype)
     (vehicle-applicaiton
      :initarg :vehicle-application
+     :initform 'acrobatics
      :accessor ece-vapplication)))
 
  (defmethod format-condition :around ((c rainy-locomotion-error) 
@@ -68,29 +85,38 @@ Example:
 
  (error 'rainy-locomotion-error
    :quality \"Unsafe\"
-   :vehicle-type \"Formula 1\"
-   :vehicle-application \"Racing\")")
+   :vehicle-type '(airplane canvas)
+   :vehicle-application '(taxi (parking outdoor) flight))")
 
   (:method ((condition condition) (stream symbol))
+    ;; FIXME_DESIGN symbol as stream designator => constant
 "Dispatch for FORMAT-CONDITION onto a symbolic output stream designator. 
 This method allows for symbolic indication of an output stream to
-FORMAT-CONDITION, with a syntax conformant onto ANSI CL (CLtL2)"
+FORMAT-CONDITION, with a syntax compatible onto ANSI CL (CLtL2)"
+;; FIXME_DOCS See also: CL:PRINT; LTP `string-designator' type; LTP
+;; `compute-output-stream' 
     (format-condition condition
                       (ecase stream
                         ((t) *terminal-io*)
                         ((nil) *standard-output*))))
 
   (:method ((condition simple-condition) (stream stream))
-    "Apply the format control and format arguments for the CONDITION
-onto the specified STREAM.
+    "Apply the format control and format arguments for the CONDITION,
+with output to the specified STREAM.
 
-If a next method is defined in the effective method chain after this
+If a next method is defined in the effective method sequence after this
 method, then that next method will be evaluated before the
-format-control and format-arguments for the CONDITION are applied to  
-the stream. A TERPRI call will be evaluted after the next methods"
+format-control and format-arguments for the CONDITION are applied for
+output to the stream. WA TERPRI call will be evaluted after the next
+method has returned, and before the direct format procedure in this method"
+    ;; FIXME_DOCS describe, illustrate the rationale for the method
+    ;; dispatching behavior denoted in the docstring - e.g albeit
+    ;; trivially, "It's not a frame stack," vis a vis serial backtrace
+    ;; output
     (when (next-method-p)
       (call-next-method)
       (terpri stream))
+    ;; FIXME_DESIGN should APPLY FORMAT, certainly
     (format stream (simple-condition-format-control condition)
             (simple-condition-format-arguments condition)))
   (:method :after ((condition condition) (stream stream))
@@ -102,7 +128,10 @@ the stream. A TERPRI call will be evaluted after the next methods"
        :format-arguments (list (gensym "e-") 
                                (get-universal-time)))
 
+;; -
+
 (define-condition entity-condition ()
+  ;; FIXME_DOCS note that this is not `cell-error'
   ((name
     :initarg :name
     :reader entity-condition-name)))
@@ -115,6 +144,8 @@ the stream. A TERPRI call will be evaluted after the next methods"
   (format s "Not found: ~S"
           (entity-condition-name c)))
 
+;; -
+
 (define-condition redefinition-condition (style-warning)
   ((previous-object
     :initarg :previous
@@ -126,12 +157,12 @@ the stream. A TERPRI call will be evaluted after the next methods"
 
 
  (defmethod format-condition ((c redefinition-condition) (s stream))
-
   (format s "Redefinition ~<~S~> => ~<~S~>"
           (redefinition-condition-previous-object c)
           (redefinition-condition-new-object c)))
 
 (define-condition container-condition ()
+  ;; FIXME_DOCS "Examples"
   ((container
     :initarg :container
     :reader container-condition-container)))

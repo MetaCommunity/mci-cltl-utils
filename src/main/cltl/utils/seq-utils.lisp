@@ -1,10 +1,22 @@
 ;; seq-utils.lisp - utilities for Common Lisp sequences
+;;------------------------------------------------------------------------------
+;;
+;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
+;;
+;; This program and the accompanying materials are made available under the
+;; terms of the Eclipse Public License v1.0 which accompanies this distribution
+;; and is available at http://www.eclipse.org/legal/epl-v10.html
+;; 
+;; Contributors: Sean Champ - Initial API and implementation
+;;
+;;------------------------------------------------------------------------------
 
-(in-package #:mcicl.utils)
+(in-package #:utils.ltp)
 
 ;;; % List Utilities
 
 (defmacro push-last (a l)
+  ;; FIXME use SETF forms
   (with-gensym (%l)
     `(let ((,%l ,l))
        (cond 
@@ -16,11 +28,15 @@
 ;; (push-last 3 '(1 2))
 ;; => (1 2 3)
 
-;; (push-last 3 nil)
-;; => (3)
-
 ;; (let ((l '(1 2))) (eq (push-last 3 l) l))
 ;; => T
+
+
+;; (push-last 3 nil)
+;; => (3) ;; note PLACE and SETF in ANSI CL
+;; vis a vis:
+;; (let ((l nil)) (eq (push-last 3 l) l))
+;; => NIL
 
 ;;; % Vector Utilities
 
@@ -53,7 +69,7 @@
 ;;; %% String Utilities
 
 (defun simplify-string (string)
-  "If STRING can be coereced to a SIMPLE-BASE-STRING then, return a
+  "If STRING can be coerced to a SIMPLE-BASE-STRING, then return a
 SIMPLE-BASE-STRING representative of the contents of STRING. 
 Otherwise, return a SIMPLE-STRING representative of the 
 contents of STRING."
@@ -79,7 +95,7 @@ contents of STRING."
 
 (defmacro string-position (char str &body rest)
   ;; a type-dispatching form, towards applying compiler optimizations 
-  ;; at runtime, cf. SB-KERNEL:%FIND-POSITION
+  ;; at runtime, cf. SB-KERNEL:%FIND-POSITION, and no-/doubt similar in CMUCL
   (with-gensym (%char %str)
     `(let ((,%char ,char)
 	   (,%str ,str))
@@ -99,24 +115,35 @@ contents of STRING."
 
 (defun null-string ()
   (declare (values simple-base-string))
+    ;; FIXME reimplement as a macro, or declare inline
   (values +null-string+))
 
 (defun string-null-p (str)
+  ;; FIXME_DOCS See also `null-string'
+  ;; FIXME reimplement as a macro, or declare inline
   (declare (type string str)
 	   (values boolean))
   (or (eq str +null-string+)
-      (and (typep str 'string)
+      ;; FIXME_DOCS note opportunities for object reuse in ANSI CL
+      ;; programs, and correspondingly, opportunities for using EQ as
+      ;; an equivalence test 
+      (and (typep str 'string) 
 	   (zerop (length (the string str))))))
     
 
 (deftype array-dimension-designator ()
+  ;; FIXME_DOCS See also `array-length'
+  ;; FIXME =rename=> array-dimension
   '(integer 0 (#.array-dimension-limit)))
 
 (deftype array-length ()
+  ;; FIXME_DOCS See also `array-dimension'
     '(integer 0 #.array-dimension-limit))
 
 (defun split-string-1 (char str &key (start 0) end from-end 
-				key (test #'char=) test-not )
+                                  key (test #'char=) test-not )
+  ;; FIXME_DOCS See also `split-string'
+  ;; FIXME_DOCS note use of CL:SIMPLE-STRING as a refinement onto CL:STRING
   (declare (type string str)
 	   (values simple-string 
 		   (or simple-string null)
@@ -148,9 +175,10 @@ contents of STRING."
 				from-end  key 
 				(test #'char=)
 				test-not)
+  ;; FIXME_DOCS See also `split-string-1'
   (declare (type string str)
 	   (values list))
-  (with-tail-recursion 
+  (with-tail-recursion ;; FIXME_DOCS note usage case here
     (labels ((split (str2 buffer)
 	       (declare (type string str)
 			(type list buffer))
@@ -161,6 +189,7 @@ contents of STRING."
 				   :test test :test-not test-not)
 		 (cond
 		   (n
+                    ;; FIXME_DESIGN cost of `push-last' onto arbitrary lists?
 		    (let ((more (push-last start buffer)))
 		      (split rest more)))
 		   (t (push-last str2 buffer))))))

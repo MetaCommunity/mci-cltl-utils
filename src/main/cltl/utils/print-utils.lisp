@@ -1,6 +1,20 @@
 ;; print-utils.lisp - utilities for object printing
+;;------------------------------------------------------------------------------
+;;
+;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
+;;
+;; This program and the accompanying materials are made available under the
+;; terms of the Eclipse Public License v1.0 which accompanies this distribution
+;; and is available at http://www.eclipse.org/legal/epl-v10.html
+;; 
+;; Contributors: Sean Champ - Initial API and implementation
+;;
+;;------------------------------------------------------------------------------
 
-(in-package #:mcicl.utils)
+;; FIXME_DOCS - document the generic fumctions and methods defined
+;; here. Refer to subsequent commentaey, this file
+
+(in-package #:utils.ltp)
 
 (defgeneric (setf object-print-name) (new-value object))
 (defgeneric (setf object-print-label) (new-value object))
@@ -277,7 +291,7 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 			   (format-control 
 			    (load-time-value 
 			     (compile nil 
-				      (formatter "~%~/mcicl.utils:format-label/ : ~/mcicl.utils:format-label/")))))
+				      (formatter "~%~/ltp.utils:format-label/ : ~/ltp.utils:format-label/")))))
   (declare (type hash-table table)
 	   (type format-control format-control)
            (type stream-designator stream))

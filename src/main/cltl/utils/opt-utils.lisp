@@ -1,6 +1,17 @@
-;; opt-utils.lisp - selected compiler optimizations (prototype)
+;; opt-utils.lisp - onto compiler optimizations
+;;------------------------------------------------------------------------------
+;;
+;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
+;;
+;; This program and the accompanying materials are made available under the
+;; terms of the Eclipse Public License v1.0 which accompanies this distribution
+;; and is available at http://www.eclipse.org/legal/epl-v10.html
+;; 
+;; Contributors: Sean Champ - Initial API and implementation
+;;
+;;------------------------------------------------------------------------------
 
-(in-package #:mcicl.utils)
+(in-package #:utils.ltp)
 
 (defmacro with-optimization ((&rest policy) &body body)
   `(locally (declare (optimize ,@policy))
@@ -10,8 +21,6 @@
 ;; see also:
 ;;  http://0branch.com/notes/tco-cl.html
 ;;  http://trac.clozure.com/ccl/wiki/DeclareOptimize
-;; ...
-;; well formatted tables:
 ;;  http://ecls.sourceforge.net/new-manual/ch02.html#ansi.declarations.optimize
 
 (defmacro with-tail-recursion (&body body)
@@ -30,7 +39,9 @@
 	   (test-tail (&rest opt)
 	     `(with-opt-env (env ,@opt)
 		#+CCL 
-		(ccl::policy.allow-tail-recursion-elimination env))))
+		(ccl::policy.allow-tail-recursion-elimination env)
+                ;; FIXME implement test form here
+                )))
   (values (test-tail  (debug 2) (speed 3) (safety 2) (space 2))
 	  (test-tail  (debug 3) (speed 0) (safety 3) (space 0))))
 ;; #+CCL => #<CCL::LEXICAL-ENVIRONMENT ...> , ...
@@ -61,7 +72,7 @@
              (warn 'simple-compilation-warning
                    :format-control
                    "~<Compiler warned while compiling ~S~>~
-~@[ ~<[optimization ~S]~>~]" 
+~@[ ~<[using optimization ~S]~>~]" 
                    :format-arguments (list ,%form (quote ,optimization))))
            (cond
              (,failurep 
@@ -69,7 +80,7 @@
                        'simple-compilation-error
                        :format-control
                        "~<Compiler erred while compiling ~S~>~
-~@[ ~<[optimization ~S]~>~]" 
+~@[ ~<[using optimization ~S]~>~]" 
                        :format-arguments (list ,%form (quote ,optimization)))
               (values ,fn))
              (t (values ,fn))))))))
