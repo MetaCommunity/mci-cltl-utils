@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<!DOCTYPE npage [
+
+<!ENTITY notes.ent SYSTEM "notes.ent">
+%notes.ent;
+
+]>
+
+<npage xmlns="http://wk.pm.thinkum.space/ns/notepoint/"
+       xmlns:h="http://www.w3.org/1999/xhtml"
+       xmlns:db="http://docbook.org/ns/docbook"
+       xmlns:dc="http://purl.org/dc/terms/">
+  <notemeta>
+    <dc:title>Lisp Tools Project - Notes - &ccl; version 11.1</dc:title>
+  </notemeta>
+
+  
+  <stnote>
+    <notemeta>
+      <dc:title>The &ccl; User Environment - Notes</dc:title>
+    </notemeta>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" xml:id="initf">
+      <title>Initialization Files Used by &ccl.p;</title>
+
+      <simplelist>
+        <member><filename vocab="LPN">home:ccl-init</filename></member>
+        <member><filename vocab="LPN">home:.ccl-init</filename></member>
+      </simplelist>
+
+      <example>
+        <title>
+          Default logical pathname translations for <filename
+          vocab="LPN">home:</filename> in &ccl.p;
+        </title>
+        <screen
+><prompt>CL-USER&gt; </prompt><userinput>(<command>logical-pathname-translations</command> "home")</userinput>
+<computeroutput>=&gt; ((#P"home:**;*.*" #P"/home/username/**/*.*"))</computeroutput>
+</screen>
+      </example> 
+    </simplesect>  <!-- @ initf -->
+      
+    <simplesect xmlns="http://docbook.org/ns/docbook" xml:id="srcloc">
+      <title>Source Location in &ccl.p;</title>
+
+      <para>
+        &ccl.p; uses the <glossterm>logical pathname</glossterm>
+        <glossterm>host</glossterm>, <literal>ccl</literal>.
+      </para>
+
+      <example>
+        <title>
+          Logical Pathname Host <literal>ccl</literal> - Configuration and
+          Evaluation
+        </title>
+
+        <screen
+><prompt>CL-USER&gt; </prompt><userinput>(<command>setf</command> (logical-pathname-translations "ccl")
+      '(("**;*.*" "/usr/local/src/ccl/ccl-1.11-linuxarm/**/*.*")))</userinput>
+<computeroutput>=&gt; (("**;*.*" "/usr/local/src/ccl/ccl-1.11-linuxarm/**/*.*"))</computeroutput>
+x
+<prompt>CL-USER&gt; </prompt><userinput>(<command>probe-file</command>  <filename vocab="LPN">#P"ccl:level-0;l0-aprims.lisp.newest"</filename>)</userinput>
+<computeroutput>=&gt; <filename>#P"/usr/local/src/ccl/ccl-1.11-linuxarm/level-0/l0-aprims.lisp"</filename> </computeroutput>
+</screen>
+      </example>
+    </simplesect>  <!-- @ srcloc -->
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" xml:id="ccl-slime">
+      <title>&ccl.p; and &SLIME.p;</title>
+
+      <formalpara>
+        <title>Version Compatibility</title>
+        <para>
+          Support for the &ansicl.p; components of &SLIME.p;, namely &SWANK;,
+          requires a &ccl.p; distribution of version
+          <productnumber>1.4</productnumber> or any more recent
+          distribution.
+        </para>
+      </formalpara>
+      
+      <formalpara>
+        <title>
+          &SWANK; <glossterm>Symbol</glossterm>
+          <glossterm>Cross-Reference</glossterm> suport in &ccl.p;
+        </title>
+        
+        <para>
+          The <glossterm>interactive</glossterm> Emacs Lisp
+          <glossterm>command</glossterm> <command
+          vocab="elisp">slime-edit-definition</command> should typically
+          be available for &SLIME.p; in &ccl.p;. Concerning the &ansicl.p;
+          <glossterm>function</glossterm>, <function
+          vocab="ansicl">SWANK/CCL::XREF-LOCATIONS</function> and corresponding
+          Emacs Lisp <glossterm>commands</glossterm> such as <command
+          vocab="elisp" >slime-who-calls</command>, it may be necessary
+          to add an <glossterm>initialization form</glossterm> to the
+          &ccl.p; user <glossterm>rc file</glossterm>, pursuant towards
+          feature compatibility onto &SLIME.p;
+          <glossterm>cross-reference</glossterm> evaluation. See also:
+          <xref linkend="initf"/>; <xref linkend="srcloc"/>.
+        </para>
+      </formalpara>
+
+      <example>
+        <title>
+          Source Form for Support of &slime.p;
+          <glossterm>Cross-Reference</glossterm> Evaluation in &ccl.p;
+          - User <filename vocab="LPN">home:.ccl-init</filename>
+        </title>
+        <programlisting>#+:SWANK
+(require '#:xref)</programlisting>
+      </example>
+    </simplesect> <!-- @ ccl-slime -->
+    
+  </stnote>
+
+</npage>

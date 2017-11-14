@@ -1,0 +1,60 @@
+
+<!ENTITY prod.st
+	"<productname xmlns='http://docbook.org/ns/docbook'>"
+>
+<!ENTITY prod.et
+	"</productname>"
+>
+
+<!-- FIXME TO DO: Define a 'project' element onto DocBook, NotePoint, DOAP
+                                                                   -->
+<!-- Using 'productname' presently                                 -->
+<!ENTITY proj.st
+	"&prod,st;"
+>
+<!ENTITY proj.et
+	"prod.et;"
+>
+
+
+<!ENTITY ecl
+	"ECL"
+>
+<!ENTITY ecl.p
+	"&proj.st;&ecl;&proj.et;"
+>
+
+<!ENTITY ccl
+	"CCL"
+>
+<!ENTITY ccl.p
+	"&proj.st;&ccl;&proj.et;"
+>
+
+
+<!ENTITY SLIME
+	"SLIME"
+>
+<!ENTITY SLIME.p
+	"&proj.st;&slime;&proj.et;"
+>
+
+<!ENTITY SWANK
+	"SWANK"
+>
+<!ENTITY SWANK.p
+	"&prod.st;&swank;&prod.et;"
+>
+
+
+<!ENTITY pkgsrc
+	"pkgsrc"
+>
+<!ENTITY pkgsrc.p
+	"&proj.st;&pkgsrc;&proj.et;"
+>
+
+
+<!ENTITY docbook.p
+	"&proj.st;DocBook&proj.et;"
+>

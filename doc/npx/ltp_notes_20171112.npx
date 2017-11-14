@@ -1,0 +1,516 @@
+<?xml version="1.0"?>
+<!DOCTYPE npage [
+
+<!ENTITY notes.ent SYSTEM "notes.ent">
+%notes.ent;
+
+]>
+
+<npage xmlns="http://wk.pm.thinkum.space/ns/notepoint/"
+       xmlns:h="http://www.w3.org/1999/xhtml"
+       xmlns:db="http://docbook.org/ns/docbook"
+       xmlns:dc="http://purl.org/dc/terms/">
+  <notemeta>
+    <dc:title>Lisp Tools Project - Notes - &ecl; version 16.1.2</dc:title>
+  </notemeta>
+
+  <stnote>
+    <notemeta>
+      <dc:title>Caveats</dc:title>
+    </notemeta>
+
+    <simplelist xmlns="http://docbook.org/ns/docbook">
+      <member>
+        This <glossterm>notes page</glossterm> refers to &ecl.p;
+        version <productnumber>16.1.2</productnumber> as available
+        with &pkgsrc.p;
+      </member>
+      <member>
+        The <glossterm>logical pathname</glossterm>
+        <filename>ecldoc:</filename> is apllied, in the following,
+        such that the <glossterm>logical pathname</glossterm> may be
+        <glossterm>resolved</glossterm> to the <glossterm>filesystem
+        pathname</glossterm>
+        <filename>lang/ecl/work/ecl-16.1.2/doc/</filename> 
+        under &pkgsrc.p; <varname>WRKROOT</varname>, subsequent to
+        <command>bmake extract</command> in
+        <filename>lang/ecl/</filename> under &pkgsrc.p;
+        <varname>PKGSRCDIR</varname>.
+      </member>
+    </simplelist>
+  </stnote>
+  
+   <stnote>
+    <notemeta>
+      <dc:title>&ecl; in &pkgsrc;</dc:title>
+    </notemeta>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook">
+      <title>
+        Building a threaded &ecl.p; with &pkgsrc.p; -
+        <filename>mk.conf</filename> example
+      </title>
+      <programlisting>PKG_OPTIONS.boehm-gc+=threads
+PKG_OPTIONS.ecl+=threads</programlisting>
+
+<sidebar>
+  <title>Architecture Support</title>
+  <para>Tbis <glossterm>build configuration</glossterm> was developed
+  for &ecl.p; in an <symbol>:ARMV7L</symbol>
+  <glossterm>architecture</glossterm>, more specifically:
+  <literal>Linux 
+  sycamore.cloud.thinkum.space 3.4.39-5952280 #1 SMP PREEMPT Mon Nov 2
+  16:20:06 KST 2015 armv7l armv7l armv7l GNU/Linux</literal> in a
+  <glossterm>chroot</glossterm> environment with
+  <productname>Ubuntu</productname>
+  <productnumber>14.04.5-LTS</productnumber>,
+  <foreignphrase>Trusty</foreignphrase> under
+  <productname>Android</productname>
+  <productnumber>5.0.2</productnumber> - the machine hardware
+  platform, a <orgname>Samsung</orgname> 
+  <productname>SM-T700</productname> tablet computer.</para>
+</sidebar>
+    </simplesect>
+  </stnote>
+
+  <stnote>
+    <notemeta>
+      <dc:title>The &ecl; User Environment - Notes</dc:title>
+    </notemeta>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook">
+      <title>Process Initialization in &ecl.p;</title>
+
+      <sidebar>
+        <title>&ecl.p; Documentation</title>
+        <para>
+          In the file, <filename>ecldoc:ref_os.xmlf</filename>,
+          section <markup vocab="xpath"
+          >refentry[@xml:id="ref._lisp-init-file-list_"]</markup>,
+          documentation is provided concerning behaviors in
+          &ecl.p; with and without the <command
+          vocab="arg">-norc</command> <glossterm>command line
+          option</glossterm>. Similarly, the section of the &ecl.p;
+          documentation provides a desacription about <glossterm>init
+          file</glossterm> behaviors in &ecl.p;. Principally, the
+          section describes the variable,
+          <varname>EXT:*LISP-INIT-FILE-LIST*</varname>.
+        </para>
+        <para>
+          Further
+          documentation about behaviors of <glossterm>command line
+          option</glossterm> processing in &ecl.p; is
+          provided in the section 
+          <markup vocab="xpath"
+                  >refentry[@xml:id="ref.process-command-args"]</markup>,
+          in the same file, <filename>ecldoc:ref_os.xmlf</filename>
+        </para>
+      </sidebar>
+
+      <simplelist>
+
+        <member>
+          &ecl.p; <quote>Vanilla</quote> <glossterm>command
+          line</glossterm> <glossterm>interface</glossterm><footnote>
+          <itemizedlist>
+            <listitem>
+              <para>
+                Note <productname>rlwrap</productname> availability in &pkgsrc.p;
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Observe <varname>EXT:+DEFAULT-COMMAND-ARG-RULES+</varname>
+                usage - refer also to <filename>ecldoc:</filename>
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Topic: Interactive Debugger
+              </para>
+            </listitem>
+          </itemizedlist>
+        </footnote>
+        </member>
+        
+        <member>
+        &ecl.p; User <glossterm>Init File</glossterm>
+        </member>
+
+        <member>
+          Normal <glossterm><acronym>REPL</acronym> <quote>Top
+          Level</quote></glossterm> in &ecl.p;
+        </member>
+
+        <member>
+          &ecl.p; in multiprocessing environments -
+          <productname>POSIX</productname> environments -
+/          <productname>POSIX</productname> process, threads, timer,
+          messaging interfaces, and OS kernel systems; patterns in
+          <productname>C</productname> and
+          <productname>C++</productname> applications;
+          <productname>ACE Toolkit</productname>;
+          <productname>Boost</productname> libraries;
+          <glossterm>realtime</glossterm> computing - patterns in
+          <productname>POSIX</productname> environments. Extensions
+          omto <productname>ANSI CL</productname> available in
+          &ecl.p;, applicable in similar contexts
+        </member>
+
+        <member>
+          &ecl.p; and <productname>Emacs</productname>,
+          <productname>SLIME</productname><footnote>
+
+          <para>Note: SLIME, SWANK, ASDF</para>
+
+          <example>
+            <title>Specifying a local ASDF installation in
+            <filename>~/.swank.lisp</filename></title>
+            
+            <programlisting>(defparameter swank::*asdf-path* #p"/path/containing/asdf/asdf.lisp")</programlisting>
+          </example>
+          
+        </footnote>
+        </member>
+
+        <member>
+          &ecl.p; and <productname>ASDF</productname>
+        </member>
+
+        <member>
+          &ecl.p; and <glossterm>interactive</glossterm>
+          <glossterm>environment</glossterm>
+          <glossterm>services</glossterm> (Character Terminal, X,
+          Wayland, "Other") <glossterm>programming</glossterm>
+        </member>
+
+        <member>
+          <glossterm>System</glossterm> imaging with &ecl.p;
+        </member>
+
+        <member>
+          <quote>Other Application Concerns</quote>
+        </member>
+
+        <member>
+          Process Termination Behaviors - Resource deallocation and
+          process exit.
+        </member>
+      </simplelist>
+    </simplesect>
+  </stnote>
+
+  <stnote>
+    <notemeta>
+      <dc:title>Platform QA - &ecl; - Documentation - "FIXME" Topics</dc:title>
+    </notemeta>
+
+
+    <simplesect xmlns="http://docbook.org/ns/docbook">
+      <title><quote>Vanilla &ecl.p;</quote> - Documentation "FIXME" Topics</title>
+      <simplelist>
+        <member>
+          Juxtaposing the content of the &ecl.p; <glossterm>manual
+          page</glossterm> and the variable
+          <varname>EXT:+DEFAULT-COMMAND-ARG-RULES+</varname>, the
+          <glossterm>manual page</glossterm> perhaps <quote>Could Be
+          Updated</quote>, a <glossterm>task</glossterm> as
+          <quote>Could Be</quote> approached in a manner pursuant of
+          furtherl review about the &ecl.p; documentation
+          system.<footnote>
+          <para>
+            Note that the value of this
+            <glossterm>variable</glossterm> represents, in effect, a
+            manner of an <foreignphrase>ad hoc</foreignphrase>
+            <glossterm>data structure</glossterm> - the syntax of
+            which may not be apparent without revieing an application
+            of fhe value, such as in the <glossterm>source
+            code</glossterm> of the function,
+            <function>EXT:PROCESS-COMMAND-ARGS</function> and
+            correspondingly,
+            <function>SI::PRODUCE-INIT-CODE</function>. 
+          </para>
+          <para>
+            Roughly, the
+            syntax: <literal>ARGFLAG NOPTIONS PATTERN
+            LOADFLAG</literal>
+          </para>
+          <para>
+            <symbol>ARGFLAG</symbol> would be a
+            <glossterm>string</glossterm> denoting the command line
+            option to which the specified processing rule is to be
+            applied. 
+          </para>
+          <para>
+            <symbol>NOPTIONS</symbol> may be one of
+            the symbols (Package <symbol>CL</symbol>)
+            <symbol>&amp;OPTIONAL</symbol>,  <symbol>REST</symbol> or
+            <symbol>&amp;REST</symbol> (FIXME:
+            <symbol>&amp;REST</symbol> in <symbol>CL</symbol>,
+            PEDANTIC-STANDARD-IS-PEDANTIC) ... aproximately,
+            pertaining to command line syntax for
+            &ecl.p;.
+          </para>
+          <para>
+            <symbol>LOADFLAG</symbol> may be one of the
+            symbols, <symbol>:LOADRC</symbol>,
+            <symbol>:NOLOADRC</symbol>, or <symbol>:STOP</symbol>
+            (FIXME: UNDECLARED-SIDE-EFFECTS)
+          </para>
+          <para>
+            <symbol>PATTERN</symbol> ... (CODE NEEDS REVIEW)
+          </para>
+          <para>
+            (TD: represent this with a formal data type - pedantically
+            albeit, it might use CLOS, and might be inasmuch
+            extensible for arbitrary user applications.)
+          </para></footnote><footnote>
+          <para>
+            Note <function>CL:EVAL</function> in
+            <function>EXT:PROCESS-COMMAND-ARGS</function> (FIXME -
+            CMDLINE-AS-MACRO; CMDLINE-DEBUGGER; DEBUGGER-TTY; QA-PLATFORM-USER)
+          </para>
+          </footnote><footnote>
+          <para>
+            Note application of the function,
+            <classname>SI::COMMAND-ARG-ERROR</classname> in
+            <function>SI::PRODUCE-INIT-CODE</function> (function
+            definition source: TBD)
+          </para>
+          </footnote><footnote>
+          <para>
+            See also, reference documentation developed in the file,
+            <filename>ecldoc:ref_os.xmlf</filename>, such that 
+            albeit does not describe individual <glossterm>command line
+            options</glossterm> for &ecl.p;, in the markup content of the
+            file.
+          </para>
+          </footnote><footnote>
+          <para>
+            TBD: Templates for generating XML markup text, in
+            production of the &ecl.p;
+          <citerefentry><refentrytitle>ecl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+          <glossterm>manual page</glossterm>, using text in the value
+          of <varname>EXT:+DEFAULT-COMMAND-ARG-RULES+</varname> as an
+          <glossterm>associative list</glossterm>; integration of
+          <productname>Common Lisp</productname> and
+          <productname>DocBook</productname> stylesheets, optionally
+          using either an <productname>XSL</productname> extension
+          function, an <productname>XML</productname> processing
+          instruction, or simply with <markup>xi:include</markup> onto
+          a file as may be generated with &ecl.p;, during the
+          documentation build process.
+          </para>
+        </footnote>
+        </member>
+      </simplelist>
+    </simplesect>
+    
+    <simplesect xmlns="http://docbook.org/ns/docbook">
+      <title><productname>CLOS</productname> in &ecl.p;</title>
+        <screen><prompt>CL-USER> </prompt><userinput>(describe (find-class 'real))</userinput>
+<computeroutput><![CDATA[#<The BUILT-IN-CLASS REAL> is an instance of class BUILT-IN-CLASS
+CLOS::FLAG :      NIL
+CLOS::DIRECT-METHODS :      NIL
+CLOS::DIRECT-GENERIC-FUNCTIONS :      NIL
+CLOS::NAME :      REAL
+CLOS::DIRECT-SUPERCLASSES :      (#<The BUILT-IN-CLASS NUMBER>)
+CLOS::DIRECT-SUBCLASSES :      (#<The BUILT-IN-CLASS FLOAT>
+                                #<The BUILT-IN-CLASS RATIONAL>)
+CLOS::SLOTS :      NIL
+CLOS::PRECEDENCE-LIST :      (#<The BUILT-IN-CLASS REAL>
+                              #<The BUILT-IN-CLASS NUMBER>
+                              #<The BUILT-IN-CLASS T>)
+CLOS::DIRECT-SLOTS :      NIL
+CLOS::DIRECT-DEFAULT-INITARGS :      NIL
+CLOS::DEFAULT-INITARGS :      NIL
+CLOS::FINALIZED :      T
+CLOS:DOCSTRING :      "Unbound"
+CLOS::SIZE :      0
+CLOS::SEALEDP :      NIL
+CLOS::PROTOTYPE :      "Unbound"
+CLOS::DEPENDENTS :      NIL
+CLOS::VALID-INITARGS :      NIL
+CLOS:SLOT-TABLE :      #<hash-table 0264b3f0>
+CLOS::LOCATION-TABLE :      #<hash-table 0264b3b8>
+CLOS::OPTIMIZE-SLOT-ACCESS :      "Unbound"
+CLOS::FORWARD :      "Unbound"
+; No value]]></computeroutput></screen>
+
+<para>Note that the file <filename>ecldoc:ansi_numbers.xml</filename>,
+in the content of the &docbook.p; element
+<literal>table[@xml:id="table.ansi.numbers"]</literal>, contains an 
+ambiguous assertion as to the implementation of the
+<glossterm>type</glossterm>, <classname>cl:real</classname> in
+&ecl.p;. The implementation of the <glossterm>class</glossterm>,
+<classname>cl:real</classname> in &ecl.p; is as denoted above -
+&ecl.p; <productnumber>16.1.2</productnumber></para>
+
+    </simplesect>
+  </stnote>
+  
+  <stnote>
+    <notemeta>
+      <dc:title>Towards Using C Toolchains in &ecl;</dc:title>
+    </notemeta>
+
+    <formalpara xmlns="http://docbook.org/ns/docbook">
+      <title>
+        Contextual Discussion: Properties in  &pkgsrc.p; environment
+        configuration - <filename>mk.conf</filename> parameters
+      </title>
+      <para>
+        <simplelist>
+          <member>
+            <varname>PKGSRC_COMPILER</varname>: concerning
+            definition of <emphasis>compiler kind</emphasis>, principally onto
+            <productname>C</productname> and
+            <productname>C++</productname> <glossterm>source
+            systems</glossterm>; typically 
+            of a value <literal>clang</literal> or <literal>gcc</literal>,
+            optionally with object caching enabled via
+            <literal>clang</literal>; reified onto
+            <varname>CC</varname> and <varname>CXX</varname>
+          </member>
+          <member>
+            <varname>CC</varname>: actual <productname>C</productname>
+            compiler; may be defined in <filename>mk.conf</filename>
+            as an effective specialization onto
+            <varname>PKGSRC_COMPILER</varname>, per compiler 
+            version selection; typically corresponds with
+            <varname>CXX</varname>
+          </member>  
+          <member>
+            <varname>CXX</varname>: actual <productname>C++</productname>
+            compiler; principally analogous to <varname>CC</varname>
+          </member>
+        </simplelist>
+      </para>
+    </formalpara>
+
+    <formalpara xmlns="http://docbook.org/ns/docbook">
+      <title>
+        A Small Number of External Variables in &ecl.p; package <symbol>C</symbol>
+      </title>
+      <para>
+        <simplelist>
+          <member>
+            <varname>CC</varname>
+          </member>
+          <member>
+            <varname>*CC-OPTIMIZE*</varname>
+          </member>
+          <member>
+            <varname>*USER-CC-FLAGS*</varname>. Note also the
+            <glossterm>internal symbol</glossterm>
+            <varname>*CC-FLAGS*</varname><footnote>
+            <para>
+              TBD: Integration with
+              <command>pkgconf</command>, pursuant towards applications
+              for non-Lisp
+              <glossterm>program systems</glossterm> in &ecl.p; and
+              broadly, <emphasis>component reuse</emphasis> in
+              <productname>Common Lisp</productname> application
+              systems utilizing &ecl.p;.
+            </para>
+          </footnote>
+          </member>
+        </simplelist>
+      </para>
+    </formalpara>
+
+    <formalpara xmlns="http://docbook.org/ns/docbook">
+      <title>
+        A Small Number of Internal Symbols in
+        &ecl.p; package <symbol>C</symbol>
+      </title>
+      <para>
+        <simplelist>
+          <member>
+            <varname>*CC-FLAGS*</varname> [<type>Variable</type>]
+          </member>
+
+          <member>
+            <varname>*CC-IS-CXX*</varname>  [<type>Variable</type>]
+          </member>
+
+          <member>
+            <function>COMPILER-CC</function> [<type>Function</type>]
+          </member>
+
+          <member>
+            <function>LINKER-CC</function> [<type>Function</type>]
+          </member>
+
+          <member>
+            <function>LINKER-AR</function> [<type>Function</type>]
+          </member>
+
+          <member>
+            <function>BUNDLE-CC</function> [<type>Function</type>]
+          </member>
+
+          <member>
+            <function>SYSTEM-LD-FLAG</function>
+            [<type>Function</type>] concerning
+            <glossterm>system</glossterm> definitions onto
+            <productname>ASDF</productname> and
+            <glossterm>types</glossterm> (??)
+            <symbol>:LIBRARY</symbol>,
+            <symbol>:SHARED-LIBRARY</symbol> (specified via a
+            <symbol>:TYPE</symbol> <glossterm>initarg</glossterm> onto
+            <classname>BUILD-OP</classname> ??) in
+            <productname>ASDF</productname>
+            <glossterm>system</glossterm> <emphasis>output</emphasis>
+            assets as described by the <productname>ASDF</productname>
+            <function>output-files</function> function in
+            <productname>ASDF</productname> <symbol>BUILD-OP</symbol>
+          </member>
+ 
+          <member>
+            <function>BUILDER</function> [<type>Function</type>]
+          </member>
+        </simplelist>
+      </para>
+    </formalpara>
+
+    <formalpara xmlns="http://docbook.org/ns/docbook">
+      <title>
+        Concerning Source Generation and Source Templates - Internal Variables in
+        &ecl.p; package <symbol>C</symbol> (Non-Exhaustive List)
+      </title>
+      <para>
+        <simplelist>
+          <member>
+            <varname>+LISP-PROGRAM-HEADER+</varname>
+          </member>
+          <member>
+            <varname>+LISP-PROGRAM-INIT+</varname>
+          </member>
+        </simplelist>
+      </para>
+    </formalpara>
+
+    <formalpara xmlns="http://docbook.org/ns/docbook">
+      <title>Contextual Notes - Components and Applications</title>
+      <para>
+        <simplelist>
+          <member>
+            <productname>CMake</productname> and
+            <productname>SWIG</productname> -
+            <symbol>FindSWIG</symbol>, <symbol>UseSWIG</symbol>
+          </member>
+          <member>
+            <productname>SWIG</productname> Interface Definitions;
+            <productname>CFFI</productname> in<productname>SWIG</productname>
+          </member>
+          <member>
+            &pkgsrc.p; <varname>WRKDIR</varname>, concerning
+            <emphasis>source review</emphasis>
+          </member>
+      </simplelist>
+      </para>
+    </formalpara>
+    
+  </stnote>
+</npage>
