@@ -114,4 +114,61 @@ x
     
   </stnote>
 
+
+  <stnote>
+    <notemeta>
+      <dc:title>
+        Modal Locking and :OPENMCL-NATIVE-THREADS in &ccl;
+      </dc:title>
+    </notemeta>
+    
+    <simplesect xmlns="http://docbook.org/ns/docbook"
+                xml:id="rwlock">
+      <title>Modal Read/Write Locking in &ccl.p;</title>
+
+      <formalpara>
+        <title>TBD: &ccl.p; OS Interface - APIs, Documentation</title>
+
+        <para>
+          &ccl.p; defines a macro,
+          <function><replaceable>&lt;ARCH&gt;</replaceable>::define-storage-layout</function>
+          such as applied onto the symbol, <symbol>rwlock</symbol> -
+          in a manner no-doubt illustrating a structure onto the
+          underlying host operating system, however represented in the
+          &ccl.p;
+          implementation. <replaceable>&lt;ARCH&gt;</replaceable> may
+          be, for instance, reified as the package
+          <symbol>ARM</symbol>. Note also,
+          <function><replaceable>&lt;ARCH&gt;</replaceable>::define-fixedsized-object</function>
+          onto the symbol, <symbol>lock</symbol>. Furthermore,
+          concerning some <quote>Other Symbols and Structures</quote>
+          in &ccl.p; - these notes, on reviewing <filename
+          vocab="glob"
+          >compiler/<replaceable>arch1</replaceable>/<replaceable>arch2</replaceable>-arch.lisp</filename>
+          for <replaceable>arch1</replaceable> <symbol>ARM</symbol>,
+          <replaceable>arch2</replaceable> <symbol>arm</symbol>.
+          
+
+          <simplelist>
+            <member>
+              <symbol>rwlock-new</symbol>
+            </member>
+            <member>
+              <symbol>rwlock-destroy</symbol>
+            </member>
+            <member>
+              <symbol>rwlock-rlock</symbol>
+            </member>
+            <member>
+              <symbol>rwlock-wlock</symbol>
+            </member>
+            <member>
+              <symbol>rwlock-unlock</symbol>
+            </member>
+          </simplelist>
+        </para>
+      </formalpara>
+      
+    </simplesect>
+  </stnote>
 </npage>
