@@ -23,8 +23,7 @@
 (in-package #:cl-user)
 
 
-(defpackage #:utils.ltp.thinkum.space
-  (:nicknames #:utils #:utils.ltp)
+(defpackage #:ltp-utils
   (:use #:asdf #:cl)
 
   (:export

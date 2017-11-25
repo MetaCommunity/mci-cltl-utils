@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:utils.ltp)
+(in-package #:ltp-utils)
 
 
 (defmacro defconstant* (name value &optional docstring

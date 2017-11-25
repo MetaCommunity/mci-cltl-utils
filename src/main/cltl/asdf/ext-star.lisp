@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:asdf.sysdef.ltp)
+(in-package #:ltp-asdf-utils)
 
 (defclass component* (component)
   ())

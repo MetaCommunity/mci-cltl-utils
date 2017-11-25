@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:utils.ltp)
+(in-package #:ltp-utils)
 
 (deftype file-name ()
   `(or string pathname))

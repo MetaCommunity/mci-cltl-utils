@@ -14,9 +14,8 @@
 (in-package #:cl-user)
 
 
-(defpackage #:asdf.sysdef.ltp.thinkum.space
-  (:nicknames #:asdf.sysdef.ltp)
-  (:use #:utils.ltp.thinkum.space
+(defpackage #:ltp-asdf-utils
+  (:use #:ltp-utils
         #:asdf
         #:cl)
   (:shadowing-import-from

@@ -14,7 +14,7 @@
 ;; FIXME_DOCS - document the generic fumctions and methods defined
 ;; here. Refer to subsequent commentaey, this file
 
-(in-package #:utils.ltp)
+(in-package #:ltp-utils)
 
 (defgeneric (setf object-print-name) (new-value object))
 (defgeneric (setf object-print-label) (new-value object))

@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:utils.ltp)
+(in-package #:ltp-utils)
 
 (deftype setf-function-designator ()
   '(cons (eql setf) (cons symbol null)))

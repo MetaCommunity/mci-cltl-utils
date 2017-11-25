@@ -11,8 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(defpackage #:mop.utils.ltp.thinkum.space
-  (:nicknames #:mop.utils.ltp)
+(defpackage #:ltp-mop-utils
   (:use  #:utils.ltp.thinkum.space
          #:c2mop
          #+LTP_PROTOTYPES #:bordeaux-threads
@@ -74,8 +73,9 @@
 
   )
 
-(let* ((p (find-package '#:mop.utils.ltp))
+(let* ((p (find-package '#:ltp-mop-utils))
        (s (package-shadowing-symbols p)))
+  ;; NB: No package loxk held, during this operation
   (do-external-symbols (xs '#:c2mop)
     (unless (find (the symbol xs) (the list s) 
                   :test #'eq)

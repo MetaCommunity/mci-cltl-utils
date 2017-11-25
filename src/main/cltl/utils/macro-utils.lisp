@@ -13,7 +13,7 @@
 
 
 
-(in-package #:utils.ltp)
+(in-package #:ltp-utils)
 
 (defmacro format* (ctrl &rest args)
   "Return a simple string formatted of the format conrtol string CTRL

@@ -1,4 +1,4 @@
-;; mop-utils.ltp.thinkum.space.asd
+;; ltp-mop-utils.asd                                                -*- lisp -*-
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
@@ -14,27 +14,27 @@
 (in-package #:cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defpackage #:system.utils.ltp.thinkum.space
-      (:nicknames #:utils-system.ltp)
+  (defpackage #:ltp-utils-system
+    ;; note package reuse - package ltp-utils-system
     (:use #:asdf #:cl)))
 
-(in-package #:utils-system.ltp)
+(in-package #:ltp-utils-system)
 
 
-(defsystem #:mop-utils.ltp.thinkum.space
+(defsystem #:ltp-mop-utils
   ;; :description ""
   :version "1.0"
   ;;  :homepage "https://github.com/MetaCommunity/mci-cltl-utils"
   ;;  :license "https://github.com/MetaCommunity/mci-cltl-utils/blob/master/LICENSE"
-  :depends-on (#:utils.ltp.thinkum.space
+  :depends-on (#:ltp-utils
                #:closer-mop
                #+LTP_PROTOTYPES #:bordeaux-threads
                )
   :components 
-  ((:file "mop-pkg") ;; c2mop integration
+  ((:file "ltp-mop-utils-package") ;; c2mop integration
    (:file "mop-utils" ;; validate-[super]class (convenience macro)
-          :depends-on ("mop-pkg"))
+          :depends-on ("ltp-mop-utils-package"))
    #+LTP_PROTOTYPES
    (:file "aclass"
-          :depends-on ("mop-utils" "mop-pkg"))
+          :depends-on ("mop-utils")).
    ))

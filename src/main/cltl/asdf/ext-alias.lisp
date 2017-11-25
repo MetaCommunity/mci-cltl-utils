@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:asdf.sysdef.ltp)
+(in-package #:ltp-asdf-utils)
 
 (defgeneric alias-system-alias-to (system))
 (defgeneric (setf alias-system-alias-to) (component system))

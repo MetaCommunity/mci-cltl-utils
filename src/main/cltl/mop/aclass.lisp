@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:mop.utils.ltp)
+(in-package #:ltp-mop-utils)
 
 
 ;;; % Associative Index

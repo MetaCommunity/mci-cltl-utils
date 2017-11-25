@@ -1,4 +1,4 @@
-;; asdf.sysdef.ltp.thinkum.space.asd			       	-*-lisp-*-
+;; ltp-asdf-utils.asd - LTP utilties for ASDF system definitions      -*-lisp-*-
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
@@ -14,25 +14,25 @@
 (in-package #:cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defpackage #:utils-system.ltp
+  (defpackage #:ltp-utils-system
+    ;; note package reuse - package ltp-utils-system
     (:use #:asdf #:cl)))
 
-(in-package #:utils-system.ltp)
+(in-package #:ltp-utils-system)
 
 
-(defsystem #:asdf.sysdef.ltp.thinkum.space
+(defsystem #:ltp-asdf-utils
   ;; :description ""
   :version "1.0"
   :homepage "https://github.com/MetaCommunity/mci-cltl-utils"
   :license "https://github.com/MetaCommunity/mci-cltl-utils/blob/master/LICENSE"
-  :depends-on (#:utils.ltp.thinkum.space)
+  :depends-on (#:ltp-utils)
   :components 
-  ((:file "ext-pkg")
+  ((:file "ltp-asdf-utils-package")
    (:file "ext-utils"
-          :depends-on  ("ext-pkg"))
+          :depends-on  ("ltp-asdf-utils-package"))
    (:file "ext-star"
-          :depends-on ("ext-pkg"))
+          :depends-on ("ltp-asdf-utils-package"))
    (:file "ext-alias"
-          :depends-on ("ext-pkg" 
-                       "ext-star"))
+          :depends-on ("ext-star"))
    ))
