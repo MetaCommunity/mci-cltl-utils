@@ -105,7 +105,7 @@ x
         <title>
           Source Form for Support of &slime.p;
           <glossterm>Cross-Reference</glossterm> Evaluation in &ccl.p;
-          - User <filename vocab="LPN">home:.ccl-init</filename>
+          - User <filename vocab="LPN">home:.ccl-init</filename> Fragment
         </title>
         <programlisting>#+:SWANK
 (require '#:xref)</programlisting>
@@ -132,18 +132,19 @@ x
         <para>
           &ccl.p; defines a macro,
           <function><replaceable>&lt;ARCH&gt;</replaceable>::define-storage-layout</function>
-          such as applied onto the symbol, <symbol>rwlock</symbol> -
-          in a manner no-doubt illustrating a structure onto the
-          underlying host operating system, however represented in the
-          &ccl.p;
-          implementation. <replaceable>&lt;ARCH&gt;</replaceable> may
-          be, for instance, reified as the package
-          <symbol>ARM</symbol>. Note also,
+          such as applied onto the symbols, <symbol>rwlock</symbol>
+          and <symbol>lockptr</symbol> - in a manner no-doubt
+          illustrating a structure onto the underlying host operating
+          system and/or host machine architecture, insofar as
+          represented in the &ccl.p; implementation.
+          <replaceable>&lt;ARCH&gt;</replaceable> may be, for
+          instance, reified as the package <symbol>ARM</symbol>. Note
+          also,
           <function><replaceable>&lt;ARCH&gt;</replaceable>::define-fixedsized-object</function>
-          onto the symbol, <symbol>lock</symbol>. Furthermore,
-          concerning some <quote>Other Symbols and Structures</quote>
-          in &ccl.p; - these notes, on reviewing <filename
-          vocab="glob"
+          in as applied onto the symbol,
+          <symbol>lock</symbol>. Furthermore, concerning some
+          <quote>Other Symbols and Structures</quote> in &ccl.p; -
+          these notes, on reviewing <filename vocab="glob"
           >compiler/<replaceable>arch1</replaceable>/<replaceable>arch2</replaceable>-arch.lisp</filename>
           for <replaceable>arch1</replaceable> <symbol>ARM</symbol>,
           <replaceable>arch2</replaceable> <symbol>arm</symbol>.
@@ -166,9 +167,38 @@ x
               <symbol>rwlock-unlock</symbol>
             </member>
           </simplelist>
+          Thirdly, note the &c.p; language source code in the &ccl.p;
+          system source files, <filename
+          vocab="LPN">ccl:lisp-kernel;threads.h</filename> and
+          <filename
+          vocab="LPN">ccl:lisp-kernel;thread_manager.c</filename>. Note
+          that in each of these source files, a &c.p;
+          <glossterm>preprocessor flag</glossterm>,
+          <varname>USE_FUTEX</varname> is applied. See also: &linux.p;
+          manual pages,
+          <citerefentry><refentrytitle>futex</refentrytitle><manvolnum>2</manvolnum></citerefentry>
+          (as of &linux.p; kernel <productnumber>2.6</productnumber>)
+          and
+          <citerefentry><refentrytitle>syscall</refentrytitle><manvolnum>2</manvolnum></citerefentry>;
+          BSD kernel documentation e.g concerning
+          <symbol>SCHED_ULE</symbol> in <productname>FreeBSD</productname>; &ccl.p; source files <filename
+          vocab="LPN">ccl:lisp-kernel;<replaceable>&lt;ARCH&gt;</replaceable>-<replaceable>&lt;CLASSIFIER&gt;</replaceable>.c</filename>
+          and  <filename
+          vocab="LPN">ccl:lisp-kernel;<replaceable>&lt;ARCH&gt;</replaceable>-<replaceable>&lt;CLASSIFIER&gt;</replaceable>.h</filename>,
+          also <filename vocab="LPN">ccl:level-0;l0-misc.lisp</filename>. Note
+          the application of <glossterm>spinlocks</glossterm>, with
+          and without <symbol>USE_FUTEX</symbol> and the corresponding &ccl.p;
+          <symbol>futex</symbol> <glossterm>feature</glossterm> enabled.
         </para>
       </formalpara>
+
+      <programlisting
+>(let ((ccl::*build-time-optional-features*
+      (cons :futex ccl::*build-time-optional-features*)))
+  (ccl:rebuild-ccl :reload nil :full t
+      :optional-features '(:futex) :clean t )) ;; ??</programlisting>
       
     </simplesect>
   </stnote>
+  
 </npage>
