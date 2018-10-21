@@ -9,6 +9,7 @@
 <!-- FIXME TO DO: Define a 'project' element onto DocBook, NotePoint, DOAP
                                                                    -->
 <!-- Using 'productname' presently                                 -->
+<!-- see also: rtk:doc;npx;rtk_npx.ent                             -->
 <!ENTITY proj.st
 	"&prod,st;"
 >
@@ -21,7 +22,23 @@
 	"Common Lisp"
 >
 <!ENTITY ansicl.p;
-	"&prod.st;Common Lisp&prod.et;"
+	"&prod.st;&ansicl;&prod.et;"
+>
+
+
+<!ENTITY c
+	"C"
+>
+<!ENTITY c.p
+	"&prod.st;&c;&prod.et;"
+>
+
+
+<!ENTITY linux
+	"Linux"
+>
+<!ENTITY linux.p
+	"&proj.st;&linux;&proj.et;"
 >
 
 
