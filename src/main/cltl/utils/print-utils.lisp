@@ -291,7 +291,7 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 			   (format-control 
 			    (load-time-value 
 			     (compile nil 
-				      (formatter "~%~/ltp.utils:format-label/ : ~/ltp.utils:format-label/")))))
+				      (formatter "~%~/ltp-utils:format-label/ : ~/ltp-utils:format-label/")))))
   (declare (type hash-table table)
 	   (type format-control format-control)
            (type stream-designator stream))
@@ -299,7 +299,7 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
              (format stream format-control k v))
            table))
 
-;; (with-output-to-string (*standard-output*) (print-hash-table asdf::*defined-systems*))
+;; (with-output-to-string (*standard-output*) (print-hash-table asdf/system-registry:*registered-systems*))
 
 (defgeneric object-name (object))
 (defgeneric (setf object-name) (new-value object))
