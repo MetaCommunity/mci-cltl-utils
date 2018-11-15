@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<!DOCTYPE npage [
+
+<!ENTITY notes.ent SYSTEM "notes.ent">
+%notes.ent;
+
+<!ENTITY docid "ltp_notes_20181115_2">
+
+]>
+
+<npage xmlns="http://wk.pm.thinkum.space/ns/notepoint/"
+       xmlns:h="http://www.w3.org/1999/xhtml"
+       xmlns:db="http://docbook.org/ns/docbook"
+       xmlns:dc="http://purl.org/dc/terms/"
+       xml:id="&docid;">
+  <notemeta>
+    <dc:title>Lisp Tools Project - Notes</dc:title>
+    <dc:created>15 November, 2018</dc:created>
+  </notemeta>
+
+  <stnote>
+    <notemeta>
+      <dc:title>Image Management in Common Lisp</dc:title>
+    </notemeta>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.confovl">
+      <title>Configuration Overlays</title>
+
+      <remark>NB: DMTF CIM; CIM Schema</remark>
+
+      <remark>NB: C Preprocessor Directives; Analogy onto dispatching
+      with CL:*FEATURES* in the reader environment</remark>
+
+      <remark>
+      NB: Parameterization for tools ochestration with ASDF
+      </remark>
+    </simplesect>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.confovl">
+      <title>
+        Patterns in Distribution of Common Lisp Software Systems
+      </title>
+
+      <formalpara>
+        <title>
+          The CMU Artificial Ingtelligence Repository
+        </title>
+        <para>
+        </para>
+      </formalpara>
+
+      <formalpara>
+        <title>
+          Common Lisp Software Distribution on Debian GNU/Linux Systems
+        </title>
+        <para>
+          <simplelist>
+            <member>Debian packages</member>
+            <member>MK:DEFSYS (CLOCC) and CLC</member>
+          </simplelist>
+        </para>
+      </formalpara>
+
+      <formalpara>
+        <title>
+        QuickLisp
+        </title>
+        <para>
+        </para>
+      </formalpara>
+
+      <formalpara>
+        <title>
+          Port Systems, Port mk-file Infrastructures, and Common Lisp Software
+        </title>
+        <para>
+          <simplelist>
+            <member>
+              FreeBSD port mk-files; Common Lisp Software in FreeBSD Ports
+            </member>
+            <member>
+              Portable pkgsrc mk-files; Common Lisp Software in pkgsrc (pkgsrc-wip)
+            </member>
+          </simplelist>
+        </para>
+      </formalpara>
+
+    </simplesect>
+  </stnote>
+</npage>

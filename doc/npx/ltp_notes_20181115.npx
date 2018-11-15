@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<!DOCTYPE npage [
+
+<!ENTITY notes.ent SYSTEM "notes.ent">
+%notes.ent;
+
+<!ENTITY docid "ltp_notes_20181115">
+
+]>
+
+<npage xmlns="http://wk.pm.thinkum.space/ns/notepoint/"
+       xmlns:h="http://www.w3.org/1999/xhtml"
+       xmlns:db="http://docbook.org/ns/docbook"
+       xmlns:dc="http://purl.org/dc/terms/"
+       xml:id="&docid;">
+  <notemeta>
+    <dc:title>Lisp Tools Project - Notes</dc:title>
+    <dc:created>15 November, 2018</dc:created>
+    <!-- NB: The following - roughly analogous onto anotations w/ the SKOS termset -->
+    <dc:coverage>Emacs</dc:coverage>
+    <dc:coverage>SLIME</dc:coverage>
+    <dc:coverage>FreeBSD</dc:coverage>
+  </notemeta>
+
+
+  <stnote>
+    <notemeta>
+      <dc:title>Emacs and SLIME</dc:title>
+    </notemeta>
+
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.slimefb">
+
+      <title>Overview - Concerns</title>
+
+      <para>Concerning the performance of SLIME/SWANK for Emacs 27 on
+      FreeBSD hosts</para>
+    </simplesect>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.slimecom">
+      <title>SLIME/SWANK Communication Style</title>
+
+
+      <example>
+        <title>
+          Parameterization for <filename>~/.swank.lisp</filename>
+        </title>
+        <programlisting
+            ><![CDATA[(setq SWANK:*COMMUNICATION-STYLE* :FD-HANDLER)]]></programlisting>
+      </example>
+
+    </simplesect>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.slimeeval">
+      <title>SLIME/REPL I/O</title>
+
+      <funcsynopsis>
+        <funcprototype>
+          <funcdef>
+            <function>SWANK-REPL:LISTENER-EVAL</function>
+          </funcdef>
+          <paramdef>
+            <parameter>STRING</parameter>
+          </paramdef>
+          <paramdef role="modifier">
+            <phrase>&amp;key</phrase>
+          </paramdef>
+          <paramdef>
+            <parameter>WINDOW-WIDTH</parameter>
+          </paramdef>
+        </funcprototype>
+      </funcsynopsis>
+      
+      <para>
+        The parameter <parameter>WINDOW-WIDTH</parameter>, if
+        provided, serves to establish a lexical binding onto
+        <varname>CL:*PRINT-RIGHT-MARGIN*</varname>. This may serve to
+        produce any <glossterm>side effect</glossterm> as with regards
+        to behaviors of <glossterm>pretty printer</glossterm> functions
+        -- principally, concerning Common Lisp in interactive
+        programming environments.
+      </para>
+
+      <para>
+        The synax of the <parameter>STRING</parameter> parameter
+        <remark>
+          ... TBD. See also (??) <filename>~/.slime-history.eld</filename> 
+          subsq. of <command>slime-repl-save-history</command> in Emacs.
+
+          Roughly: SLIME Wire Syntax - string-encoded Lisp expressions
+        </remark>
+      </para>
+
+    </simplesect>
+
+  </stnote>
+
+
+  <stnote>
+    <notemeta>
+      <dc:title>GNUstep, GNU Emacs, and FreeBSD Ports</dc:title>
+    </notemeta>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.emacstep">
+      <title>GNUstep Support for GNU Emacs</title>
+
+    </simplesect>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.fflav">
+      <title>Understanding FreeBSD Port Flavors</title>
+
+      <remark>
+      NB: Meta-Ports; Parameterization for Port Configuration, during
+      Port Development/Port Maintenance - differentiation (FresBSD
+      ports) to pkgsrc port config syntax; Port Config Options @ 
+
+      porf build hosts; port systemization workflows; Site QA; Port QA;
+      distsrc QA
+      </remark>  
+    </simplesect>
+
+  </stnote>
+</npage>
