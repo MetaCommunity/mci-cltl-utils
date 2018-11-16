@@ -104,11 +104,38 @@
       <dc:title>GNUstep, GNU Emacs, and FreeBSD Ports</dc:title>
     </notemeta>
 
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.overstep">
+      <title>An Overview of the GNUstep Environment</title>
+
+      <remark>NB: The GNUstep "Dock" as a charateristic feature</remark>
+
+      <remark>
+        NB: The GNUstep virtual desktop manager and the Desktop "Pager"
+      </remark> 
+      
+      <remark>
+        NB: GNUstep applications in other desktop environments
+        (XFCE, Cinnamon, Mate, KDE, ... Afterstep, ....)
+      </remark>
+
+      <remark>
+        NB: Pop Culture and "FOSS Trolls" - Fear and Loathing in Silicon
+        Valley (??); a Brave GNU Zion (??); BSD is all the CP/M
+        that Microsoft Never Invented; Apple, Sun Microsystems, and
+        OPENSTEP; Sun Microsytems and the Corporate Appropriation by
+        Oracle
+      </remark>
+    </simplesect>
+
+
     <simplesect xmlns="http://docbook.org/ns/docbook" 
                 xml:id="&docid;.emacstep">
       <title>GNUstep Support for GNU Emacs</title>
 
     </simplesect>
+
 
     <simplesect xmlns="http://docbook.org/ns/docbook" 
                 xml:id="&docid;.fflav">
@@ -122,6 +149,135 @@
       porf build hosts; port systemization workflows; Site QA; Port QA;
       distsrc QA
       </remark>  
+    </simplesect>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.ctrn">
+      <title>
+        GNUstep, Cocotron, and the Objective-C Development Environment -
+        HCI Design Patterns and Platform Integration Beyond XCode
+      </title> 
+
+      <remark>
+        NB: The overall "Look and Feel" of the GNUstep desktop
+        environment; canonic references to OPENSTEP, and X/Open Motif
+        and CDE work in the same epoch; orgthogonal to OPENSTEP, "Web
+        Objects" and the environment of commercial collaborations
+        between Apple Computing and Sun Microsystems, in that epoch
+      </remark>
+
+      <remark>Extant references to Cocotron src repositories (NB: No
+      "Universe Port" in  FreeBSD or in pkgsrc)</remark>
+
+      <simplelist>
+        <member>
+          Canonic Web Site:
+          <olink targetdoc="http://www.cocotron.org/"
+                 >The Cocotron</olink>
+        </member>
+        <member>
+          Source Code: 
+          <olink targetdoc="https://github.com/cjwl/cocotron"
+                 >cjwl/cocotron: The Cocotron</olink> 
+          - Source Repository at <orgname>GitHub</orgname>
+        </member>
+        <member>
+          Source Code Fork:
+          <olink targetdoc="https://github.com/darlinghq/darling-cocotron"
+                 >darlinghq/darling-cocotron: Fork of the Cocotron for Darling</olink> 
+          - Source Repository at <orgname>GitHub</orgname>
+        </member>
+        <member>
+          Documentation Resource:
+          <olink
+              target="https://github.com/amraboelela/myos/wiki/Cocotron"
+              >Cocotron · amraboelela/myos</olink> 
+          - Wiki Page
+        </member>
+        <member>
+          <remark>
+            TBD: Cocotron PPAs for Ubuntu 18.04; pkg sites for Fedora,
+            SuSE, other
+          </remark>
+        </member>
+
+      </simplelist>
+
+      <remark>
+        TBD: "Walkthrough" about build and test for Cocotron and GNUstep
+        - cocotrton from the Darling project, GNUstep from ports
+      </remark>
+
+      <remark>
+        TBD: "Walkthrough" about integration of Cocotrton framework APIs
+        and  CCL
+        (NB: Hemlock/... in CCL) 
+        (NB: CCL FFI - Implementation-Specific API and Debugging Functionality) 
+        (NB: Dtrace toolkit[s];
+        ... is not Linux oprofile cf. CCL docs;
+        - Dtrace implementation "In the OS", also "Tools" in FreeBSD ports;
+        - Dtrace tools dist via opendtrace:
+        <olink targetdoc="https://github.com/opendtrace/toolkit"
+               >opendtrace/toolkit: The DTrace Toolkit: A set of scripts
+        for use with DTrace on various systems</olink, at GitHub;
+        - <olink targetdoc="http://dtrace.org/guide/chp-prog.html"
+        >D Program Structure</olink>, from the 
+        <olink targetdoc="http://dtrace.org/guide/preface.html#preface"
+               >Dynamic Tracing Guide</olink>; 
+        and
+        - <olink targetdoc="http://www.brendangregg.com/dtrace.html"
+        >DTrace Tools</olink>, by Brendan Gregg; 
+        - Example: 
+        <olink
+            targetdoc="https://www.ibm.com/developerworks/aix/library/au-dtraceprobes.html"
+            >Adding DTrace probes to your applications</olink>, 
+        by Martin Brown)
+
+<!-- DTrace for Linux - Notes
+http://www.brendangregg.com/blog/2016-10-27/dtrace-for-linux-2016.html
+https://github.com/dtrace4linux/linux
+NB: Debian make-kpkg tools & Ubuntu 18.04 ; NB armbian
+
+NB: Oracle's appropriation and rebranding of the works of engineers at
+Sun Microsystems (be vry. wary - it promises a rough QA ahead, at all
+points in alignment with Oracle's practices as such)
+-->
+      </remark> 
+
+      <remark>
+        NB: The fairly trivial "Frameworks" concept in Apple
+        (Macintosh division) OS X APIs ... and "Platform Bundling" (as
+        in: "A whole lot of") within commercial code distribution, but
+        singularly forXCode; NB: The Darling project[s] &amp; GNU
+        compiler tools &amp; the Linux OS;
+        NB<superscript>2</superscript>: The DMG format as a manner of
+        container enviroment format (TBD: "Manifest" format for DMGs)
+        such that Android APKs do not in all ways emulate; NB Security
+        Policy configuration in Android (portable onto SE Linux systems)
+        and "Meaning" for APKs, "The OS environment," and "The
+        User/Owner" in a manner of an exemplary AOSP environment; Texts
+      </remark>
+
+
+      <formalpara>
+        <title>Projects Using Objective-C</title>
+        <para>
+          <simplelist>
+            <member>
+              GNUstep <remark>about which, this document presents some
+              number of remarks</remark>
+            </member>
+            <member>
+              <olink targetdoc="http://www.cse.chalmers.se/~oloft/gisela/"
+                     >Gisela - A Framework for Definitional Programming</olink>
+            </member>
+            <member>
+              <olink targetdoc="http://www.llvm.org/"
+                  >The LLVM Compiler Infrastructure</olink>
+            </member>
+          </simplelist>
+        </para>
+      </formalpara>
     </simplesect>
 
   </stnote>
