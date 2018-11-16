@@ -4,7 +4,7 @@
 <!ENTITY notes.ent SYSTEM "notes.ent">
 %notes.ent;
 
-<!ENTITY docid "ltp_notes_20181115">
+<!ENTITY docid "ltp_notes_20181115_1">
 
 ]>
 
