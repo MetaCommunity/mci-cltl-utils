@@ -24,16 +24,118 @@
     </notemeta>
 
     <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.gnrl">
+      <title>General Considerations</title>
+
+      <para>
+        <remark>
+          Although occuring very frequently as a concept in Common Lisp
+          implementation development, the concept of "Lisp Image" does
+          not find so much as a passing reference in the CLHS/ANSICL
+          editions of the Common Lisp langauge.
+        </remark>
+      </para>
+
+      <para>
+        <remark>
+          Concept: Lisp Object Image - Whether implemented as a "Heap
+          Image" or otherwise as a non-transient storage for Lisp object
+          data, within any single Common Lisp application
+          environmnent. Juxtapose to a general concept of a "Lisp
+          Kernel" (e.g cf. CCL, and - albeit in other, and particularly
+          tools-oriented/build-oriented terms - with CMUCl and 
+          SBCL) with consideration regarding C compiler toolchains,
+          object library linkage, and object library formats (e.g ELF)
+          within conventional operating system environments (POSIX/LibC
+          subset or otherwise)
+        </remark>
+      </para>
+
+      <para>
+        <remark>
+          Not all Common Lisp implementations utilize a Lisp object
+          image (e.g ABCL)
+        </remark>
+      </para>
+      <para>
+        <remark>
+          Note the site-local characteristics of Lisp Object Images,
+          furtheremore onto the constrant that each Lisp Object Image is
+          (normally, and when available) allocated for <emphasis>at
+          least one</emphasis> Lisp Kernel, on a single application
+          host. Note that a concept of an "Image Manifest" has not as
+          yet emerged of "The Community" in any terms.
+        </remark>
+      </para>
+      
+    </simplesect>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
+                xml:id="&docid;.confnm">
+      <title>
+        Configuration Namespaces, Namespace Grammars, and Namespace
+        Instance Data
+      </title>
+      <para>
+        <remark>NB: Augeas</remark>
+      </para>
+      <para>
+        <remark>
+          NB: MOF 'Namespace' Metaclass - derfinition, in MOF and
+          subsq. reuse in UML and SysML metamodels; UML and Template
+          Specification (semantics reminiscent of C++ templates cf. C++11
+          or Java(R) Generics; Syntax deriving principally of UML and
+          broader MOF/MDA terms, OMG specifications/canon)
+        </remark>
+      </para>
+      <para>
+        <remark>
+          TBD: Syntax for arbitrary applications in Common Lisp
+          software systems; Generalizations onto MOP; Portability for
+          Developers and for Users; Extensions for specification and
+          analysis - dependency analysis, platforms management, and
+          other analysis tasks pursuant of systems management - onto PL
+          i.e ISI PowerLoom(R)
+        </remark>
+      </para>
+
+      <remark>
+        NB: C Preprocessor Directives (Effective Configuration
+        Namespace); Analogy onto dispatching with CL:*FEATURES*
+        (Effective Configuration Namespace) in the reader environment
+      </remark>
+
+      <remark>
+        NB: Some CL:*FEATURES* elements may be, in effect,
+        mutually exclusive - e.g machine architecture identifiers in
+        CL:*FEATURE*
+      </remark>
+
+    </simplesect>
+
+
+    <simplesect xmlns="http://docbook.org/ns/docbook" 
                 xml:id="&docid;.confovl">
       <title>Configuration Overlays</title>
 
       <remark>NB: DMTF CIM; CIM Schema</remark>
 
-      <remark>NB: C Preprocessor Directives; Analogy onto dispatching
-      with CL:*FEATURES* in the reader environment</remark>
+      <remark>
+        Concepts: Default configuration profile (e.g as determined
+        at build-time within a software system); Site-specific
+        configuration profiles (e.g as may be specified at build-time,
+        in effect overeriding specific features of any default
+        configuration profile)
+      </remark>
 
       <remark>
-      NB: Parameterization for tools ochestration with ASDF
+        NB configuration profiles and "Auto Detection", in regards to
+        build-system behaviors as per the "Build Environment"
+      </remark>
+      
+      <remark>
+        TBD: Parameterization for tools ochestration with ASDF;
+        Interoperability for Modeling and Analysis in Systems Management
       </remark>
     </simplesect>
 
@@ -42,6 +144,14 @@
       <title>
         Patterns in Distribution of Common Lisp Software Systems
       </title>
+
+      <formalpara>
+        <title>
+          The Individual Project
+        </title>
+        <para>
+        </para>
+      </formalpara>
 
       <formalpara>
         <title>
@@ -58,7 +168,8 @@
         <para>
           <simplelist>
             <member>Debian packages</member>
-            <member>MK:DEFSYS (CLOCC) and CLC</member>
+            <member>MK:DEFSYS (CLOCC - DEFSYS3, DEFSYS4) and CLC</member>
+            <member>ASDF</member>
           </simplelist>
         </para>
       </formalpara>
