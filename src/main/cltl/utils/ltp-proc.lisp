@@ -22,9 +22,7 @@ descriptor"
 
   ;; Notes
   ;;
-  ;; dup ... (SBCL, POSIX; LTP EO Protyping @ OS. cf. SUSv4, et.c)
-  ;;
-  ;; process specifiers and Process Descriptors - T.D (LTP)
+  ;; * process specifiers and Process Descriptors - T.D (LTP)
   ;; - NB stderr descriptor & run-with-pipe
   ;; - TBD Semantics for descripror/file mapping (nin, nout, errout)
   ;;   - NB: Portable I/O Descriptor Mapping (cf. CP/M?? and DOS and MSVC I/O, and POSIX systems)
@@ -44,4 +42,26 @@ descriptor"
   ;;    - GLib ABI [SINGLETON-CLASS] - Onto C ABI
   ;;    - gtkmm ABI [ABSTRACT CLASS] - Onto GLib ABI, C++ ABI
   ;; - Documentation, nothing too ostentatious in devsrc
-)
+  ;;
+  ;; * Process Objects
+  ;;   - process reflection - operns from external to a process' OS environ (vis a vis the UNIX 'ps' util)
+  ;;     - process state
+  ;;     - process principal actor - host user descriptors - visible UID/GID (POSIX hosts); consult Cygwin documentation (Microsoftq Windows PC systems)
+  ;;     - process cmdline
+  ;;     - process PID, pgrp, and (may be unavl) controlling TTY
+  ;;   - wait, waitpid (POSIX environments)
+  ;;     - NB: Prototyping may require a multithreaded Lisp implementation (arm/other machine arch)
+  ;;   - process I/O descriptors
+  ;;     - dup ... (SBCL, POSIX; LTP EO Protyping @ OS. cf. SUSv4, et.c) (POSIX environments)
+  ;;     - streams - bare FD i/o stream, time-annotated FD i/o stream
+  ;;     - file I/O and OS process objects
+  ;;       - TBD detecting when a stream is open on a file, in "The Lisp" simultaneous to another open FD onto "The same file," in any process initialized from "The Lisp"
+  ;;   - TTYs, TERM, and termios
+  ;;   - functional API and interactive programming examples
+  ;;
+  ;; * QA - Usage Cases
+  ;; - ltp-proc/ltp-cmd and git orchestration (gen-diffs.el example)
+  ;; - ltp-proc/ltp-cmd and parameterization for XML tools (DocBook, TEI P5, other)
+  ;; - arbitrarily toying around in SLIME (??)
+  ;; - LTP model tools
+  )
