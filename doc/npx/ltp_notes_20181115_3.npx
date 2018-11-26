@@ -1,0 +1,280 @@
+<?xml version="1.0"?>
+<!DOCTYPE npage [
+
+<!ENTITY notes.ent SYSTEM "notes.ent">
+%notes.ent;
+
+<!ENTITY docid "ltp_notes_20181115_3">
+
+]>
+
+<npage xmlns="http://wk.pm.thinkum.space/ns/notepoint/"
+       xmlns:h="http://www.w3.org/1999/xhtml"
+       xmlns:db="http://docbook.org/ns/docbook"
+       xmlns:dc="http://purl.org/dc/terms/"
+       xml:id="&docid;">
+  <notemeta>
+    <dc:title>Lisp Tools Project - Notes - Concurrency for Emacs and SLIME</dc:title>
+    <dc:created>15 November, 2018</dc:created>
+  </notemeta>
+
+  <stnote xml:id="&docid;.elmp">
+    <notemeta>
+      <dc:title>
+        Emacs Threads and the Lisp Development Environment
+      </dc:title>
+    </notemeta>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook"
+                xml:id="&docid;.threadapi">
+      <title>Apropos Threads, in Emacs</title>
+
+      <simplelist>
+        <member><xref linkend="&docid;.threadfn" /></member>
+        <member><xref linkend="&docid;.threadcmd" /></member>
+        <member><xref linkend="&docid;.threadvar" /></member>
+      </simplelist>
+
+      <glosslist xml:id="&docid;.threadfn">
+        <title>Function Dictionary<footnote>
+        <para>
+          Applicable to at least <productname>Emacs</productname>
+          <productnumber>26</productnumber> and
+          <productname>Emacs</productname>
+          <productnumber>27</productnumber>
+        </para>
+        <para>
+          The text of this functions dictionary shares the same
+          copyright as GNU Emacs
+        </para>
+        </footnote></title>
+        <glossentry>
+          <glossterm>all-threads</glossterm>
+          <glossdef><para>Function: Return a list of all the live threads.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>current-thread</glossterm>
+          <glossdef><para>Function: Return the current thread.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>make-thread</glossterm>
+          <glossdef><para>Function: Start a new thread and run FUNCTION in it.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>process-thread</glossterm>
+          <glossdef><para>Function: Ret the locking thread of PROCESS.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>set-process-thread</glossterm>
+          <glossdef><para>Function: Set the locking thread of PROCESS to be THREAD.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>thread--blocker</glossterm>
+          <glossdef><para>Function: Return the object that THREAD is blocking on.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>thread-alive-p</glossterm>
+          <glossdef><para>Function: Return t if THREAD is alive, or nil if it has exited.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>thread-handle-event</glossterm>
+          <glossdef><para>Command: Handle thread events, propagated by ‘thread-signal’.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>thread-join</glossterm>
+          <glossdef><para>Function: Wait for THREAD to exit.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>thread-last-error</glossterm>
+          <glossdef><para>Function: Return the last error form recorded by a dying thread.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>thread-live-p</glossterm>
+          <glossdef><para>Function: Return t if THREAD is alive, or nil if it has exited.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>thread-name</glossterm>
+          <glossdef><para>Function: Return the name of the THREAD.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>thread-signal</glossterm>
+          <glossdef><para>Function: Signal an error in a thread.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>thread-yield</glossterm>
+          <glossdef><para>Function: Yield the CPU to another thread.</para></glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>threadp</glossterm>
+          <glossdef><para>Function: Return t if OBJECT is a thread.</para></glossdef>
+        </glossentry>
+
+      </glosslist>
+
+
+      <glosslist xml:id="&docid;.threadcmd">
+        <title>Commands</title>
+        <glossentry>
+          <glossterm>list-threads</glossterm>
+          <glossdef><para>Command: Display a list of threads.</para></glossdef>
+        </glossentry>
+      </glosslist>
+
+      <glosslist xml:id="&docid;.threadvar">
+        <title>Global Variables</title>
+        <glossentry>
+          <glossterm>main-thread</glossterm>
+          <glossdef><para>Variable: The main thread of Emacs.</para></glossdef>
+        </glossentry>
+      </glosslist>
+
+    </simplesect>
+
+
+
+
+    <simplesect xmlns="http://docbook.org/ns/docbook"
+                xml:id="&docid;.thrut">
+      <title>Utilitty Forms</title>
+
+      <example>
+        <title>Condititonal Dispatch for Thread API Availability</title>
+
+        <programlisting><![CDATA[(defun threads-p ()
+  (and (boundp 'main-thread) main-thread t))]]></programlisting>
+      </example>
+    </simplesect>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook"
+                xml:id="&docid;.tbd">
+      <title>Threads and SLIME</title>
+
+      <para>
+        The function <function>slime-eval-async</function> calls
+        <function>slime-rex</function>. At least one of these functions
+        &mdash; probably, the first &mdash; should create and return an
+        object encapsulating a thread for the asynchronous evaluation.
+      </para>
+
+      <para>
+       The function <function>slime-eval-async</function> is called from
+       a number of functions, including:
+        <simplelist>
+          <member>
+            <function>slime-init-connection-state</function>
+          </member>
+          <member>
+            <function>slime-compile-file</function>
+          </member>
+          <member>
+            <function>slime-compile-string</function>
+          </member>
+          <member>
+            <function>slime-compilation-finished</function>
+          </member>
+          <member>
+            <function>slime-recompile-locations</function>
+          </member>
+          <member>
+            <function>slime-echo-arglist</function>
+          </member>
+          <member>
+            <function>slime-first-change-hook</function>
+          </member>
+          <member>
+            <function>slime-eval-print</function>
+          </member>
+          <member>
+            <function>slime-eval-save</function>
+          </member>
+          <member>
+            <function>slime-eval-describe</function>
+          </member>
+          <member>
+            <function>slime-edit-value</function>
+          </member>
+          <member>
+            <function>slime-edit-value-commit</function>
+          </member>
+          <member>
+            <function>slime-undefine-function</function>
+          </member>
+          <member>
+            <function>slime-unintern-symbol</function>
+          </member>
+          <member>
+            <function>slime-delete-package</function>
+          </member>
+          <member>
+            SLIME Profiling Functions
+          </member>
+          <member>
+            A number of SLDB Functions
+          </member>
+          <member>
+            A number of SLIME Documentation Functions
+          </member>
+          <member>
+            <function>slime-xref</function>
+          </member>
+          <member>
+            A number eof SLIME Macorexpansion Functions
+          </member>
+          <member>
+            <function>slime-quit-lisp-internal</function>
+          </member>
+        </simplelist>
+      </para>
+
+      <para>Note also: <function>slime-eval-with-transcript</function>
+      &mdash; requiring synchronous I/O, "to be sure."</para>
+    </simplesect>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook"
+                xml:id="&docid;.tbd">
+      <title>Implementation Threads and SLIME</title>
+
+      <para>
+        The command <function>slime-list-threads</function> provides ...
+      </para>
+    </simplesect>
+
+  </stnote>
+
+
+  <stnote xml:id="&docid;.osthrds">
+    <notemeta>
+      <dc:title>
+        Threads in the Operating Sytsem Environment
+      </dc:title>
+    </notemeta>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook"
+                xml:id="&docid;.thrd-susv4">
+      <title>Concurrency and Systems Development from SYSV to SUSv4</title>
+
+    </simplesect>
+
+    <simplesect xmlns="http://docbook.org/ns/docbook"
+                xml:id="&docid;.thrd-c++">
+      <title>Atomic Operations in C++</title>
+
+    </simplesect>
+  </stnote>
+
+</npage>
+
