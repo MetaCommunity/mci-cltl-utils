@@ -48,7 +48,18 @@ $FreeBSD: stable/11/lib/libc/gen/dlopen.3 278758 2015&bsol;-02&bsol;-14 15:14:41
 </refmeta>
 
 <refnamediv xml:id='doclifter-purpose'>
-<refname> dlopen  @GLUE@,</refname>
+<refname>dlopen</refname>
+<!--
+     NB: Doclifter added a @GLUE@ token to the initial refname.
+     That was removed, in this text.
+
+     The following were transposed from the original dlopen.3
+-->
+<refname>fdlopen</refname>
+<refname>dlsym</refname>
+<refname>dlfunc</refname>
+<refname>dlerror</refname>
+<refname>dlclose</refname>
 <refpurpose> programmatic interface to the dynamic linker </refpurpose>
 </refnamediv>
 <!-- body begins here -->

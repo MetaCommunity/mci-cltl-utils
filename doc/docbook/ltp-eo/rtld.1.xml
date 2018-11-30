@@ -41,7 +41,15 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. -->
 </refmeta>
 
 <refnamediv xml:id='doclifter-purpose'>
-<refname> ld-elf.so.1  @GLUE@,</refname>
+<refname>ld-elf.so.1</refname>
+<!--
+     NB: Doclifter added a @GLUE@ token to the initial refname.
+     That was removed, in this text.
+
+     The following were transposed from the original rtld.1
+-->
+<refname>ld.so</refname>
+<refname>rtld</refname>
 <refpurpose> run-time link-editor </refpurpose>
 </refnamediv>
 <!-- body begins here -->
