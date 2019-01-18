@@ -12,6 +12,7 @@
        xmlns:dc="http://purl.org/dc/terms/">
   <notemeta>
     <dc:title>Lisp Tools Project - Notes - &ecl; version 16.1.2</dc:title>
+    <dc:created>12 November, 2017</dc:created>
   </notemeta>
 
   <stnote>

@@ -12,9 +12,11 @@
        xmlns:dc="http://purl.org/dc/terms/">
   <notemeta>
     <dc:title>Lisp Tools Project - Notes - &ccl; version 11.1</dc:title>
+    <dc:created>14 November, 2017</dc:created>
+    <dc:modified>11 November, 2018</dc:modified>
   </notemeta>
 
-  
+
   <stnote>
     <notemeta>
       <dc:title>The &ccl; User Environment - Notes</dc:title>
@@ -37,9 +39,9 @@
 ><prompt>CL-USER&gt; </prompt><userinput>(<command>logical-pathname-translations</command> "home")</userinput>
 <computeroutput>=&gt; ((#P"home:**;*.*" #P"/home/username/**/*.*"))</computeroutput>
 </screen>
-      </example> 
+      </example>
     </simplesect>  <!-- @ initf -->
-      
+
     <simplesect xmlns="http://docbook.org/ns/docbook" xml:id="srcloc">
       <title>Source Location in &ccl.p;</title>
 
@@ -77,13 +79,13 @@ x
           distribution.
         </para>
       </formalpara>
-      
+
       <formalpara>
         <title>
           &SWANK; <glossterm>Symbol</glossterm>
           <glossterm>Cross-Reference</glossterm> suport in &ccl.p;
         </title>
-        
+
         <para>
           The <glossterm>interactive</glossterm> Emacs Lisp
           <glossterm>command</glossterm> <command
@@ -111,7 +113,7 @@ x
 (require '#:xref)</programlisting>
       </example>
     </simplesect> <!-- @ ccl-slime -->
-    
+
   </stnote>
 
 
@@ -121,7 +123,7 @@ x
         Modal Locking and :OPENMCL-NATIVE-THREADS in &ccl;
       </dc:title>
     </notemeta>
-    
+
     <simplesect xmlns="http://docbook.org/ns/docbook"
                 xml:id="rwlock">
       <title>Modal Read/Write Locking in &ccl.p;</title>
@@ -148,7 +150,7 @@ x
           >compiler/<replaceable>arch1</replaceable>/<replaceable>arch2</replaceable>-arch.lisp</filename>
           for <replaceable>arch1</replaceable> <symbol>ARM</symbol>,
           <replaceable>arch2</replaceable> <symbol>arm</symbol>.
-          
+
 
           <simplelist>
             <member>
@@ -197,8 +199,11 @@ x
       (cons :futex ccl::*build-time-optional-features*)))
   (ccl:rebuild-ccl :reload nil :full t
       :optional-features '(:futex) :clean t )) ;; ??</programlisting>
-      
+
+      <remark>To Do: Address :OPENMCL-NATIVE-THREADS</remark>
+
     </simplesect>
+
   </stnote>
-  
+
 </npage>
