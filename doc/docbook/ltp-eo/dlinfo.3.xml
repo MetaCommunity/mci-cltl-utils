@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- lifted from mdoc+troff by doclifter -->
+<refentry xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en' xml:id='doclifter-dlinfo3'>
+
+<!-- Copyright (c) 2003 Alexey Zelkin &lt;phantom@FreeBSD.org&gt;
+All rights reserved. -->
+
+<!-- Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution. -->
+
+<!-- THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE. -->
+
+<!-- $FreeBSD: stable/11/lib/libc/gen/dlinfo.3 267774 2014&bsol;-06&bsol;-23 08:25:03Z bapt $ -->
+
+
+
+<refmeta>
+<refentrytitle>DLINFO</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv xml:id='doclifter-purpose'>
+<refname> dlinfo </refname>
+<refpurpose> information about dynamically loaded object </refpurpose>
+</refnamediv>
+<!-- body begins here -->
+<refsynopsisdiv xml:id='doclifter-synopsis'>
+<funcsynopsis>
+<funcsynopsisinfo>
+#include &lt;link.h&gt;
+#include &lt;dlfcn.h&gt;
+</funcsynopsisinfo>
+<funcprototype>
+<funcdef>int <function>dlinfo</function></funcdef>
+    <paramdef>void *restrict <parameter>handle</parameter></paramdef>
+    <paramdef>int <parameter>request</parameter></paramdef>
+    <paramdef>void *restrict <parameter>p</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+
+<refsect1 xml:id='doclifter-library'><title>LIBRARY</title>
+<para><citetitle>Standard C Library (libc, -lc)</citetitle></para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-description'><title>DESCRIPTION</title>
+<para>The
+dlinfo();
+function provides information about dynamically loaded object.
+The action taken by
+dlinfo();
+and exact meaning and type of
+<emphasis remap='Fa'>p</emphasis>
+argument depend on value of the
+<emphasis remap='Fa'>request</emphasis>
+argument provided by caller.</para>
+
+<para>The
+<emphasis remap='Fa'>handle</emphasis>
+argument is either the value returned from the
+<citerefentry><refentrytitle>dlopen</refentrytitle><manvolnum>3</manvolnum></citerefentry>
+function call or special handle
+<constant>RTLD_SELF</constant>.
+If
+<emphasis remap='Fa'>handle</emphasis>
+is the value returned from
+<citerefentry><refentrytitle>dlopen</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+the information returned by the
+dlinfo();
+function pertains to the specified object.
+If handle is the special handle
+<constant>RTLD_SELF</constant>,
+the information returned pertains to the caller itself.</para>
+
+<para>Possible values for the
+<emphasis remap='Fa'>request</emphasis>
+argument are:</para>
+<variablelist remap='Bl -tag -width indent'>
+<varlistentry>
+<term><constant>RTLD_DI_LINKMAP</constant></term>
+<listitem>
+<para>Retrieve the
+<type>Link_map</type>
+(Vt struct link_map)
+structure pointer for the specified
+<emphasis remap='Fa'>handle</emphasis>.
+On successful return, the
+<emphasis remap='Fa'>p</emphasis>
+argument is filled with the pointer to the
+<type>Link_map</type>
+structure
+(Fa Link_map **p)
+describing a shared object specified by the
+<emphasis remap='Fa'>handle</emphasis>
+argument.
+The
+<type>Link_map</type>
+structures are maintained as a doubly linked list by
+<citerefentry><refentrytitle>ld.so</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+in the same order as
+<citerefentry><refentrytitle>dlopen</refentrytitle><manvolnum>3</manvolnum></citerefentry>
+and
+<citerefentry><refentrytitle>dlclose</refentrytitle><manvolnum>3</manvolnum></citerefentry>
+are called.
+See
+<link role='Sx' linkend='doclifter-examples'>EXAMPLES</link>,
+example 1.</para>
+
+<para>The
+<type>Link_map</type>
+structure is defined in
+#include &lt;link.h&gt;
+and has the following members:</para>
+<programlisting remap='Bd'>
+caddr_t         l_addr;    /* Base Address of library */
+const char      *l_name;   /* Absolute Path to Library */
+const void      *l_ld;     /* Pointer to .dynamic in memory */
+struct link_map *l_next,   /* linked list of mapped libs */
+                *l_prev;
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width .Va l_addr'>
+<varlistentry>
+<term><varname>l_addr</varname></term>
+<listitem>
+<para>The base address of the object loaded into memory.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><varname>l_name</varname></term>
+<listitem>
+<para>The full name of the loaded shared object.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><varname>l_ld</varname></term>
+<listitem>
+<para>The address of the dynamic linking information segment
+(Dv PT_DYNAMIC)
+loaded into memory.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><varname>l_next</varname></term>
+<listitem>
+<para>The next
+<type>Link_map</type>
+structure on the link-map list.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><varname>l_prev</varname></term>
+<listitem>
+<para>The previous
+<type>Link_map</type>
+structure on the link-map list.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><constant>RTLD_DI_SERINFO</constant></term>
+<listitem>
+<para>Retrieve the library search paths associated with the given
+<emphasis remap='Fa'>handle</emphasis>
+argument.
+The
+<emphasis remap='Fa'>p</emphasis>
+argument should point to
+<type>Dl_serinfo</type>
+structure buffer
+(Fa Dl_serinfo *p).
+The
+<type>Dl_serinfo</type>
+structure must be initialized first with the
+<constant>RTLD_DI_SERINFOSIZE</constant>
+request.</para>
+
+<para>The returned
+<type>Dl_serinfo</type>
+structure contains
+<varname>dls_cnt</varname>
+<type>Dl_serpath</type>
+entries.
+Each entry's
+<varname>dlp_name</varname>
+field points to the search path.
+The corresponding
+<varname>dlp_info</varname>
+field contains one of more flags indicating the origin of the path (see the
+<constant>LA_SER_*</constant>
+flags defined in the
+#include &lt;link.h&gt;
+header file).
+See
+<link role='Sx' linkend='doclifter-examples'>EXAMPLES</link>,
+example 2, for a usage example.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><constant>RTLD_DI_SERINFOSIZE</constant></term>
+<listitem>
+<para>Initialize a
+<type>Dl_serinfo</type>
+structure for use in a
+<constant>RTLD_DI_SERINFO</constant>
+request.
+Both the
+<varname>dls_cnt</varname>
+and
+<varname>dls_size</varname>
+fields are returned to indicate the number of search paths applicable
+to the handle, and the total size of a
+<type>Dl_serinfo</type>
+buffer required to hold
+<varname>dls_cnt</varname>
+<type>Dl_serpath</type>
+entries and the associated search path strings.
+See
+<link role='Sx' linkend='doclifter-examples'>EXAMPLES</link>,
+example 2, for a usage example.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><varname>RTLD_DI_ORIGIN</varname></term>
+<listitem>
+<para>Retrieve the origin of the dynamic object associated with the handle.
+On successful return,
+<emphasis remap='Fa'>p</emphasis>
+argument is filled with the
+<type>char</type>
+pointer
+(Fa char *p).</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 xml:id='doclifter-return_values'><title>RETURN VALUES</title>
+<para>The
+dlinfo();
+function returns 0 on success, or -1 if an error occurred.
+Whenever an error has been detected, a message detailing it can
+be retrieved via a call to
+<citerefentry><refentrytitle>dlerror</refentrytitle><manvolnum>3</manvolnum></citerefentry>.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-examples'><title>EXAMPLES</title>
+<para>Example 1: Using
+dlinfo();
+to retrieve
+<type>Link_map</type>
+structure.</para>
+
+<para>The following example shows how dynamic library can detect the list
+of shared libraries loaded after caller's one.
+For simplicity, error checking has been omitted.</para>
+<programlisting remap='Bd'>
+<funcsynopsis>
+<funcsynopsisinfo>
+Link_map *map;
+
+</funcsynopsisinfo>
+<funcprototype>
+<funcdef><function>dlinfo</function></funcdef>
+    <paramdef><parameter>RTLD_SELF</parameter></paramdef>
+    <paramdef><parameter>RTLD_DI_LINKMAP</parameter></paramdef>
+    <paramdef><parameter>&amp;map</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+while (map != NULL) {
+<funcsynopsis>
+<funcprototype>
+<funcdef><function>printf</function></funcdef>
+    <paramdef>"%p: %s&bsol;n" <parameter></parameter></paramdef>
+    <paramdef><parameter>map-&gt;l_addr</parameter></paramdef>
+    <paramdef><parameter>map-&gt;l_name</parameter></paramdef>
+</funcprototype>
+<funcsynopsisinfo>
+	map = map-&gt;l_next;
+</funcsynopsisinfo>
+</funcsynopsis>
+}
+
+</programlisting> <!-- remap='Ed (block)' -->
+<para>Example 2: Using
+dlinfo();
+to retrieve the library search paths.</para>
+
+<para>The following example shows how a dynamic object can inspect the library
+search paths that would be used to locate a simple filename with
+<citerefentry><refentrytitle>dlopen</refentrytitle><manvolnum>3</manvolnum></citerefentry>.
+For simplicity, error checking has been omitted.</para>
+<programlisting remap='Bd'>
+<funcsynopsis>
+<funcsynopsisinfo>
+Dl_serinfo	 _info, *info = &amp;_info;
+Dl_serpath	*path;
+unsigned int	 cnt;
+
+/* determine search path count and required buffer size */
+</funcsynopsisinfo>
+<funcprototype>
+<funcdef><function>dlinfo</function></funcdef>
+    <paramdef><parameter>RTLD_SELF</parameter></paramdef>
+    <paramdef><parameter>RTLD_DI_SERINFOSIZE</parameter></paramdef>
+    <paramdef>( void *) <parameter>info</parameter></paramdef>
+</funcprototype>
+<funcsynopsisinfo>
+/* allocate new buffer and initialize */
+</funcsynopsisinfo>
+<funcsynopsisinfo>
+info = malloc(_info.dls_size);
+info-&gt;dls_size = _info.dls_size;
+info-&gt;dls_cnt = _info.dls_cnt;
+
+/* obtain sarch path information */
+</funcsynopsisinfo>
+<funcprototype>
+<funcdef><function>dlinfo</function></funcdef>
+    <paramdef><parameter>RTLD_SELF</parameter></paramdef>
+    <paramdef><parameter>RTLD_DI_SERINFO</parameter></paramdef>
+    <paramdef>( void *) <parameter>info</parameter></paramdef>
+</funcprototype>
+<funcsynopsisinfo>
+path = &amp;info-&gt;dls_serpath[0];
+
+for (cnt = 1; cnt &lt;= info-&gt;dls_cnt; cnt++, path++) {
+</funcsynopsisinfo>
+<funcprototype>
+<funcdef>( void ) <function>printf</function></funcdef>
+    <paramdef>"%2d: %s&bsol;n" <parameter></parameter></paramdef>
+    <paramdef><parameter>cnt</parameter></paramdef>
+    <paramdef><parameter>path-&gt;dls_name</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+}
+
+</programlisting> <!-- remap='Ed (block)' -->
+<para><citerefentry><refentrytitle>rtld</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>dladdr</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>dlopen</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>dlsym</refentrytitle><manvolnum>3</manvolnum></citerefentry></para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-history'><title>HISTORY</title>
+<para>The
+dlinfo();
+function first appeared in the Solaris operating system.
+In
+<productname>FreeBSD ,</productname>
+it first appeared in
+<productname>FreeBSD 4.8</productname></para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-authors'><title>AUTHORS</title>
+<para>phrase -nosplit role='author'
+The
+<productname>FreeBSD</productname>
+implementation of the
+dlinfo();
+function was originally written by
+phrase Alexey Zelkin Aq Mt phantom@FreeBSD.org role='author'
+and later extended and improved by
+phrase Alexander Kabaev Aq Mt kan@FreeBSD.org role='author'.</para>
+
+<para>The manual page for this function was written by
+phrase Alexey Zelkin Aq Mt phantom@FreeBSD.org role='author'.</para>
+</refsect1>
+</refentry>
+

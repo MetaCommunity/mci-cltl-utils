@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- lifted from mdoc+troff by doclifter -->
+<refentry xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en' xml:id='doclifter-dladdr3'>
+
+<!-- Copyright (c) 1998 John D. Polstra
+All rights reserved. -->
+
+<!-- Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution. -->
+
+<!-- THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE. -->
+
+<!-- $FreeBSD: stable/11/lib/libc/gen/dladdr.3 206622 2010&bsol;-04&bsol;-14 19:08:06Z uqs $ -->
+
+
+
+<refmeta>
+<refentrytitle>DLADDR</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv xml:id='doclifter-purpose'>
+<refname> dladdr </refname>
+<refpurpose> find the shared object containing a given address </refpurpose>
+</refnamediv>
+<!-- body begins here -->
+<refsynopsisdiv xml:id='doclifter-synopsis'>
+<funcsynopsis>
+<funcsynopsisinfo>
+#include &lt;dlfcn.h&gt;
+</funcsynopsisinfo>
+<funcprototype>
+<funcdef>int <function>dladdr</function></funcdef>
+    <paramdef>const void * <parameter>addr</parameter></paramdef>
+    <paramdef>Dl_info * <parameter>info</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+
+<refsect1 xml:id='doclifter-library'><title>LIBRARY</title>
+<para><citetitle>Standard C Library (libc, -lc)</citetitle></para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-description'><title>DESCRIPTION</title>
+<para>The
+dladdr();
+function
+queries the dynamic linker for information about the shared object
+containing the address
+<emphasis remap='Fa'>addr</emphasis>.
+The information is returned in the structure specified by
+<emphasis remap='Fa'>info</emphasis>.
+The structure contains at least the following members:</para>
+<variablelist remap='Bl -tag -width XXXconst char *dli_fname'>
+<varlistentry>
+<term><literal>const char *dli_fname</literal></term>
+<listitem>
+<para>The pathname of the shared object containing the address.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><literal>void *dli_fbase</literal></term>
+<listitem>
+<para>The base address at which the shared object is mapped into the
+address space of the calling process.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><literal>const char *dli_sname</literal></term>
+<listitem>
+<para>The name of the nearest run-time symbol with a value less than or
+equal to
+<emphasis remap='Fa'>addr</emphasis>.
+When possible, the symbol name is returned as it would appear in C
+source code.</para>
+
+<para>If no symbol with a suitable value is found, both this field and
+<varname>dli_saddr</varname>
+are set to
+<constant>NULL</constant>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><literal>void *dli_saddr</literal></term>
+<listitem>
+<para>The value of the symbol returned in
+<literal>dli_sname</literal>.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>The
+dladdr();
+function
+is available only in dynamically linked programs.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-errors'><title>ERRORS</title>
+<para>If a mapped shared object containing
+<emphasis remap='Fa'>addr</emphasis>
+cannot be found,
+dladdr();
+returns 0.
+In that case, a message detailing the failure can be retrieved by
+calling
+dlerror(.);</para>
+
+<para>On success, a non-zero value is returned.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-see_also'><title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>rtld</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>dlopen</refentrytitle><manvolnum>3</manvolnum></citerefentry></para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-history'><title>HISTORY</title>
+<para>The
+dladdr();
+function first appeared in the Solaris operating system.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-bugs'><title>BUGS</title>
+<para>This implementation is bug-compatible with the Solaris
+implementation.
+In particular, the following bugs are present:</para>
+<itemizedlist remap='Bl -bullet' mark='bullet'>
+<listitem>
+<para>If
+<emphasis remap='Fa'>addr</emphasis>
+lies in the main executable rather than in a shared library, the
+pathname returned in
+<varname>dli_fname</varname>
+may not be correct.
+The pathname is taken directly from
+<varname>argv[0]</varname>
+of the calling process.
+When executing a program specified by its
+full pathname, most shells set
+<varname>argv[0]</varname>
+to the pathname.
+But this is not required of shells or guaranteed
+by the operating system.</para>
+</listitem>
+<listitem>
+<para>If
+<emphasis remap='Fa'>addr</emphasis>
+is of the form
+<varname>&amp;func</varname>,
+where
+<varname>func</varname>
+is a global function, its value may be an unpleasant surprise.
+In
+dynamically linked programs, the address of a global function is
+considered to point to its program linkage table entry, rather than to
+the entry point of the function itself.
+This causes most global
+functions to appear to be defined within the main executable, rather
+than in the shared libraries where the actual code resides.</para>
+</listitem>
+<listitem>
+<para>Returning 0 as an indication of failure goes against long-standing
+Unix tradition.</para>
+</listitem>
+</itemizedlist>
+</refsect1>
+</refentry>
+

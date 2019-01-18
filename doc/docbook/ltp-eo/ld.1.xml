@@ -1,0 +1,3133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- lifted from pod2man+man+troff by doclifter -->
+<refentry xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en' xml:id='doclifter-ld1'>
+<refentryinfo><date>2010-10-30</date></refentryinfo>
+<refmeta>
+<refentrytitle>LD</refentrytitle>
+<manvolnum>1</manvolnum>
+<refmiscinfo class='date'>2010-10-30</refmiscinfo>
+<refmiscinfo class='source'>binutils-2.17.50</refmiscinfo>
+<refmiscinfo class='manual'>GNU Development Tools</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>ld</refname>
+<refpurpose>The GNU linker</refpurpose>
+</refnamediv>
+<!-- body begins here -->
+<refsynopsisdiv xml:id='doclifter-synopsis'>
+<cmdsynopsis>
+  <command>ld</command>    <arg choice='opt'><replaceable>options</replaceable></arg>
+    <arg choice='plain' rep='repeat'><replaceable>objfile</replaceable></arg>
+    
+</cmdsynopsis>
+</refsynopsisdiv>
+
+
+<refsect1 xml:id='doclifter-description'><title>DESCRIPTION</title>
+<para><indexterm><primary>Header</primary><secondary>DESCRIPTION</secondary></indexterm>
+<emphasis role='strong' remap='B'>ld</emphasis> combines a number of object and archive files, relocates
+their data and ties up symbol references. Usually the last step in
+compiling a program is to run <emphasis role='strong' remap='B'>ld</emphasis>.</para>
+
+<para><emphasis role='strong' remap='B'>ld</emphasis> accepts Linker Command Language files written in
+a superset of <?troff ps -1?>AT&amp;T<?troff ps 0?>'s Link Editor Command Language syntax,
+to provide explicit and total control over the linking process.</para>
+
+<para>This man page does not describe the command language; see the
+<emphasis role='strong' remap='B'>ld</emphasis> entry in <emphasis remap='CW'>`info'</emphasis> for full details on the command
+language and on other aspects of the <?troff ps -1?>GNU<?troff ps 0?> linker.</para>
+
+<para>This version of <emphasis role='strong' remap='B'>ld</emphasis> uses the general purpose <?troff ps -1?>BFD<?troff ps 0?> libraries
+to operate on object files. This allows <emphasis role='strong' remap='B'>ld</emphasis> to read, combine, and
+write object files in many different formats---for example, <?troff ps -1?>COFF<?troff ps 0?> or
+<emphasis remap='CW'>`a.out'</emphasis>.  Different formats may be linked together to produce any
+available kind of object file.</para>
+
+<para>Aside from its flexibility, the <?troff ps -1?>GNU<?troff ps 0?> linker is more helpful than other
+linkers in providing diagnostic information.  Many linkers abandon
+execution immediately upon encountering an error; whenever possible,
+<emphasis role='strong' remap='B'>ld</emphasis> continues executing, allowing you to identify other errors
+(or, in some cases, to get an output file in spite of the error).</para>
+
+<para>The <?troff ps -1?>GNU<?troff ps 0?> linker <emphasis role='strong' remap='B'>ld</emphasis> is meant to cover a broad range of situations,
+and to be as compatible as possible with other linkers.  As a result,
+you have many choices to control its behavior.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-options'><title>OPTIONS</title>
+<para><indexterm><primary>Header</primary><secondary>OPTIONS</secondary></indexterm>
+The linker supports a plethora of command-line options, but in actual
+practice few of them are used in any particular context.
+For instance, a frequent use of <emphasis role='strong' remap='B'>ld</emphasis> is to link standard Unix
+object files on a standard, supported Unix system.  On such a system, to
+link a file <emphasis remap='CW'>`hello.o'</emphasis>:</para>
+
+<literallayout remap='Vb'>
+        ld -o &lt;output&gt; /lib/crt0.o hello.o -lc
+</literallayout> <!-- remap='Ve' -->
+
+<para>This tells <emphasis role='strong' remap='B'>ld</emphasis> to produce a file called <emphasis remap='I'>output</emphasis> as the
+result of linking the file <emphasis remap='CW'>`/lib/crt0.o'</emphasis> with <emphasis remap='CW'>`hello.o'</emphasis> and
+the library <emphasis remap='CW'>`libc.a'</emphasis>, which will come from the standard search
+directories.  (See the discussion of the <emphasis role='strong' remap='B'>-l</emphasis> option below.)</para>
+
+<para>Some of the command-line options to <emphasis role='strong' remap='B'>ld</emphasis> may be specified at any
+point in the command line.  However, options which refer to files, such
+as <emphasis role='strong' remap='B'>-l</emphasis> or <emphasis role='strong' remap='B'>-T</emphasis>, cause the file to be read at the point at
+which the option appears in the command line, relative to the object
+files and other file options.  Repeating non-file options with a
+different argument will either have no further effect, or override prior
+occurrences (those further to the left on the command line) of that
+option.  Options which may be meaningfully specified more than once are
+noted in the descriptions below.</para>
+
+<para>Non-option arguments are object files or archives which are to be linked
+together.  They may follow, precede, or be mixed in with command-line
+options, except that an object file argument may not be placed between
+an option and its argument.</para>
+
+<para>Usually the linker is invoked with at least one object file, but you can
+specify other forms of binary input files using <emphasis role='strong' remap='B'>-l</emphasis>, <emphasis role='strong' remap='B'>-R</emphasis>,
+and the script command language.  If <emphasis remap='I'>no</emphasis> binary input files at all
+are specified, the linker does not produce any output, and issues the
+message <emphasis role='strong' remap='B'>No input files</emphasis>.</para>
+
+<para>If the linker cannot recognize the format of an object file, it will
+assume that it is a linker script.  A script specified in this way
+augments the main linker script used for the link (either the default
+linker script or the one specified by using <emphasis role='strong' remap='B'>-T</emphasis>).  This feature
+permits the linker to link against a file which appears to be an object
+or an archive, but actually merely defines some symbol values, or uses
+<emphasis remap='CW'>`INPUT'</emphasis> or <emphasis remap='CW'>`GROUP'</emphasis> to load other objects.  Note that
+specifying a script in this way merely augments the main linker script;
+use the <emphasis role='strong' remap='B'>-T</emphasis> option to replace the default linker script entirely.</para>
+
+<para>For options whose names are a single letter,
+option arguments must either follow the option letter without intervening
+whitespace, or be given as separate arguments immediately following the
+option that requires them.</para>
+
+<para>For options whose names are multiple letters, either one dash or two can
+precede the option name; for example, <emphasis role='strong' remap='B'>-trace-symbol</emphasis> and
+<emphasis role='strong' remap='B'>--trace-symbol</emphasis> are equivalent.  Note---there is one exception to
+this rule.  Multiple letter options that start with a lower case 'o' can
+only be preceded by two dashes.  This is to reduce confusion with the
+<emphasis role='strong' remap='B'>-o</emphasis> option.  So for example <emphasis role='strong' remap='B'>-omagic</emphasis> sets the output file
+name to <emphasis role='strong' remap='B'>magic</emphasis> whereas <emphasis role='strong' remap='B'>--omagic</emphasis> sets the <?troff ps -1?>NMAGIC<?troff ps 0?> flag on the
+output.</para>
+
+<para>Arguments to multiple-letter options must either be separated from the
+option name by an equals sign, or be given as separate arguments
+immediately following the option that requires them.  For example,
+<emphasis role='strong' remap='B'>--trace-symbol foo</emphasis> and <emphasis role='strong' remap='B'>--trace-symbol=foo</emphasis> are equivalent.
+Unique abbreviations of the names of multiple-letter options are
+accepted.</para>
+
+<para>Note---if the linker is being invoked indirectly, via a compiler driver
+(e.g. <emphasis role='strong' remap='B'>gcc</emphasis>) then all the linker command line options should be
+prefixed by <emphasis role='strong' remap='B'>-Wl,</emphasis> (or whatever is appropriate for the particular
+compiler driver) like this:</para>
+
+<literallayout remap='Vb'>
+          gcc -Wl,--startgroup foo.o bar.o -Wl,--endgroup
+</literallayout> <!-- remap='Ve' -->
+
+<para>This is important, because otherwise the compiler driver program may
+silently drop the linker options, resulting in a bad link.</para>
+
+<para>Here is a table of the generic command line switches accepted by the <?troff ps -1?>GNU<?troff ps 0?>
+linker:</para>
+<variablelist remap='IP'>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>@</emphasis><emphasis remap='I'>file</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>@file</secondary></indexterm>
+Read command-line options from <emphasis remap='I'>file</emphasis>.  The options read are
+inserted in place of the original @<emphasis remap='I'>file</emphasis> option.  If <emphasis remap='I'>file</emphasis>
+does not exist, or cannot be read, then the option will be treated
+literally, and not removed.</para>
+
+<para>Options in <emphasis remap='I'>file</emphasis> are separated by whitespace.  A whitespace
+character may be included in an option by surrounding the entire
+option in either single or double quotes.  Any character (including a
+backslash) may be included by prefixing the character to be included
+with a backslash.  The <emphasis remap='I'>file</emphasis> may itself contain additional
+@<emphasis remap='I'>file</emphasis> options; any such options will be processed recursively.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-a</emphasis><emphasis remap='I'>keyword</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-akeyword</secondary></indexterm>
+This option is supported for <?troff ps -1?>HP/UX<?troff ps 0?> compatibility.  The <emphasis remap='I'>keyword</emphasis>
+argument must be one of the strings <emphasis role='strong' remap='B'>archive</emphasis>, <emphasis role='strong' remap='B'>shared</emphasis>, or
+<emphasis role='strong' remap='B'>default</emphasis>.  <emphasis role='strong' remap='B'>-aarchive</emphasis> is functionally equivalent to
+<emphasis role='strong' remap='B'>-Bstatic</emphasis>, and the other two keywords are functionally equivalent
+to <emphasis role='strong' remap='B'>-Bdynamic</emphasis>.  This option may be used any number of times.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-A</emphasis><emphasis remap='I'>architecture</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Aarchitecture</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--architecture=</emphasis><emphasis remap='I'>architecture</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--architecture=architecture</secondary></indexterm>
+<!-- PD -->
+In the current release of <emphasis role='strong' remap='B'>ld</emphasis>, this option is useful only for the
+Intel 960 family of architectures.  In that <emphasis role='strong' remap='B'>ld</emphasis> configuration, the
+<emphasis remap='I'>architecture</emphasis> argument identifies the particular architecture in
+the 960 family, enabling some safeguards and modifying the
+archive-library search path.</para>
+
+<para>Future releases of <emphasis role='strong' remap='B'>ld</emphasis> may support similar functionality for
+other architecture families.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-b</emphasis> <emphasis remap='I'>input-format</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-b input-format</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--format=</emphasis><emphasis remap='I'>input-format</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--format=input-format</secondary></indexterm>
+<!-- PD -->
+<emphasis role='strong' remap='B'>ld</emphasis> may be configured to support more than one kind of object
+file.  If your <emphasis role='strong' remap='B'>ld</emphasis> is configured this way, you can use the
+<emphasis role='strong' remap='B'>-b</emphasis> option to specify the binary format for input object files
+that follow this option on the command line.  Even when <emphasis role='strong' remap='B'>ld</emphasis> is
+configured to support alternative object formats, you don't usually need
+to specify this, as <emphasis role='strong' remap='B'>ld</emphasis> should be configured to expect as a
+default input format the most usual format on each machine.
+<emphasis remap='I'>input-format</emphasis> is a text string, the name of a particular format
+supported by the <?troff ps -1?>BFD<?troff ps 0?> libraries.  (You can list the available binary
+formats with <emphasis role='strong' remap='B'>objdump -i</emphasis>.)</para>
+
+<para>You may want to use this option if you are linking files with an unusual
+binary format.  You can also use <emphasis role='strong' remap='B'>-b</emphasis> to switch formats explicitly (when
+linking object files of different formats), by including
+<emphasis role='strong' remap='B'>-b</emphasis> <emphasis remap='I'>input-format</emphasis> before each group of object files in a
+particular format.</para>
+
+<para>The default format is taken from the environment variable
+<emphasis remap='CW'>`GNUTARGET'</emphasis>.</para>
+
+<para>You can also define the input format from a script, using the command
+<emphasis remap='CW'>`TARGET'</emphasis>;</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-c</emphasis> <emphasis remap='I'>MRI-commandfile</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-c MRI-commandfile</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--mri-script=</emphasis><emphasis remap='I'>MRI-commandfile</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--mri-script=MRI-commandfile</secondary></indexterm>
+<!-- PD -->
+For compatibility with linkers produced by <?troff ps -1?>MRI<?troff ps 0?>, <emphasis role='strong' remap='B'>ld</emphasis> accepts script
+files written in an alternate, restricted command language, described in
+the <?troff ps -1?>MRI<?troff ps 0?> Compatible Script Files section of <?troff ps -1?>GNU<?troff ps 0?> ld documentation.
+Introduce <?troff ps -1?>MRI<?troff ps 0?> script files with
+the option <emphasis role='strong' remap='B'>-c</emphasis>; use the <emphasis role='strong' remap='B'>-T</emphasis> option to run linker
+scripts written in the general-purpose <emphasis role='strong' remap='B'>ld</emphasis> scripting language.
+If <emphasis remap='I'>MRI-cmdfile</emphasis> does not exist, <emphasis role='strong' remap='B'>ld</emphasis> looks for it in the directories
+specified by any <emphasis role='strong' remap='B'>-L</emphasis> options.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-d</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-d</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-dc</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-dc</secondary></indexterm></para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-dp</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-dp</secondary></indexterm>
+<!-- PD -->
+These three options are equivalent; multiple forms are supported for
+compatibility with other linkers.  They assign space to common symbols
+even if a relocatable output file is specified (with <emphasis role='strong' remap='B'>-r</emphasis>).  The
+script command <emphasis remap='CW'>`FORCE_COMMON_ALLOCATION'</emphasis> has the same effect.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-e</emphasis> <emphasis remap='I'>entry</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-e entry</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--entry=</emphasis><emphasis remap='I'>entry</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--entry=entry</secondary></indexterm>
+<!-- PD -->
+Use <emphasis remap='I'>entry</emphasis> as the explicit symbol for beginning execution of your
+program, rather than the default entry point.  If there is no symbol
+named <emphasis remap='I'>entry</emphasis>, the linker will try to parse <emphasis remap='I'>entry</emphasis> as a number,
+and use that as the entry address (the number will be interpreted in
+base 10; you may use a leading <emphasis role='strong' remap='B'>0x</emphasis> for base 16, or a leading
+<emphasis role='strong' remap='B'>0</emphasis> for base 8).</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--exclude-libs</emphasis> <emphasis remap='I'>lib</emphasis><emphasis role='strong' remap='B'>,</emphasis><emphasis remap='I'>lib</emphasis><emphasis role='strong' remap='B'>,...</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--exclude-libs lib,lib,...</secondary></indexterm>
+Specifies a list of archive libraries from which symbols should not be automatically
+exported. The library names may be delimited by commas or colons.  Specifying
+<emphasis remap='CW'>`--exclude-libs ALL'</emphasis> excludes symbols in all archive libraries from
+automatic export.  This option is available only for the i386 <?troff ps -1?>PE<?troff ps 0?> targeted
+port of the linker and for <?troff ps -1?>ELF<?troff ps 0?> targeted ports.  For i386 <?troff ps -1?>PE<?troff ps 0?>, symbols
+explicitly listed in a .def file are still exported, regardless of this
+option.  For <?troff ps -1?>ELF<?troff ps 0?> targeted ports, symbols affected by this option will
+be treated as hidden.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-E</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-E</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--export-dynamic</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--export-dynamic</secondary></indexterm>
+<!-- PD -->
+When creating a dynamically linked executable, add all symbols to the
+dynamic symbol table.  The dynamic symbol table is the set of symbols
+which are visible from dynamic objects at run time.</para>
+
+<para>If you do not use this option, the dynamic symbol table will normally
+contain only those symbols which are referenced by some dynamic object
+mentioned in the link.</para>
+
+<para>If you use <emphasis remap='CW'>`dlopen'</emphasis> to load a dynamic object which needs to refer
+back to the symbols defined by the program, rather than some other
+dynamic object, then you will probably need to use this option when
+linking the program itself.</para>
+
+<para>You can also use the dynamic list to control what symbols should
+be added to the dynamic symbol table if the output format supports it.
+See the description of <emphasis role='strong' remap='B'>--dynamic-list</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-EB</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-EB</secondary></indexterm>
+Link big-endian objects.  This affects the default output format.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-EL</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-EL</secondary></indexterm>
+Link little-endian objects.  This affects the default output format.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-f</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-f</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--auxiliary</emphasis> <emphasis remap='I'>name</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--auxiliary name</secondary></indexterm>
+<!-- PD -->
+When creating an <?troff ps -1?>ELF<?troff ps 0?> shared object, set the internal <?troff ps -1?>DT_AUXILIARY<?troff ps 0?> field
+to the specified name.  This tells the dynamic linker that the symbol
+table of the shared object should be used as an auxiliary filter on the
+symbol table of the shared object <emphasis remap='I'>name</emphasis>.</para>
+
+<para>If you later link a program against this filter object, then, when you
+run the program, the dynamic linker will see the <?troff ps -1?>DT_AUXILIARY<?troff ps 0?> field.  If
+the dynamic linker resolves any symbols from the filter object, it will
+first check whether there is a definition in the shared object
+<emphasis remap='I'>name</emphasis>.  If there is one, it will be used instead of the definition
+in the filter object.  The shared object <emphasis remap='I'>name</emphasis> need not exist.
+Thus the shared object <emphasis remap='I'>name</emphasis> may be used to provide an alternative
+implementation of certain functions, perhaps for debugging or for
+machine specific performance.</para>
+
+<para>This option may be specified more than once.  The <?troff ps -1?>DT_AUXILIARY<?troff ps 0?> entries
+will be created in the order in which they appear on the command line.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-F</emphasis> <emphasis remap='I'>name</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-F name</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--filter</emphasis> <emphasis remap='I'>name</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--filter name</secondary></indexterm>
+<!-- PD -->
+When creating an <?troff ps -1?>ELF<?troff ps 0?> shared object, set the internal <?troff ps -1?>DT_FILTER<?troff ps 0?> field to
+the specified name.  This tells the dynamic linker that the symbol table
+of the shared object which is being created should be used as a filter
+on the symbol table of the shared object <emphasis remap='I'>name</emphasis>.</para>
+
+<para>If you later link a program against this filter object, then, when you
+run the program, the dynamic linker will see the <?troff ps -1?>DT_FILTER<?troff ps 0?> field.  The
+dynamic linker will resolve symbols according to the symbol table of the
+filter object as usual, but it will actually link to the definitions
+found in the shared object <emphasis remap='I'>name</emphasis>.  Thus the filter object can be
+used to select a subset of the symbols provided by the object
+<emphasis remap='I'>name</emphasis>.</para>
+
+<para>Some older linkers used the <emphasis role='strong' remap='B'>-F</emphasis> option throughout a compilation
+toolchain for specifying object-file format for both input and output
+object files.
+The <?troff ps -1?>GNU<?troff ps 0?> linker uses other mechanisms for this purpose: the
+<emphasis role='strong' remap='B'>-b</emphasis>, <emphasis role='strong' remap='B'>--format</emphasis>, <emphasis role='strong' remap='B'>--oformat</emphasis> options, the
+<emphasis remap='CW'>`TARGET'</emphasis> command in linker scripts, and the <emphasis remap='CW'>`GNUTARGET'</emphasis>
+environment variable.
+The <?troff ps -1?>GNU<?troff ps 0?> linker will ignore the <emphasis role='strong' remap='B'>-F</emphasis> option when not
+creating an <?troff ps -1?>ELF<?troff ps 0?> shared object.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-fini</emphasis> <emphasis remap='I'>name</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-fini name</secondary></indexterm>
+When creating an <?troff ps -1?>ELF<?troff ps 0?> executable or shared object, call <?troff ps -1?>NAME<?troff ps 0?> when the
+executable or shared object is unloaded, by setting <?troff ps -1?>DT_FINI<?troff ps 0?> to the
+address of the function.  By default, the linker uses <emphasis remap='CW'>`_fini'</emphasis> as
+the function to call.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-g</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-g</secondary></indexterm>
+Ignored.  Provided for compatibility with other tools.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-G</emphasis><emphasis remap='I'>value</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Gvalue</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--gpsize=</emphasis><emphasis remap='I'>value</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--gpsize=value</secondary></indexterm>
+<!-- PD -->
+Set the maximum size of objects to be optimized using the <?troff ps -1?>GP<?troff ps 0?> register to
+<emphasis remap='I'>size</emphasis>.  This is only meaningful for object file formats such as
+<?troff ps -1?>MIPS<?troff ps 0?> <?troff ps -1?>ECOFF<?troff ps 0?> which supports putting large and small objects into different
+sections.  This is ignored for other object file formats.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-h</emphasis><emphasis remap='I'>name</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-hname</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-soname=</emphasis><emphasis remap='I'>name</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-soname=name</secondary></indexterm>
+<!-- PD -->
+When creating an <?troff ps -1?>ELF<?troff ps 0?> shared object, set the internal <?troff ps -1?>DT_SONAME<?troff ps 0?> field to
+the specified name.  When an executable is linked with a shared object
+which has a <?troff ps -1?>DT_SONAME<?troff ps 0?> field, then when the executable is run the dynamic
+linker will attempt to load the shared object specified by the <?troff ps -1?>DT_SONAME<?troff ps 0?>
+field rather than the using the file name given to the linker.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-i</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-i</secondary></indexterm>
+Perform an incremental link (same as option <emphasis role='strong' remap='B'>-r</emphasis>).</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-init</emphasis> <emphasis remap='I'>name</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-init name</secondary></indexterm>
+When creating an <?troff ps -1?>ELF<?troff ps 0?> executable or shared object, call <?troff ps -1?>NAME<?troff ps 0?> when the
+executable or shared object is loaded, by setting <?troff ps -1?>DT_INIT<?troff ps 0?> to the address
+of the function.  By default, the linker uses <emphasis remap='CW'>`_init'</emphasis> as the
+function to call.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-l</emphasis><emphasis remap='I'>namespec</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-lnamespec</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--library=</emphasis><emphasis remap='I'>namespec</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--library=namespec</secondary></indexterm>
+<!-- PD -->
+Add the archive or object file specified by <emphasis remap='I'>namespec</emphasis> to the
+list of files to link.  This option may be used any number of times.
+If <emphasis remap='I'>namespec</emphasis> is of the form <emphasis remap='I'>:filename</emphasis>, <emphasis role='strong' remap='B'>ld</emphasis>
+will search the library path for a file called <emphasis remap='I'>filename</emphasis>, otherise it
+will search the library path for a file called <emphasis remap='I'>libnamespec.a</emphasis>.</para>
+
+<para>On systems which support shared libraries, <emphasis role='strong' remap='B'>ld</emphasis> may also search for
+files other than <emphasis remap='I'>libnamespec.a</emphasis>.  Specifically, on <?troff ps -1?>ELF<?troff ps 0?>
+and SunOS systems, <emphasis role='strong' remap='B'>ld</emphasis> will search a directory for a library
+called <emphasis remap='I'>libnamespec.so</emphasis> before searching for one called
+<emphasis remap='I'>libnamespec.a</emphasis>.  (By convention, a <emphasis remap='CW'>`.so'</emphasis> extension
+indicates a shared library.)  Note that this behavior does not apply
+to <emphasis remap='I'>:filename</emphasis>, which always specifies a file called
+<emphasis remap='I'>filename</emphasis>.</para>
+
+<para>The linker will search an archive only once, at the location where it is
+specified on the command line.  If the archive defines a symbol which
+was undefined in some object which appeared before the archive on the
+command line, the linker will include the appropriate file(s) from the
+archive.  However, an undefined symbol in an object appearing later on
+the command line will not cause the linker to search the archive again.</para>
+
+<para>See the <emphasis role='strong' remap='B'>-(</emphasis> option for a way to force the linker to search
+archives multiple times.</para>
+
+<para>You may list the same archive multiple times on the command line.</para>
+
+<para>This type of archive searching is standard for Unix linkers.  However,
+if you are using <emphasis role='strong' remap='B'>ld</emphasis> on <?troff ps -1?>AIX<?troff ps 0?>, note that it is different from the
+behaviour of the <?troff ps -1?>AIX<?troff ps 0?> linker.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-L</emphasis><emphasis remap='I'>searchdir</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Lsearchdir</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--library-path=</emphasis><emphasis remap='I'>searchdir</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--library-path=searchdir</secondary></indexterm>
+<!-- PD -->
+Add path <emphasis remap='I'>searchdir</emphasis> to the list of paths that <emphasis role='strong' remap='B'>ld</emphasis> will search
+for archive libraries and <emphasis role='strong' remap='B'>ld</emphasis> control scripts.  You may use this
+option any number of times.  The directories are searched in the order
+in which they are specified on the command line.  Directories specified
+on the command line are searched before the default directories.  All
+<emphasis role='strong' remap='B'>-L</emphasis> options apply to all <emphasis role='strong' remap='B'>-l</emphasis> options, regardless of the
+order in which the options appear.</para>
+
+<para>If <emphasis remap='I'>searchdir</emphasis> begins with <emphasis remap='CW'>`='</emphasis>, then the <emphasis remap='CW'>`='</emphasis> will be replaced
+by the <emphasis remap='I'>sysroot prefix</emphasis>, a path specified when the linker is configured.</para>
+
+<para>The default set of paths searched (without being specified with
+<emphasis role='strong' remap='B'>-L</emphasis>) depends on which emulation mode <emphasis role='strong' remap='B'>ld</emphasis> is using, and in
+some cases also on how it was configured.</para>
+
+<para>The paths can also be specified in a link script with the
+<emphasis remap='CW'>`SEARCH_DIR'</emphasis> command.  Directories specified this way are searched
+at the point in which the linker script appears in the command line.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-m</emphasis><emphasis remap='I'>emulation</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-memulation</secondary></indexterm>
+Emulate the <emphasis remap='I'>emulation</emphasis> linker.  You can list the available
+emulations with the <emphasis role='strong' remap='B'>--verbose</emphasis> or <emphasis role='strong' remap='B'>-V</emphasis> options.</para>
+
+<para>If the <emphasis role='strong' remap='B'>-m</emphasis> option is not used, the emulation is taken from the
+<emphasis remap='CW'>`LDEMULATION'</emphasis> environment variable, if that is defined.</para>
+
+<para>Otherwise, the default emulation depends upon how the linker was
+configured.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-M</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-M</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--print-map</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--print-map</secondary></indexterm>
+<!-- PD -->
+Print a link map to the standard output.  A link map provides
+information about the link, including the following:</para>
+    <itemizedlist remap='IP+bullet'>
+      <listitem override='bullet'>
+<para>Where object files are mapped into memory.</para>
+      </listitem>
+      <listitem override='bullet'>
+<para>How common symbols are allocated.</para>
+      </listitem>
+      <listitem override='bullet'>
+<para>All archive members included in the link, with a mention of the symbol
+which caused the archive member to be brought in.</para>
+      </listitem>
+      <listitem override='bullet'>
+<para>The values assigned to symbols.</para>
+
+<para>Note - symbols whose values are computed by an expression which
+involves a reference to a previous value of the same symbol may not
+have correct result displayed in the link map.  This is because the
+linker discards intermediate results and only retains the final value
+of an expression.  Under such circumstances the linker will display
+the final value enclosed by square brackets.  Thus for example a
+linker script containing:</para>
+
+<literallayout remap='Vb'>
+           foo = 1
+           foo = foo * 4
+           foo = foo + 8
+</literallayout> <!-- remap='Ve' -->
+
+<para>will produce the following output in the link map if the <emphasis role='strong' remap='B'>-M</emphasis>
+option is used:</para>
+
+<literallayout remap='Vb'>
+<funcsynopsis>
+<funcsynopsisinfo>
+           0x00000001                foo = 0x1
+           [0x0000000c]                foo = (foo * 0x4)
+           [0x0000000c]                foo = (foo + 0x8)
+</funcsynopsisinfo>
+</funcsynopsis>
+</literallayout> <!-- remap='Ve' -->
+<para>See <emphasis role='strong' remap='B'>Expressions</emphasis> for more information about expressions in linker
+scripts.</para>
+      </listitem>
+    </itemizedlist>
+<!-- .RS 4
+.RE -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-n</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-n</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--nmagic</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--nmagic</secondary></indexterm>
+<!-- PD -->
+Turn off page alignment of sections, and mark the output as
+<emphasis remap='CW'>`NMAGIC'</emphasis> if possible.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-N</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-N</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--omagic</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--omagic</secondary></indexterm>
+<!-- PD -->
+Set the text and data sections to be readable and writable.  Also, do
+not page-align the data segment, and disable linking against shared
+libraries.  If the output format supports Unix style magic numbers,
+mark the output as <emphasis remap='CW'>`OMAGIC'</emphasis>. Note: Although a writable text section
+is allowed for PE-COFF targets, it does not conform to the format
+specification published by Microsoft.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-omagic</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-omagic</secondary></indexterm>
+This option negates most of the effects of the <emphasis role='strong' remap='B'>-N</emphasis> option.  It
+sets the text section to be read-only, and forces the data segment to
+be page-aligned.  Note - this option does not enable linking against
+shared libraries.  Use <emphasis role='strong' remap='B'>-Bdynamic</emphasis> for this.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-o</emphasis> <emphasis remap='I'>output</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-o output</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--output=</emphasis><emphasis remap='I'>output</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--output=output</secondary></indexterm>
+<!-- PD -->
+Use <emphasis remap='I'>output</emphasis> as the name for the program produced by <emphasis role='strong' remap='B'>ld</emphasis>; if this
+option is not specified, the name <emphasis remap='I'>a.out</emphasis> is used by default.  The
+script command <emphasis remap='CW'>`OUTPUT'</emphasis> can also specify the output file name.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-O</emphasis> <emphasis remap='I'>level</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-O level</secondary></indexterm>
+If <emphasis remap='I'>level</emphasis> is a numeric values greater than zero <emphasis role='strong' remap='B'>ld</emphasis> optimizes
+the output.  This might take significantly longer and therefore probably
+should only be enabled for the final binary.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-q</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-q</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--emit-relocs</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--emit-relocs</secondary></indexterm>
+<!-- PD -->
+Leave relocation sections and contents in fully linked executables.
+Post link analysis and optimization tools may need this information in
+order to perform correct modifications of executables.  This results
+in larger executables.</para>
+
+<para>This option is currently only supported on <?troff ps -1?>ELF<?troff ps 0?> platforms.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--force-dynamic</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--force-dynamic</secondary></indexterm>
+Force the output file to have dynamic sections.  This option is specific
+to VxWorks targets.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-r</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-r</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--relocatable</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--relocatable</secondary></indexterm>
+<!-- PD -->
+Generate relocatable output---i.e., generate an output file that can in
+turn serve as input to <emphasis role='strong' remap='B'>ld</emphasis>.  This is often called <emphasis remap='I'>partial
+linking</emphasis>.  As a side effect, in environments that support standard Unix
+magic numbers, this option also sets the output file's magic number to
+<emphasis remap='CW'>`OMAGIC'</emphasis>.
+If this option is not specified, an absolute file is produced.  When
+linking C++; programs, this file <option>will not</option> resolve references to
+constructors; to do that, use <emphasis role='strong' remap='B'>-Ur</emphasis>.</para>
+
+<para>When an input file does not have the same format as the output file,
+partial linking is only supported if that input file does not contain any
+relocations.  Different output formats can have further restrictions; for
+example some <emphasis remap='CW'>`a.out'</emphasis>-based formats do not support partial linking
+with input files in other formats at all.</para>
+
+<para>This option does the same thing as <emphasis role='strong' remap='B'>-i</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-R</emphasis> <emphasis remap='I'>filename</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-R filename</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--just-symbols=</emphasis><emphasis remap='I'>filename</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--just-symbols=filename</secondary></indexterm>
+<!-- PD -->
+Read symbol names and their addresses from <emphasis remap='I'>filename</emphasis>, but do not
+relocate it or include it in the output.  This allows your output file
+to refer symbolically to absolute locations of memory defined in other
+programs.  You may use this option more than once.</para>
+
+<para>For compatibility with other <?troff ps -1?>ELF<?troff ps 0?> linkers, if the <emphasis role='strong' remap='B'>-R</emphasis> option is
+followed by a directory name, rather than a file name, it is treated as
+the <emphasis role='strong' remap='B'>-rpath</emphasis> option.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-s</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-s</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--strip-all</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--strip-all</secondary></indexterm>
+<!-- PD -->
+Omit all symbol information from the output file.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-S</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-S</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--strip-debug</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--strip-debug</secondary></indexterm>
+<!-- PD -->
+Omit debugger symbol information (but not all symbols) from the output file.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-t</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-t</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--trace</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--trace</secondary></indexterm>
+<!-- PD -->
+Print the names of the input files as <emphasis role='strong' remap='B'>ld</emphasis> processes them.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-T</emphasis> <emphasis remap='I'>scriptfile</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-T scriptfile</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--script=</emphasis><emphasis remap='I'>scriptfile</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--script=scriptfile</secondary></indexterm>
+<!-- PD -->
+Use <emphasis remap='I'>scriptfile</emphasis> as the linker script.  This script replaces
+<emphasis role='strong' remap='B'>ld</emphasis>'s default linker script (rather than adding to it), so
+<emphasis remap='I'>commandfile</emphasis> must specify everything necessary to describe the
+output file.    If <emphasis remap='I'>scriptfile</emphasis> does not exist in
+the current directory, <emphasis remap='CW'>`ld'</emphasis> looks for it in the directories
+specified by any preceding <emphasis role='strong' remap='B'>-L</emphasis> options.  Multiple <emphasis role='strong' remap='B'>-T</emphasis>
+options accumulate.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-dT</emphasis> <emphasis remap='I'>scriptfile</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-dT scriptfile</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--default-script=</emphasis><emphasis remap='I'>scriptfile</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--default-script=scriptfile</secondary></indexterm>
+<!-- PD -->
+Use <emphasis remap='I'>scriptfile</emphasis> as the default linker script.</para>
+
+<para>This option is similar to the <emphasis role='strong' remap='B'>--script</emphasis> option except that
+processing of the script is delayed until after the rest of the
+command line has been processed.  This allows options placed after the
+<emphasis role='strong' remap='B'>--default-script</emphasis> option on the command line to affect the
+behaviour of the linker script, which can be important when the linker
+command line cannot be directly controlled by the user.  (eg because
+the command line is being constructed by another tool, such as
+<emphasis role='strong' remap='B'>gcc</emphasis>).</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-u</emphasis> <emphasis remap='I'>symbol</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-u symbol</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--undefined=</emphasis><emphasis remap='I'>symbol</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--undefined=symbol</secondary></indexterm>
+<!-- PD -->
+Force <emphasis remap='I'>symbol</emphasis> to be entered in the output file as an undefined
+symbol.  Doing this may, for example, trigger linking of additional
+modules from standard libraries.  <emphasis role='strong' remap='B'>-u</emphasis> may be repeated with
+different option arguments to enter additional undefined symbols.  This
+option is equivalent to the <emphasis remap='CW'>`EXTERN'</emphasis> linker script command.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Ur</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Ur</secondary></indexterm>
+For anything other than C++; programs, this option is equivalent to
+<emphasis role='strong' remap='B'>-r</emphasis>: it generates relocatable output---i.e., an output file that can in
+turn serve as input to <emphasis role='strong' remap='B'>ld</emphasis>.  When linking C++; programs, <emphasis role='strong' remap='B'>-Ur</emphasis>
+<emphasis remap='I'>does</emphasis> resolve references to constructors, unlike <emphasis role='strong' remap='B'>-r</emphasis>.
+It does not work to use <emphasis role='strong' remap='B'>-Ur</emphasis> on files that were themselves linked
+with <emphasis role='strong' remap='B'>-Ur</emphasis>; once the constructor table has been built, it cannot
+be added to.  Use <emphasis role='strong' remap='B'>-Ur</emphasis> only for the last partial link, and
+<emphasis role='strong' remap='B'>-r</emphasis> for the others.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--unique[=</emphasis><emphasis remap='I'><?troff ps -1?>SECTION<?troff ps 0?></emphasis><emphasis role='strong' remap='B'>]</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--unique[=SECTION]</secondary></indexterm>
+Creates a separate output section for every input section matching
+<emphasis remap='I'><?troff ps -1?>SECTION<?troff ps 0?></emphasis>, or if the optional wildcard <emphasis remap='I'><?troff ps -1?>SECTION<?troff ps 0?></emphasis> argument is
+missing, for every orphan input section.  An orphan section is one not
+specifically mentioned in a linker script.  You may use this option
+multiple times on the command line;  It prevents the normal merging of
+input sections with the same name, overriding output section assignments
+in a linker script.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-v</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-v</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--version</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--version</secondary></indexterm></para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-V</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-V</secondary></indexterm>
+<!-- PD -->
+Display the version number for <emphasis role='strong' remap='B'>ld</emphasis>.  The <emphasis role='strong' remap='B'>-V</emphasis> option also
+lists the supported emulations.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-x</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-x</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--discard-all</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--discard-all</secondary></indexterm>
+<!-- PD -->
+Delete all local symbols.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-X</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-X</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--discard-locals</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--discard-locals</secondary></indexterm>
+<!-- PD -->
+Delete all temporary local symbols.  (These symbols start with
+system-specific local label prefixes, typically <emphasis role='strong' remap='B'>.L</emphasis> for <?troff ps -1?>ELF<?troff ps 0?> systems
+or <emphasis role='strong' remap='B'>L</emphasis> for traditional a.out systems.)</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-y</emphasis> <emphasis remap='I'>symbol</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-y symbol</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--trace-symbol=</emphasis><emphasis remap='I'>symbol</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--trace-symbol=symbol</secondary></indexterm>
+<!-- PD -->
+Print the name of each linked file in which <emphasis remap='I'>symbol</emphasis> appears.  This
+option may be given any number of times.  On many systems it is necessary
+to prepend an underscore.</para>
+
+<para>This option is useful when you have an undefined symbol in your link but
+don't know where the reference is coming from.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Y</emphasis> <emphasis remap='I'>path</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Y path</secondary></indexterm>
+Add <emphasis remap='I'>path</emphasis> to the default library search path.  This option exists
+for Solaris compatibility.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-z</emphasis> <emphasis remap='I'>keyword</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-z keyword</secondary></indexterm>
+The recognized keywords are:</para>
+    <variablelist remap='IP'>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>combreloc</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>combreloc</secondary></indexterm>
+Combines multiple reloc sections and sorts them to make dynamic symbol
+lookup caching possible.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>defs</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>defs</secondary></indexterm>
+Disallows undefined symbols in object files.  Undefined symbols in
+shared libraries are still allowed.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>execstack</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>execstack</secondary></indexterm>
+Marks the object as requiring executable stack.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>initfirst</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>initfirst</secondary></indexterm>
+This option is only meaningful when building a shared object.
+It marks the object so that its runtime initialization will occur
+before the runtime initialization of any other objects brought into
+the process at the same time.  Similarly the runtime finalization of
+the object will occur after the runtime finalization of any other
+objects.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>interpose</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>interpose</secondary></indexterm>
+Marks the object that its symbol table interposes before all symbols
+but the primary executable.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>lazy</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>lazy</secondary></indexterm>
+When generating an executable or shared library, mark it to tell the
+dynamic linker to defer function call resolution to the point when
+the function is called (lazy binding), rather than at load time.
+Lazy binding is the default.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>loadfltr</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>loadfltr</secondary></indexterm>
+Marks  the object that its filters be processed immediately at
+runtime.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>muldefs</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>muldefs</secondary></indexterm>
+Allows multiple definitions.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>nocombreloc</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>nocombreloc</secondary></indexterm>
+Disables multiple reloc sections combining.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>nocopyreloc</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>nocopyreloc</secondary></indexterm>
+Disables production of copy relocs.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>nodefaultlib</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>nodefaultlib</secondary></indexterm>
+Marks the object that the search for dependencies of this object will
+ignore any default library search paths.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>nodelete</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>nodelete</secondary></indexterm>
+Marks the object shouldn't be unloaded at runtime.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>nodlopen</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>nodlopen</secondary></indexterm>
+Marks the object not available to <emphasis remap='CW'>`dlopen'</emphasis>.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>nodump</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>nodump</secondary></indexterm>
+Marks the object can not be dumped by <emphasis remap='CW'>`dldump'</emphasis>.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>noexecstack</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>noexecstack</secondary></indexterm>
+Marks the object as not requiring executable stack.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>norelro</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>norelro</secondary></indexterm>
+Don't create an <?troff ps -1?>ELF<?troff ps 0?> <emphasis remap='CW'>`PT_GNU_RELRO'</emphasis> segment header in the object.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>now</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>now</secondary></indexterm>
+When generating an executable or shared library, mark it to tell the
+dynamic linker to resolve all symbols when the program is started, or
+when the shared library is linked to using dlopen, instead of
+deferring function call resolution to the point when the function is
+first called.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>origin</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>origin</secondary></indexterm>
+Marks the object may contain <emphasis remap='CW'>$ORIGIN</emphasis>.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>relro</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>relro</secondary></indexterm>
+Create an <?troff ps -1?>ELF<?troff ps 0?> <emphasis remap='CW'>`PT_GNU_RELRO'</emphasis> segment header in the object.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>max-page-size=</emphasis><emphasis remap='I'>value</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>max-page-size=value</secondary></indexterm>
+Set the emulation maximum page size to <emphasis remap='I'>value</emphasis>.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>common-page-size=</emphasis><emphasis remap='I'>value</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>common-page-size=value</secondary></indexterm>
+Set the emulation common page size to <emphasis remap='I'>value</emphasis>.</para>
+      </listitem>
+      </varlistentry>
+    </variablelist>
+  <blockquote remap='RS'>
+
+<para>Other keywords are ignored for Solaris compatibility.
+    </para></blockquote> <!-- remap='RE' -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-(</emphasis> <emphasis remap='I'>archives</emphasis> <emphasis role='strong' remap='B'>-)</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-( archives -)</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--start-group</emphasis> <emphasis remap='I'>archives</emphasis> <emphasis role='strong' remap='B'>--end-group</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--start-group archives --end-group</secondary></indexterm>
+<!-- PD -->
+The <emphasis remap='I'>archives</emphasis> should be a list of archive files.  They may be
+either explicit file names, or <emphasis role='strong' remap='B'>-l</emphasis> options.</para>
+
+<para>The specified archives are searched repeatedly until no new undefined
+references are created.  Normally, an archive is searched only once in
+the order that it is specified on the command line.  If a symbol in that
+archive is needed to resolve an undefined symbol referred to by an
+object in an archive that appears later on the command line, the linker
+would not be able to resolve that reference.  By grouping the archives,
+they all be searched repeatedly until all possible references are
+resolved.</para>
+
+<para>Using this option has a significant performance cost.  It is best to use
+it only when there are unavoidable circular references between two or
+more archives.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--accept-unknown-input-arch</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--accept-unknown-input-arch</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-accept-unknown-input-arch</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-accept-unknown-input-arch</secondary></indexterm>
+<!-- PD -->
+Tells the linker to accept input files whose architecture cannot be
+recognised.  The assumption is that the user knows what they are doing
+and deliberately wants to link in these unknown input files.  This was
+the default behaviour of the linker, before release 2.14.  The default
+behaviour from release 2.14 onwards is to reject such input files, and
+so the <emphasis role='strong' remap='B'>--accept-unknown-input-arch</emphasis> option has been added to
+restore the old behaviour.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--add-needed</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--add-needed</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-add-needed</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-add-needed</secondary></indexterm>
+<!-- PD -->
+This option affects the treatment of dynamic libraries from <?troff ps -1?>ELF<?troff ps 0?>
+<?troff ps -1?>DT_NEEDED<?troff ps 0?> tags in dynamic libraries mentioned on the command line after
+the <emphasis role='strong' remap='B'>--add-needed</emphasis> option.  Normally, the linker will not copy
+a <?troff ps -1?>DT_NEEDED<?troff ps 0?> tags from each dynamic library to the produced output object.
+<emphasis role='strong' remap='B'>--add-needed</emphasis> makes linker to copy <?troff ps -1?>DT_NEEDED<?troff ps 0?> tags from all
+dynamic libraries mentioned after this flag.
+<emphasis role='strong' remap='B'>--no-add-needed</emphasis> restores the default behaviour.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--as-needed</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--as-needed</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-as-needed</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-as-needed</secondary></indexterm>
+<!-- PD -->
+This option affects <?troff ps -1?>ELF<?troff ps 0?> <?troff ps -1?>DT_NEEDED<?troff ps 0?> tags for dynamic
+libraries mentioned on the command line after the <emphasis role='strong' remap='B'>--as-needed</emphasis>
+option when <emphasis role='strong' remap='B'>--add-needed</emphasis> is in effect.
+In such a case <emphasis role='strong' remap='B'>--as-needed</emphasis> causes <?troff ps -1?>DT_NEEDED<?troff ps 0?> tags
+to only be emitted for libraries that satisfy some symbol reference
+from regular objects which is undefined at the point that the library
+was linked.
+<emphasis role='strong' remap='B'>--no-as-needed</emphasis> restores the default behaviour.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-assert</emphasis> <emphasis remap='I'>keyword</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-assert keyword</secondary></indexterm>
+This option is ignored for SunOS compatibility.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Bdynamic</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Bdynamic</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-dy</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-dy</secondary></indexterm></para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-call_shared</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-call_shared</secondary></indexterm>
+<!-- PD -->
+Link against dynamic libraries.  This is only meaningful on platforms
+for which shared libraries are supported.  This option is normally the
+default on such platforms.  The different variants of this option are
+for compatibility with various systems.  You may use this option
+multiple times on the command line: it affects library searching for
+<emphasis role='strong' remap='B'>-l</emphasis> options which follow it.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Bgroup</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Bgroup</secondary></indexterm>
+Set the <emphasis remap='CW'>`DF_1_GROUP'</emphasis> flag in the <emphasis remap='CW'>`DT_FLAGS_1'</emphasis> entry in the dynamic
+section.  This causes the runtime linker to handle lookups in this
+object and its dependencies to be performed only inside the group.
+<emphasis role='strong' remap='B'>--unresolved-symbols=report-all</emphasis> is implied.  This option is
+only meaningful on <?troff ps -1?>ELF<?troff ps 0?> platforms which support shared libraries.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Bstatic</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Bstatic</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-dn</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-dn</secondary></indexterm></para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-non_shared</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-non_shared</secondary></indexterm></para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-static</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-static</secondary></indexterm>
+<!-- PD -->
+Do not link against shared libraries.  This is only meaningful on
+platforms for which shared libraries are supported.  The different
+variants of this option are for compatibility with various systems.  You
+may use this option multiple times on the command line: it affects
+library searching for <emphasis role='strong' remap='B'>-l</emphasis> options which follow it.  This
+option also implies <emphasis role='strong' remap='B'>--unresolved-symbols=report-all</emphasis>.  This
+option can be used with <emphasis role='strong' remap='B'>-shared</emphasis>.  Doing so means that a
+shared library is being created but that all of the library's external
+references must be resolved by pulling in entries from static
+libraries.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Bsymbolic</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Bsymbolic</secondary></indexterm>
+When creating a shared library, bind references to global symbols to the
+definition within the shared library, if any.  Normally, it is possible
+for a program linked against a shared library to override the definition
+within the shared library.  This option is only meaningful on <?troff ps -1?>ELF<?troff ps 0?>
+platforms which support shared libraries.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Bsymbolic-functions</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Bsymbolic-functions</secondary></indexterm>
+When creating a shared library, bind references to global function
+symbols to the definition within the shared library, if any. 
+This option is only meaningful on <?troff ps -1?>ELF<?troff ps 0?> platforms which support shared
+libraries.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--dynamic-list=</emphasis><emphasis remap='I'>dynamic-list-file</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--dynamic-list=dynamic-list-file</secondary></indexterm>
+Specify the name of a dynamic list file to the linker.  This is
+typically used when creating shared libraries to specify a list of
+global symbols whose references shouldn't be bound to the definition
+within the shared library, or creating dynamically linked executables
+to specify a list of symbols which should be added to the symbol table
+in the executable.  This option is only meaningful on <?troff ps -1?>ELF<?troff ps 0?> platforms
+which support shared libraries.</para>
+
+<para>The format of the dynamic list is the same as the version node without
+scope and node name.  See <emphasis role='strong' remap='B'><?troff ps -1?>VERSION<?troff ps 0?></emphasis> for more information.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--dynamic-list-data</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--dynamic-list-data</secondary></indexterm>
+Include all global data symbols to the dynamic list.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--dynamic-list-cpp-new</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--dynamic-list-cpp-new</secondary></indexterm>
+Provide the builtin dynamic list for C++; operator new and delete.  It
+is mainly useful for building shared libstdc++.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--dynamic-list-cpp-typeinfo</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--dynamic-list-cpp-typeinfo</secondary></indexterm>
+Provide the builtin dynamic list for C++; runtime type identification.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--check-sections</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--check-sections</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-check-sections</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-check-sections</secondary></indexterm>
+<!-- PD -->
+Asks the linker <emphasis remap='I'>not</emphasis> to check section addresses after they have
+been assigned to see if there are any overlaps.  Normally the linker will
+perform this check, and if it finds any overlaps it will produce
+suitable error messages.  The linker does know about, and does make
+allowances for sections in overlays.  The default behaviour can be
+restored by using the command line switch <emphasis role='strong' remap='B'>--check-sections</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--cref</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--cref</secondary></indexterm>
+Output a cross reference table.  If a linker map file is being
+generated, the cross reference table is printed to the map file.
+Otherwise, it is printed on the standard output.</para>
+
+<para>The format of the table is intentionally simple, so that it may be
+easily processed by a script if necessary.  The symbols are printed out,
+sorted by name.  For each symbol, a list of file names is given.  If the
+symbol is defined, the first file listed is the location of the
+definition.  The remaining files contain references to the symbol.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-define-common</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-define-common</secondary></indexterm>
+This option inhibits the assignment of addresses to common symbols.
+The script command <emphasis remap='CW'>`INHIBIT_COMMON_ALLOCATION'</emphasis> has the same effect.</para>
+
+<para>The <emphasis role='strong' remap='B'>--no-define-common</emphasis> option allows decoupling
+the decision to assign addresses to Common symbols from the choice
+of the output file type; otherwise a non-Relocatable output type
+forces assigning addresses to Common symbols.
+Using <emphasis role='strong' remap='B'>--no-define-common</emphasis> allows Common symbols that are referenced
+from a shared library to be assigned addresses only in the main program.
+This eliminates the unused duplicate space in the shared library,
+and also prevents any possible confusion over resolving to the wrong
+duplicate when there are many dynamic modules with specialized search
+paths for runtime symbol resolution.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--defsym</emphasis> <emphasis remap='I'>symbol</emphasis><emphasis role='strong' remap='B'>=</emphasis><emphasis remap='I'>expression</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--defsym symbol=expression</secondary></indexterm>
+Create a global symbol in the output file, containing the absolute
+address given by <emphasis remap='I'>expression</emphasis>.  You may use this option as many
+times as necessary to define multiple symbols in the command line.  A
+limited form of arithmetic is supported for the <emphasis remap='I'>expression</emphasis> in this
+context: you may give a hexadecimal constant or the name of an existing
+symbol, or use <emphasis remap='CW'>`+'</emphasis> and <emphasis remap='CW'>`-'</emphasis> to add or subtract hexadecimal
+constants or symbols.  If you need more elaborate expressions, consider
+using the linker command language from a script.  <emphasis remap='I'>Note:</emphasis> there should be no white
+space between <emphasis remap='I'>symbol</emphasis>, the equals sign ("<emphasis role='strong' remap='B'>=</emphasis>"), and
+<emphasis remap='I'>expression</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--demangle[=</emphasis><emphasis remap='I'>style</emphasis><emphasis role='strong' remap='B'>]</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--demangle[=style]</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-demangle</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-demangle</secondary></indexterm>
+<!-- PD -->
+These options control whether to demangle symbol names in error messages
+and other output.  When the linker is told to demangle, it tries to
+present symbol names in a readable fashion: it strips leading
+underscores if they are used by the object file format, and converts C++;
+mangled symbol names into user readable names.  Different compilers have
+different mangling styles.  The optional demangling style argument can be used
+to choose an appropriate demangling style for your compiler.  The linker will
+demangle by default unless the environment variable <emphasis role='strong' remap='B'><?troff ps -1?>COLLECT_NO_DEMANGLE<?troff ps 0?></emphasis>
+is set.  These options may be used to override the default.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--dynamic-linker</emphasis> <emphasis remap='I'>file</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--dynamic-linker file</secondary></indexterm>
+Set the name of the dynamic linker.  This is only meaningful when
+generating dynamically linked <?troff ps -1?>ELF<?troff ps 0?> executables.  The default dynamic
+linker is normally correct; don't use this unless you know what you are
+doing.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--fatal-warnings</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--fatal-warnings</secondary></indexterm>
+Treat all warnings as errors.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--force-exe-suffix</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--force-exe-suffix</secondary></indexterm>
+Make sure that an output file has a .exe suffix.</para>
+
+<para>If a successfully built fully linked output file does not have a
+<emphasis remap='CW'>`.exe'</emphasis> or <emphasis remap='CW'>`.dll'</emphasis> suffix, this option forces the linker to copy
+the output file to one of the same name with a <emphasis remap='CW'>`.exe'</emphasis> suffix. This
+option is useful when using unmodified Unix makefiles on a Microsoft
+Windows host, since some versions of Windows won't run an image unless
+it ends in a <emphasis remap='CW'>`.exe'</emphasis> suffix.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--gc-sections</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--gc-sections</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-gc-sections</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-gc-sections</secondary></indexterm>
+<!-- PD -->
+Enable garbage collection of unused input sections.  It is ignored on
+targets that do not support this option.  This option is not compatible
+with <emphasis role='strong' remap='B'>-r</emphasis> or <emphasis role='strong' remap='B'>--emit-relocs</emphasis>. The default behaviour (of not
+performing this garbage collection) can be restored by specifying
+<emphasis role='strong' remap='B'>--no-gc-sections</emphasis> on the command line.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--print-gc-sections</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--print-gc-sections</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-print-gc-sections</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-print-gc-sections</secondary></indexterm>
+<!-- PD -->
+List all sections removed by garbage collection.  The listing is
+printed on stderr.  This option is only effective if garbage
+collection has been enabled via the <emphasis role='strong' remap='B'>--gc-sections</emphasis>) option.  The
+default behaviour (of not listing the sections that are removed) can
+be restored by specifying <emphasis role='strong' remap='B'>--no-print-gc-sections</emphasis> on the command
+line.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--help</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--help</secondary></indexterm>
+Print a summary of the command-line options on the standard output and exit.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--target-help</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--target-help</secondary></indexterm>
+Print a summary of all target specific options on the standard output and exit.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Map</emphasis> <emphasis remap='I'>mapfile</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Map mapfile</secondary></indexterm>
+Print a link map to the file <filename>mapfile</filename>.  See the description of the
+<emphasis role='strong' remap='B'>-M</emphasis> option, above.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-keep-memory</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-keep-memory</secondary></indexterm>
+<emphasis role='strong' remap='B'>ld</emphasis> normally optimizes for speed over memory usage by caching the
+symbol tables of input files in memory.  This option tells <emphasis role='strong' remap='B'>ld</emphasis> to
+instead optimize for memory usage, by rereading the symbol tables as
+necessary.  This may be required if <emphasis role='strong' remap='B'>ld</emphasis> runs out of memory space
+while linking a large executable.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-undefined</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-undefined</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-z defs</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-z defs</secondary></indexterm>
+<!-- PD -->
+Report unresolved symbol references from regular object files.  This
+is done even if the linker is creating a non-symbolic shared library.
+The switch <emphasis role='strong' remap='B'>--[no-]allow-shlib-undefined</emphasis> controls the
+behaviour for reporting unresolved references found in shared
+libraries being linked in.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--allow-multiple-definition</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--allow-multiple-definition</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-z muldefs</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-z muldefs</secondary></indexterm>
+<!-- PD -->
+Normally when a symbol is defined multiple times, the linker will
+report a fatal error. These options allow multiple definitions and the
+first definition will be used.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--allow-shlib-undefined</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--allow-shlib-undefined</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-allow-shlib-undefined</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-allow-shlib-undefined</secondary></indexterm>
+<!-- PD -->
+Allows (the default) or disallows undefined symbols in shared libraries.
+This switch is similar to <emphasis role='strong' remap='B'>--no-undefined</emphasis> except that it
+determines the behaviour when the undefined symbols are in a
+shared library rather than a regular object file.  It does not affect
+how undefined symbols in regular object files are handled.</para>
+
+<para>The reason that <emphasis role='strong' remap='B'>--allow-shlib-undefined</emphasis> is the default is that
+the shared library being specified at link time may not be the same as
+the one that is available at load time, so the symbols might actually be
+resolvable at load time.  Plus there are some systems, (eg BeOS) where
+undefined symbols in shared libraries is normal.  (The kernel patches
+them at load time to select which function is most appropriate
+for the current architecture.  This is used for example to dynamically
+select an appropriate memset function).  Apparently it is also normal
+for <?troff ps -1?>HPPA<?troff ps 0?> shared libraries to have undefined symbols.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-undefined-version</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-undefined-version</secondary></indexterm>
+Normally when a symbol has an undefined version, the linker will ignore
+it. This option disallows symbols with undefined version and a fatal error
+will be issued instead.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--default-symver</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--default-symver</secondary></indexterm>
+Create and use a default symbol version (the soname) for unversioned
+exported symbols.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--default-imported-symver</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--default-imported-symver</secondary></indexterm>
+Create and use a default symbol version (the soname) for unversioned
+imported symbols.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-warn-mismatch</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-warn-mismatch</secondary></indexterm>
+Normally <emphasis role='strong' remap='B'>ld</emphasis> will give an error if you try to link together input
+files that are mismatched for some reason, perhaps because they have
+been compiled for different processors or for different endiannesses.
+This option tells <emphasis role='strong' remap='B'>ld</emphasis> that it should silently permit such possible
+errors.  This option should only be used with care, in cases when you
+have taken some special action that ensures that the linker errors are
+inappropriate.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-warn-search-mismatch</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-warn-search-mismatch</secondary></indexterm>
+Normally <emphasis role='strong' remap='B'>ld</emphasis> will give a warning if it finds an incompatible
+library during a library search.  This option silences the warning.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-whole-archive</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-whole-archive</secondary></indexterm>
+Turn off the effect of the <emphasis role='strong' remap='B'>--whole-archive</emphasis> option for subsequent
+archive files.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--noinhibit-exec</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--noinhibit-exec</secondary></indexterm>
+Retain the executable output file whenever it is still usable.
+Normally, the linker will not produce an output file if it encounters
+errors during the link process; it exits without writing an output file
+when it issues any error whatsoever.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-nostdlib</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-nostdlib</secondary></indexterm>
+Only search library directories explicitly specified on the
+command line.  Library directories specified in linker scripts
+(including linker scripts specified on the command line) are ignored.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--oformat</emphasis> <emphasis remap='I'>output-format</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--oformat output-format</secondary></indexterm>
+<emphasis role='strong' remap='B'>ld</emphasis> may be configured to support more than one kind of object
+file.  If your <emphasis role='strong' remap='B'>ld</emphasis> is configured this way, you can use the
+<emphasis role='strong' remap='B'>--oformat</emphasis> option to specify the binary format for the output
+object file.  Even when <emphasis role='strong' remap='B'>ld</emphasis> is configured to support alternative
+object formats, you don't usually need to specify this, as <emphasis role='strong' remap='B'>ld</emphasis>
+should be configured to produce as a default output format the most
+usual format on each machine.  <emphasis remap='I'>output-format</emphasis> is a text string, the
+name of a particular format supported by the <?troff ps -1?>BFD<?troff ps 0?> libraries.  (You can
+list the available binary formats with <emphasis role='strong' remap='B'>objdump -i</emphasis>.)  The script
+command <emphasis remap='CW'>`OUTPUT_FORMAT'</emphasis> can also specify the output format, but
+this option overrides it.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-pie</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-pie</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--pic-executable</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--pic-executable</secondary></indexterm>
+<!-- PD -->
+Create a position independent executable.  This is currently only supported on
+<?troff ps -1?>ELF<?troff ps 0?> platforms.  Position independent executables are similar to shared
+libraries in that they are relocated by the dynamic linker to the virtual
+address the <?troff ps -1?>OS<?troff ps 0?> chooses for them (which can vary between invocations).  Like
+normal dynamically linked executables they can be executed and symbols
+defined in the executable cannot be overridden by shared libraries.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-qmagic</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-qmagic</secondary></indexterm>
+This option is ignored for Linux compatibility.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Qy</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Qy</secondary></indexterm>
+This option is ignored for <?troff ps -1?>SVR4<?troff ps 0?> compatibility.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--relax</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--relax</secondary></indexterm>
+An option with machine dependent effects.
+This option is only supported on a few targets.</para>
+
+<para>On some platforms, the <emphasis role='strong' remap='B'>--relax</emphasis> option performs global
+optimizations that become possible when the linker resolves addressing
+in the program, such as relaxing address modes and synthesizing new
+instructions in the output object file.</para>
+
+<para>On some platforms these link time global optimizations may make symbolic
+debugging of the resulting executable impossible.
+This is known to be
+the case for the Matsushita <?troff ps -1?>MN10200<?troff ps 0?> and <?troff ps -1?>MN10300<?troff ps 0?> family of processors.</para>
+
+<para>On platforms where this is not supported, <emphasis role='strong' remap='B'>--relax</emphasis> is accepted,
+but ignored.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--retain-symbols-file</emphasis> <emphasis remap='I'>filename</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--retain-symbols-file filename</secondary></indexterm>
+Retain <emphasis remap='I'>only</emphasis> the symbols listed in the file <filename>filename</filename>,
+discarding all others.  <emphasis remap='I'>filename</emphasis> is simply a flat file, with one
+symbol name per line.  This option is especially useful in environments
+(such as VxWorks)
+where a large global symbol table is accumulated gradually, to conserve
+run-time memory.</para>
+
+<para><emphasis role='strong' remap='B'>--retain-symbols-file</emphasis> does <emphasis remap='I'>not</emphasis> discard undefined symbols,
+or symbols needed for relocations.</para>
+
+<para>You may only specify <emphasis role='strong' remap='B'>--retain-symbols-file</emphasis> once in the command
+line.  It overrides <emphasis role='strong' remap='B'>-s</emphasis> and <emphasis role='strong' remap='B'>-S</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-rpath</emphasis> <emphasis remap='I'>dir</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-rpath dir</secondary></indexterm>
+Add a directory to the runtime library search path.  This is used when
+linking an <?troff ps -1?>ELF<?troff ps 0?> executable with shared objects.  All <emphasis role='strong' remap='B'>-rpath</emphasis>
+arguments are concatenated and passed to the runtime linker, which uses
+them to locate shared objects at runtime.  The <emphasis role='strong' remap='B'>-rpath</emphasis> option is
+also used when locating shared objects which are needed by shared
+objects explicitly included in the link; see the description of the
+<emphasis role='strong' remap='B'>-rpath-link</emphasis> option.  If <emphasis role='strong' remap='B'>-rpath</emphasis> is not used when linking an
+<?troff ps -1?>ELF<?troff ps 0?> executable, the contents of the environment variable
+<emphasis remap='CW'>`LD_RUN_PATH'</emphasis> will be used if it is defined.</para>
+
+<para>The <emphasis role='strong' remap='B'>-rpath</emphasis> option may also be used on SunOS.  By default, on
+SunOS, the linker will form a runtime search patch out of all the
+<emphasis role='strong' remap='B'>-L</emphasis> options it is given.  If a <emphasis role='strong' remap='B'>-rpath</emphasis> option is used, the
+runtime search path will be formed exclusively using the <emphasis role='strong' remap='B'>-rpath</emphasis>
+options, ignoring the <emphasis role='strong' remap='B'>-L</emphasis> options.  This can be useful when using
+gcc, which adds many <emphasis role='strong' remap='B'>-L</emphasis> options which may be on <?troff ps -1?>NFS<?troff ps 0?> mounted
+file systems.</para>
+
+<para>For compatibility with other <?troff ps -1?>ELF<?troff ps 0?> linkers, if the <emphasis role='strong' remap='B'>-R</emphasis> option is
+followed by a directory name, rather than a file name, it is treated as
+the <emphasis role='strong' remap='B'>-rpath</emphasis> option.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-rpath-link</emphasis> <emphasis remap='I'><?troff ps -1?>DIR<?troff ps 0?></emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-rpath-link DIR</secondary></indexterm>
+When using <?troff ps -1?>ELF<?troff ps 0?> or SunOS, one shared library may require another.  This
+happens when an <emphasis remap='CW'>`ld -shared'</emphasis> link includes a shared library as one
+of the input files.</para>
+
+<para>When the linker encounters such a dependency when doing a non-shared,
+non-relocatable link, it will automatically try to locate the required
+shared library and include it in the link, if it is not included
+explicitly.  In such a case, the <emphasis role='strong' remap='B'>-rpath-link</emphasis> option
+specifies the first set of directories to search.  The
+<emphasis role='strong' remap='B'>-rpath-link</emphasis> option may specify a sequence of directory names
+either by specifying a list of names separated by colons, or by
+appearing multiple times.</para>
+
+<para>This option should be used with caution as it overrides the search path
+that may have been hard compiled into a shared library. In such a case it
+is possible to use unintentionally a different search path than the
+runtime linker would do.</para>
+
+<para>The linker uses the following search paths to locate required shared
+libraries:</para>
+    <variablelist remap='IP'>
+      <varlistentry>
+      <term>1.</term>
+      <listitem>
+<para>Any directories specified by <emphasis role='strong' remap='B'>-rpath-link</emphasis> options.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term>2.</term>
+      <listitem>
+<para>Any directories specified by <emphasis role='strong' remap='B'>-rpath</emphasis> options.  The difference
+between <emphasis role='strong' remap='B'>-rpath</emphasis> and <emphasis role='strong' remap='B'>-rpath-link</emphasis> is that directories
+specified by <emphasis role='strong' remap='B'>-rpath</emphasis> options are included in the executable and
+used at runtime, whereas the <emphasis role='strong' remap='B'>-rpath-link</emphasis> option is only effective
+at link time. Searching <emphasis role='strong' remap='B'>-rpath</emphasis> in this way is only supported
+by native linkers and cross linkers which have been configured with
+the <emphasis role='strong' remap='B'>--with-sysroot</emphasis> option.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term>3.</term>
+      <listitem>
+<para>On an <?troff ps -1?>ELF<?troff ps 0?> system, if the <emphasis role='strong' remap='B'>-rpath</emphasis> and <emphasis remap='CW'>`rpath-link'</emphasis> options
+were not used, search the contents of the environment variable
+<emphasis remap='CW'>`LD_RUN_PATH'</emphasis>. It is for the native linker only.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term>4.</term>
+      <listitem>
+<para>On SunOS, if the <emphasis role='strong' remap='B'>-rpath</emphasis> option was not used, search any
+directories specified using <emphasis role='strong' remap='B'>-L</emphasis> options.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term>5.</term>
+      <listitem>
+<para>For a native linker, the contents of the environment variable
+<emphasis remap='CW'>`LD_LIBRARY_PATH'</emphasis>.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term>6.</term>
+      <listitem>
+<para>For a native <?troff ps -1?>ELF<?troff ps 0?> linker, the directories in <emphasis remap='CW'>`DT_RUNPATH'</emphasis> or
+<emphasis remap='CW'>`DT_RPATH'</emphasis> of a shared library are searched for shared
+libraries needed by it. The <emphasis remap='CW'>`DT_RPATH'</emphasis> entries are ignored if
+<emphasis remap='CW'>`DT_RUNPATH'</emphasis> entries exist.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term>7.</term>
+      <listitem>
+<para>The default directories, normally <filename>/lib</filename> and <filename>/usr/lib</filename>.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term>8.</term>
+      <listitem>
+<para>For a native linker on an <?troff ps -1?>ELF<?troff ps 0?> system, if the file <filename>/etc/ld.so.conf</filename>
+exists, the list of directories found in that file.</para>
+      </listitem>
+      </varlistentry>
+    </variablelist>
+  <blockquote remap='RS'>
+
+<para>If the required shared library is not found, the linker will issue a
+warning and continue with the link.
+    </para></blockquote> <!-- remap='RE' -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-shared</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-shared</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Bshareable</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Bshareable</secondary></indexterm>
+<!-- PD -->
+Create a shared library.  This is currently only supported on <?troff ps -1?>ELF<?troff ps 0?>, <?troff ps -1?>XCOFF<?troff ps 0?>
+and SunOS platforms.  On SunOS, the linker will automatically create a
+shared library if the <emphasis role='strong' remap='B'>-e</emphasis> option is not used and there are
+undefined symbols in the link.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--sort-common</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--sort-common</secondary></indexterm>
+This option tells <emphasis role='strong' remap='B'>ld</emphasis> to sort the common symbols by size when it
+places them in the appropriate output sections.  First come all the one
+byte symbols, then all the two byte, then all the four byte, and then
+everything else.  This is to prevent gaps between symbols due to
+alignment constraints.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--sort-section name</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--sort-section name</secondary></indexterm>
+This option will apply <emphasis remap='CW'>`SORT_BY_NAME'</emphasis> to all wildcard section
+patterns in the linker script.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--sort-section alignment</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--sort-section alignment</secondary></indexterm>
+This option will apply <emphasis remap='CW'>`SORT_BY_ALIGNMENT'</emphasis> to all wildcard section
+patterns in the linker script.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--split-by-file [</emphasis><emphasis remap='I'>size</emphasis><emphasis role='strong' remap='B'>]</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--split-by-file [size]</secondary></indexterm>
+Similar to <emphasis role='strong' remap='B'>--split-by-reloc</emphasis> but creates a new output section for
+each input file when <emphasis remap='I'>size</emphasis> is reached.  <emphasis remap='I'>size</emphasis> defaults to a
+size of 1 if not given.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--split-by-reloc [</emphasis><emphasis remap='I'>count</emphasis><emphasis role='strong' remap='B'>]</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--split-by-reloc [count]</secondary></indexterm>
+Tries to creates extra sections in the output file so that no single
+output section in the file contains more than <emphasis remap='I'>count</emphasis> relocations.
+This is useful when generating huge relocatable files for downloading into
+certain real time kernels with the <?troff ps -1?>COFF<?troff ps 0?> object file format; since <?troff ps -1?>COFF<?troff ps 0?>
+cannot represent more than 65535 relocations in a single section.  Note
+that this will fail to work with object file formats which do not
+support arbitrary sections.  The linker will not split up individual
+input sections for redistribution, so if a single input section contains
+more than <emphasis remap='I'>count</emphasis> relocations one output section will contain that
+many relocations.  <emphasis remap='I'>count</emphasis> defaults to a value of 32768.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--stats</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--stats</secondary></indexterm>
+Compute and display statistics about the operation of the linker, such
+as execution time and memory usage.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--sysroot=</emphasis><emphasis remap='I'>directory</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--sysroot=directory</secondary></indexterm>
+Use <emphasis remap='I'>directory</emphasis> as the location of the sysroot, overriding the
+configure-time default.  This option is only supported by linkers
+that were configured using <emphasis role='strong' remap='B'>--with-sysroot</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--traditional-format</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--traditional-format</secondary></indexterm>
+For some targets, the output of <emphasis role='strong' remap='B'>ld</emphasis> is different in some ways from
+the output of some existing linker.  This switch requests <emphasis role='strong' remap='B'>ld</emphasis> to
+use the traditional format instead.</para>
+
+<para>For example, on SunOS, <emphasis role='strong' remap='B'>ld</emphasis> combines duplicate entries in the
+symbol string table.  This can reduce the size of an output file with
+full debugging information by over 30 percent.  Unfortunately, the SunOS
+<emphasis remap='CW'>`dbx'</emphasis> program can not read the resulting program (<emphasis remap='CW'>`gdb'</emphasis> has no
+trouble).  The <emphasis role='strong' remap='B'>--traditional-format</emphasis> switch tells <emphasis role='strong' remap='B'>ld</emphasis> to not
+combine duplicate entries.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--section-start</emphasis> <emphasis remap='I'>sectionname</emphasis><emphasis role='strong' remap='B'>=</emphasis><emphasis remap='I'>org</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--section-start sectionname=org</secondary></indexterm>
+Locate a section in the output file at the absolute
+address given by <emphasis remap='I'>org</emphasis>.  You may use this option as many
+times as necessary to locate multiple sections in the command
+line.
+<emphasis remap='I'>org</emphasis> must be a single hexadecimal integer;
+for compatibility with other linkers, you may omit the leading
+<emphasis role='strong' remap='B'>0x</emphasis> usually associated with hexadecimal values.  <emphasis remap='I'>Note:</emphasis> there
+should be no white space between <emphasis remap='I'>sectionname</emphasis>, the equals
+sign ("<emphasis role='strong' remap='B'>=</emphasis>"), and <emphasis remap='I'>org</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Tbss</emphasis> <emphasis remap='I'>org</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Tbss org</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Tdata</emphasis> <emphasis remap='I'>org</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Tdata org</secondary></indexterm></para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>-Ttext</emphasis> <emphasis remap='I'>org</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>-Ttext org</secondary></indexterm>
+<!-- PD -->
+Same as --section-start, with <emphasis remap='CW'>`.bss'</emphasis>, <emphasis remap='CW'>`.data'</emphasis> or
+<emphasis remap='CW'>`.text'</emphasis> as the <emphasis remap='I'>sectionname</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--unresolved-symbols=</emphasis><emphasis remap='I'>method</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--unresolved-symbols=method</secondary></indexterm>
+Determine how to handle unresolved symbols.  There are four possible
+values for <emphasis role='strong' remap='B'>method</emphasis>:</para>
+    <variablelist remap='IP'>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>ignore-all</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>ignore-all</secondary></indexterm>
+Do not report any unresolved symbols.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>report-all</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>report-all</secondary></indexterm>
+Report all unresolved symbols.  This is the default.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>ignore-in-object-files</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>ignore-in-object-files</secondary></indexterm>
+Report unresolved symbols that are contained in shared libraries, but
+ignore them if they come from regular object files.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>ignore-in-shared-libs</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>ignore-in-shared-libs</secondary></indexterm>
+Report unresolved symbols that come from regular object files, but
+ignore them if they come from shared libraries.  This can be useful
+when creating a dynamic binary and it is known that all the shared
+libraries that it should be referencing are included on the linker's
+command line.</para>
+      </listitem>
+      </varlistentry>
+    </variablelist>
+  <blockquote remap='RS'>
+
+<para>The behaviour for shared libraries on their own can also be controlled
+by the <emphasis role='strong' remap='B'>--[no-]allow-shlib-undefined</emphasis> option.</para>
+
+<para>Normally the linker will generate an error message for each reported
+unresolved symbol but the option <emphasis role='strong' remap='B'>--warn-unresolved-symbols</emphasis>
+can change this to a warning.
+    </para></blockquote> <!-- remap='RE' -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--dll-verbose</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--dll-verbose</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--verbose</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--verbose</secondary></indexterm>
+<!-- PD -->
+Display the version number for <emphasis role='strong' remap='B'>ld</emphasis> and list the linker emulations
+supported.  Display which input files can and cannot be opened.  Display
+the linker script being used by the linker.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--version-script=</emphasis><emphasis remap='I'>version-scriptfile</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--version-script=version-scriptfile</secondary></indexterm>
+Specify the name of a version script to the linker.  This is typically
+used when creating shared libraries to specify additional information
+about the version hierarchy for the library being created.  This option
+is only meaningful on <?troff ps -1?>ELF<?troff ps 0?> platforms which support shared libraries.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--warn-common</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--warn-common</secondary></indexterm>
+Warn when a common symbol is combined with another common symbol or with
+a symbol definition.  Unix linkers allow this somewhat sloppy practise,
+but linkers on some other operating systems do not.  This option allows
+you to find potential problems from combining global symbols.
+Unfortunately, some C libraries use this practise, so you may get some
+warnings about symbols in the libraries as well as in your programs.</para>
+
+<para>There are three kinds of global symbols, illustrated here by C examples:</para>
+    <variablelist remap='IP'>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>int i = 1;</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>int i = 1;</secondary></indexterm>
+A definition, which goes in the initialized data section of the output
+file.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>extern int i;</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>extern int i;</secondary></indexterm>
+An undefined reference, which does not allocate space.
+There must be either a definition or a common symbol for the
+variable somewhere.</para>
+      </listitem>
+      </varlistentry>
+      <varlistentry>
+      <term><emphasis role='strong' remap='B'>int i;</emphasis></term>
+      <listitem>
+<para><indexterm><primary>Item</primary><secondary>int i;</secondary></indexterm>
+A common symbol.  If there are only (one or more) common symbols for a
+variable, it goes in the uninitialized data area of the output file.
+The linker merges multiple common symbols for the same variable into a
+single symbol.  If they are of different sizes, it picks the largest
+size.  The linker turns a common symbol into a declaration, if there is
+a definition of the same variable.</para>
+      </listitem>
+      </varlistentry>
+    </variablelist>
+  <blockquote remap='RS'>
+
+<para>The <emphasis role='strong' remap='B'>--warn-common</emphasis> option can produce five kinds of warnings.
+Each warning consists of a pair of lines: the first describes the symbol
+just encountered, and the second describes the previous symbol
+encountered with the same name.  One or both of the two symbols will be
+a common symbol.</para>
+    <variablelist remap='IP'>
+      <varlistentry>
+      <term>1.</term>
+      <listitem>
+<para>Turning a common symbol into a reference, because there is already a
+definition for the symbol.</para>
+
+<literallayout remap='Vb'>
+        &lt;file&gt;(&lt;section&gt;): warning: common of &grave;&lt;symbol&gt;
+           overridden by definition
+        &lt;file&gt;(&lt;section&gt;): warning: defined here
+</literallayout> <!-- remap='Ve' -->
+<para>Turning a common symbol into a reference, because a later definition for
+the symbol is encountered.  This is the same as the previous case,
+except that the symbols are encountered in a different order.</para>
+
+<literallayout remap='Vb'>
+        &lt;file&gt;(&lt;section&gt;): warning: definition of &grave;&lt;symbol&gt;
+           overriding common
+        &lt;file&gt;(&lt;section&gt;): warning: common is here
+</literallayout> <!-- remap='Ve' -->
+<para>Merging a common symbol with a previous same-sized common symbol.</para>
+
+<literallayout remap='Vb'>
+        &lt;file&gt;(&lt;section&gt;): warning: multiple common
+<funcsynopsis>
+<funcsynopsisinfo>
+           of &grave;&lt;symbol&gt;
+</funcsynopsisinfo>
+</funcsynopsis>
+        &lt;file&gt;(&lt;section&gt;): warning: previous common is here
+</literallayout> <!-- remap='Ve' -->
+<para>Merging a common symbol with a previous larger common symbol.</para>
+
+<literallayout remap='Vb'>
+        &lt;file&gt;(&lt;section&gt;): warning: common of &grave;&lt;symbol&gt;
+           overridden by larger common
+        &lt;file&gt;(&lt;section&gt;): warning: larger common is here
+</literallayout> <!-- remap='Ve' -->
+<para>Merging a common symbol with a previous smaller common symbol.  This is
+the same as the previous case, except that the symbols are
+encountered in a different order.</para>
+
+<literallayout remap='Vb'>
+        &lt;file&gt;(&lt;section&gt;): warning: common of &grave;&lt;symbol&gt;
+           overriding smaller common
+        &lt;file&gt;(&lt;section&gt;): warning: smaller common is here
+</literallayout> <!-- remap='Ve' -->
+      </listitem>
+      </varlistentry>
+    </variablelist>
+    </blockquote> <!-- remap='RE'
+.RS 4
+.RE -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--warn-constructors</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--warn-constructors</secondary></indexterm>
+Warn if any global constructors are used.  This is only useful for a few
+object file formats.  For formats like <?troff ps -1?>COFF<?troff ps 0?> or <?troff ps -1?>ELF<?troff ps 0?>, the linker can not
+detect the use of global constructors.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--warn-multiple-gp</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--warn-multiple-gp</secondary></indexterm>
+Warn if multiple global pointer values are required in the output file.
+This is only meaningful for certain processors, such as the Alpha.
+Specifically, some processors put large-valued constants in a special
+section.  A special register (the global pointer) points into the middle
+of this section, so that constants can be loaded efficiently via a
+base-register relative addressing mode.  Since the offset in
+base-register relative mode is fixed and relatively small (e.g., 16
+bits), this limits the maximum size of the constant pool.  Thus, in
+large programs, it is often necessary to use multiple global pointer
+values in order to be able to address all possible constants.  This
+option causes a warning to be issued whenever this case occurs.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--warn-once</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--warn-once</secondary></indexterm>
+Only warn once for each undefined symbol, rather than once per module
+which refers to it.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--warn-section-align</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--warn-section-align</secondary></indexterm>
+Warn if the address of an output section is changed because of
+alignment.  Typically, the alignment will be set by an input section.
+The address will only be changed if it not explicitly specified; that
+is, if the <emphasis remap='CW'>`SECTIONS'</emphasis> command does not specify a start address for
+the section.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--warn-shared-textrel</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--warn-shared-textrel</secondary></indexterm>
+Warn if the linker adds a <?troff ps -1?>DT_TEXTREL<?troff ps 0?> to a shared object.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--warn-unresolved-symbols</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--warn-unresolved-symbols</secondary></indexterm>
+If the linker is going to report an unresolved symbol (see the option
+<emphasis role='strong' remap='B'>--unresolved-symbols</emphasis>) it will normally generate an error.
+This option makes it generate a warning instead.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--error-unresolved-symbols</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--error-unresolved-symbols</secondary></indexterm>
+This restores the linker's default behaviour of generating errors when
+it is reporting unresolved symbols.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--whole-archive</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--whole-archive</secondary></indexterm>
+For each archive mentioned on the command line after the
+<emphasis role='strong' remap='B'>--whole-archive</emphasis> option, include every object file in the archive
+in the link, rather than searching the archive for the required object
+files.  This is normally used to turn an archive file into a shared
+library, forcing every object to be included in the resulting shared
+library.  This option may be used more than once.</para>
+
+<para>Two notes when using this option from gcc: First, gcc doesn't know
+about this option, so you have to use <emphasis role='strong' remap='B'>-Wl,-whole-archive</emphasis>.
+Second, don't forget to use <emphasis role='strong' remap='B'>-Wl,-no-whole-archive</emphasis> after your
+list of archives, because gcc will add its own list of archives to
+your link and you may not want this flag to affect those as well.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--wrap</emphasis> <emphasis remap='I'>symbol</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--wrap symbol</secondary></indexterm>
+Use a wrapper function for <emphasis remap='I'>symbol</emphasis>.  Any undefined reference to
+<emphasis remap='I'>symbol</emphasis> will be resolved to <emphasis remap='CW'>`_&thinsp;_wrap_</emphasis><emphasis remap='CI'>symbol</emphasis><emphasis remap='CW'>'</emphasis>.  Any
+undefined reference to <emphasis remap='CW'>`_&thinsp;_real_</emphasis><emphasis remap='CI'>symbol</emphasis><emphasis remap='CW'>'</emphasis> will be resolved to
+<emphasis remap='I'>symbol</emphasis>.</para>
+
+<para>This can be used to provide a wrapper for a system function.  The
+wrapper function should be called <emphasis remap='CW'>`_&thinsp;_wrap_</emphasis><emphasis remap='CI'>symbol</emphasis><emphasis remap='CW'>'</emphasis>.  If it
+wishes to call the system function, it should call
+<emphasis remap='CW'>`_&thinsp;_real_</emphasis><emphasis remap='CI'>symbol</emphasis><emphasis remap='CW'>'</emphasis>.</para>
+
+<para>Here is a trivial example:</para>
+
+<literallayout remap='Vb'>
+<funcsynopsis>
+<funcprototype>
+<funcdef>void *<function>__wrap_malloc</function></funcdef>
+    <paramdef>size_t <parameter>c</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+        {
+<funcsynopsis>
+<funcprototype>
+<funcdef><function>printf</function></funcdef>
+    <paramdef>"malloc called <parameter>with</parameter>%zu&bsol;n"</paramdef>
+    <paramdef><parameter>c</parameter></paramdef>
+</funcprototype>
+<funcprototype>
+<funcdef>return <function>__real_malloc</function></funcdef>
+    <paramdef><parameter>c</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+        }
+
+</literallayout> <!-- remap='Ve' -->
+<para>If you link other code with this file using <emphasis role='strong' remap='B'>--wrap malloc</emphasis>, then
+all calls to <emphasis remap='CW'>`malloc'</emphasis> will call the function <emphasis remap='CW'>`_&thinsp;_wrap_malloc'</emphasis>
+instead.  The call to <emphasis remap='CW'>`_&thinsp;_real_malloc'</emphasis> in <emphasis remap='CW'>`_&thinsp;_wrap_malloc'</emphasis> will
+call the real <emphasis remap='CW'>`malloc'</emphasis> function.</para>
+
+<para>You may wish to provide a <emphasis remap='CW'>`_&thinsp;_real_malloc'</emphasis> function as well, so that
+links without the <emphasis role='strong' remap='B'>--wrap</emphasis> option will succeed.  If you do this,
+you should not put the definition of <emphasis remap='CW'>`_&thinsp;_real_malloc'</emphasis> in the same
+file as <emphasis remap='CW'>`_&thinsp;_wrap_malloc'</emphasis>; if you do, the assembler may resolve the
+call before the linker has a chance to wrap it to <emphasis remap='CW'>`malloc'</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--eh-frame-hdr</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--eh-frame-hdr</secondary></indexterm>
+Request creation of <emphasis remap='CW'>`.eh_frame_hdr'</emphasis> section and <?troff ps -1?>ELF<?troff ps 0?>
+<emphasis remap='CW'>`PT_GNU_EH_FRAME'</emphasis> segment header.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--enable-new-dtags</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--enable-new-dtags</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--disable-new-dtags</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--disable-new-dtags</secondary></indexterm>
+<!-- PD -->
+This linker can create the new dynamic tags in <?troff ps -1?>ELF<?troff ps 0?>. But the older <?troff ps -1?>ELF<?troff ps 0?>
+systems may not understand them. If you specify
+<emphasis role='strong' remap='B'>--enable-new-dtags</emphasis>, the dynamic tags will be created as needed.
+If you specify <emphasis role='strong' remap='B'>--disable-new-dtags</emphasis>, no new dynamic tags will be
+created. By default, the new dynamic tags are not created. Note that
+those options are only available for <?troff ps -1?>ELF<?troff ps 0?> systems.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--hash-size=</emphasis><emphasis remap='I'>number</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--hash-size=number</secondary></indexterm>
+Set the default size of the linker's hash tables to a prime number
+close to <emphasis remap='I'>number</emphasis>.  Increasing this value can reduce the length of
+time it takes the linker to perform its tasks, at the expense of
+increasing the linker's memory requirements.  Similarly reducing this
+value can reduce the memory requirements at the expense of speed.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--hash-style=</emphasis><emphasis remap='I'>style</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--hash-style=style</secondary></indexterm>
+Set the type of linker's hash table(s).  <emphasis remap='I'>style</emphasis> can be either
+<emphasis remap='CW'>`sysv'</emphasis> for classic <?troff ps -1?>ELF<?troff ps 0?> <emphasis remap='CW'>`.hash'</emphasis> section, <emphasis remap='CW'>`gnu'</emphasis> for
+new style <?troff ps -1?>GNU<?troff ps 0?> <emphasis remap='CW'>`.gnu.hash'</emphasis> section or <emphasis remap='CW'>`both'</emphasis> for both
+the classic <?troff ps -1?>ELF<?troff ps 0?> <emphasis remap='CW'>`.hash'</emphasis> and new style <?troff ps -1?>GNU<?troff ps 0?> <emphasis remap='CW'>`.gnu.hash'</emphasis>
+hash tables.  The default is <emphasis remap='CW'>`sysv'</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--reduce-memory-overheads</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--reduce-memory-overheads</secondary></indexterm>
+This option reduces memory requirements at ld runtime, at the expense of
+linking speed.  This was introduced to select the old O(n^2) algorithm
+for link map file generation, rather than the new O(n) algorithm which uses
+about 40% more memory for symbol storage.</para>
+
+<para>Another effect of the switch is to set the default hash table size to
+1021, which again saves memory at the cost of lengthening the linker's
+run time.  This is not done however if the <emphasis role='strong' remap='B'>--hash-size</emphasis> switch
+has been used.</para>
+
+<para>The <emphasis role='strong' remap='B'>--reduce-memory-overheads</emphasis> switch may be also be used to
+enable other tradeoffs in future versions of the linker.</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+
+<para>The i386 <?troff ps -1?>PE<?troff ps 0?> linker supports the <emphasis role='strong' remap='B'>-shared</emphasis> option, which causes
+the output to be a dynamically linked library (<?troff ps -1?>DLL<?troff ps 0?>) instead of a
+normal executable.  You should name the output <emphasis remap='CW'>`*.dll'</emphasis> when you
+use this option.  In addition, the linker fully supports the standard
+<emphasis remap='CW'>`*.def'</emphasis> files, which may be specified on the linker command line
+like an object file (in fact, it should precede archives it exports
+symbols from, to ensure that they get linked in, just like a normal
+object file).</para>
+
+<para>In addition to the options common to all targets, the i386 <?troff ps -1?>PE<?troff ps 0?> linker
+support additional command line options that are specific to the i386
+<?troff ps -1?>PE<?troff ps 0?> target.  Options that take values may be separated from their
+values by either a space or an equals sign.</para>
+<variablelist remap='IP'>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--add-stdcall-alias</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--add-stdcall-alias</secondary></indexterm>
+If given, symbols with a stdcall suffix (@<emphasis remap='I'>nn</emphasis>) will be exported
+as-is and also with the suffix stripped.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--base-file</emphasis> <emphasis remap='I'>file</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--base-file file</secondary></indexterm>
+Use <emphasis remap='I'>file</emphasis> as the name of a file in which to save the base
+addresses of all the relocations needed for generating DLLs with
+<emphasis remap='I'>dlltool</emphasis>.
+[This is an i386 <?troff ps -1?>PE<?troff ps 0?> specific option]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--dll</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--dll</secondary></indexterm>
+Create a <?troff ps -1?>DLL<?troff ps 0?> instead of a regular executable.  You may also use
+<emphasis role='strong' remap='B'>-shared</emphasis> or specify a <emphasis remap='CW'>`LIBRARY'</emphasis> in a given <emphasis remap='CW'>`.def'</emphasis>
+file.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--enable-stdcall-fixup</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--enable-stdcall-fixup</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--disable-stdcall-fixup</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--disable-stdcall-fixup</secondary></indexterm>
+<!-- PD -->
+If the link finds a symbol that it cannot resolve, it will attempt to
+do &ldquo;fuzzy linking&rdquo; by looking for another defined symbol that differs
+only in the format of the symbol name (cdecl vs stdcall) and will
+resolve that symbol by linking to the match.  For example, the
+undefined symbol <emphasis remap='CW'>`_foo'</emphasis> might be linked to the function
+<emphasis remap='CW'>`_foo@12'</emphasis>, or the undefined symbol <emphasis remap='CW'>`_bar@16'</emphasis> might be linked
+to the function <emphasis remap='CW'>`_bar'</emphasis>.  When the linker does this, it prints a
+warning, since it normally should have failed to link, but sometimes
+import libraries generated from third-party dlls may need this feature
+to be usable.  If you specify <emphasis role='strong' remap='B'>--enable-stdcall-fixup</emphasis>, this
+feature is fully enabled and warnings are not printed.  If you specify
+<emphasis role='strong' remap='B'>--disable-stdcall-fixup</emphasis>, this feature is disabled and such
+mismatches are considered to be errors.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--export-all-symbols</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--export-all-symbols</secondary></indexterm>
+If given, all global symbols in the objects used to build a <?troff ps -1?>DLL<?troff ps 0?> will
+be exported by the <?troff ps -1?>DLL<?troff ps 0?>.  Note that this is the default if there
+otherwise wouldn't be any exported symbols.  When symbols are
+explicitly exported via <?troff ps -1?>DEF<?troff ps 0?> files or implicitly exported via function
+attributes, the default is to not export anything else unless this
+option is given.  Note that the symbols <emphasis remap='CW'>`DllMain@12'</emphasis>,
+<emphasis remap='CW'>`DllEntryPoint@0'</emphasis>, <emphasis remap='CW'>`DllMainCRTStartup@12'</emphasis>, and
+<emphasis remap='CW'>`impure_ptr'</emphasis> will not be automatically
+exported.  Also, symbols imported from other DLLs will not be
+re-exported, nor will symbols specifying the <?troff ps -1?>DLL<?troff ps 0?>'s internal layout
+such as those beginning with <emphasis remap='CW'>`_head_'</emphasis> or ending with
+<emphasis remap='CW'>`_iname'</emphasis>.  In addition, no symbols from <emphasis remap='CW'>`libgcc'</emphasis>,
+<emphasis remap='CW'>`libstd++'</emphasis>, <emphasis remap='CW'>`libmingw32'</emphasis>, or <emphasis remap='CW'>`crtX.o'</emphasis> will be exported.
+Symbols whose names begin with <emphasis remap='CW'>`_&thinsp;_rtti_'</emphasis> or <emphasis remap='CW'>`_&thinsp;_builtin_'</emphasis> will
+not be exported, to help with C++; DLLs.  Finally, there is an
+extensive list of cygwin-private symbols that are not exported
+(obviously, this applies on when building DLLs for cygwin targets).
+These cygwin-excludes are: <emphasis remap='CW'>`_cygwin_dll_entry@12'</emphasis>,
+<emphasis remap='CW'>`_cygwin_crt0_common@8'</emphasis>, <emphasis remap='CW'>`_cygwin_noncygwin_dll_entry@12'</emphasis>,
+<emphasis remap='CW'>`_fmode'</emphasis>, <emphasis remap='CW'>`_impure_ptr'</emphasis>, <emphasis remap='CW'>`cygwin_attach_dll'</emphasis>,
+<emphasis remap='CW'>`cygwin_premain0'</emphasis>, <emphasis remap='CW'>`cygwin_premain1'</emphasis>, <emphasis remap='CW'>`cygwin_premain2'</emphasis>,
+<emphasis remap='CW'>`cygwin_premain3'</emphasis>, and <emphasis remap='CW'>`environ'</emphasis>.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--exclude-symbols</emphasis> <emphasis remap='I'>symbol</emphasis><emphasis role='strong' remap='B'>,</emphasis><emphasis remap='I'>symbol</emphasis><emphasis role='strong' remap='B'>,...</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--exclude-symbols symbol,symbol,...</secondary></indexterm>
+Specifies a list of symbols which should not be automatically
+exported.  The symbol names may be delimited by commas or colons.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--file-alignment</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--file-alignment</secondary></indexterm>
+Specify the file alignment.  Sections in the file will always begin at
+file offsets which are multiples of this number.  This defaults to
+512.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--heap</emphasis> <emphasis remap='I'>reserve</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--heap reserve</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--heap</emphasis> <emphasis remap='I'>reserve</emphasis><emphasis role='strong' remap='B'>,</emphasis><emphasis remap='I'>commit</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--heap reserve,commit</secondary></indexterm>
+<!-- PD -->
+Specify the amount of memory to reserve (and optionally commit) to be
+used as heap for this program.  The default is 1Mb reserved, 4K
+committed.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--image-base</emphasis> <emphasis remap='I'>value</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--image-base value</secondary></indexterm>
+Use <emphasis remap='I'>value</emphasis> as the base address of your program or dll.  This is
+the lowest memory location that will be used when your program or dll
+is loaded.  To reduce the need to relocate and improve performance of
+your dlls, each should have a unique base address and not overlap any
+other dlls.  The default is 0x400000 for executables, and 0x10000000
+for dlls.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--kill-at</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--kill-at</secondary></indexterm>
+If given, the stdcall suffixes (@<emphasis remap='I'>nn</emphasis>) will be stripped from
+symbols before they are exported.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--large-address-aware</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--large-address-aware</secondary></indexterm>
+If given, the appropriate bit in the &ldquo;Characteristics&rdquo; field of the <?troff ps -1?>COFF<?troff ps 0?>
+header is set to indicate that this executable supports virtual addresses
+greater than 2 gigabytes.  This should be used in conjunction with the /3GB
+or /USERVA=<emphasis remap='I'>value</emphasis> megabytes switch in the &ldquo;[operating systems]&rdquo;
+section of the <?troff ps -1?>BOOT<?troff ps 0?>.INI.  Otherwise, this bit has no effect.
+[This option is specific to <?troff ps -1?>PE<?troff ps 0?> targeted ports of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--major-image-version</emphasis> <emphasis remap='I'>value</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--major-image-version value</secondary></indexterm>
+Sets the major number of the &ldquo;image version&rdquo;.  Defaults to 1.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--major-os-version</emphasis> <emphasis remap='I'>value</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--major-os-version value</secondary></indexterm>
+Sets the major number of the &ldquo;os version&rdquo;.  Defaults to 4.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--major-subsystem-version</emphasis> <emphasis remap='I'>value</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--major-subsystem-version value</secondary></indexterm>
+Sets the major number of the &ldquo;subsystem version&rdquo;.  Defaults to 4.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--minor-image-version</emphasis> <emphasis remap='I'>value</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--minor-image-version value</secondary></indexterm>
+Sets the minor number of the &ldquo;image version&rdquo;.  Defaults to 0.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--minor-os-version</emphasis> <emphasis remap='I'>value</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--minor-os-version value</secondary></indexterm>
+Sets the minor number of the &ldquo;os version&rdquo;.  Defaults to 0.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--minor-subsystem-version</emphasis> <emphasis remap='I'>value</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--minor-subsystem-version value</secondary></indexterm>
+Sets the minor number of the &ldquo;subsystem version&rdquo;.  Defaults to 0.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--output-def</emphasis> <emphasis remap='I'>file</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--output-def file</secondary></indexterm>
+The linker will create the file <filename>file</filename> which will contain a <?troff ps -1?>DEF<?troff ps 0?>
+file corresponding to the <?troff ps -1?>DLL<?troff ps 0?> the linker is generating.  This <?troff ps -1?>DEF<?troff ps 0?> file
+(which should be called <emphasis remap='CW'>`*.def'</emphasis>) may be used to create an import
+library with <emphasis remap='CW'>`dlltool'</emphasis> or may be used as a reference to
+automatically or implicitly exported symbols.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--out-implib</emphasis> <emphasis remap='I'>file</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--out-implib file</secondary></indexterm>
+The linker will create the file <filename>file</filename> which will contain an
+import lib corresponding to the <?troff ps -1?>DLL<?troff ps 0?> the linker is generating. This
+import lib (which should be called <emphasis remap='CW'>`*.dll.a'</emphasis> or <emphasis remap='CW'>`*.a'</emphasis>
+may be used to link clients against the generated <?troff ps -1?>DLL<?troff ps 0?>; this behaviour
+makes it possible to skip a separate <emphasis remap='CW'>`dlltool'</emphasis> import library
+creation step.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--enable-auto-image-base</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--enable-auto-image-base</secondary></indexterm>
+Automatically choose the image base for DLLs, unless one is specified
+using the <emphasis remap='CW'>`--image-base'</emphasis> argument.  By using a hash generated
+from the dllname to create unique image bases for each <?troff ps -1?>DLL<?troff ps 0?>, in-memory
+collisions and relocations which can delay program execution are
+avoided.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--disable-auto-image-base</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--disable-auto-image-base</secondary></indexterm>
+Do not automatically generate a unique image base.  If there is no
+user-specified image base (<emphasis remap='CW'>`--image-base'</emphasis>) then use the platform
+default.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--dll-search-prefix</emphasis> <emphasis remap='I'>string</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--dll-search-prefix string</secondary></indexterm>
+When linking dynamically to a dll without an import library,
+search for <emphasis remap='CW'>`&lt;string&gt;&lt;basename&gt;.dll'</emphasis> in preference to
+<emphasis remap='CW'>`lib&lt;basename&gt;.dll'</emphasis>. This behaviour allows easy distinction
+between DLLs built for the various &ldquo;subplatforms&rdquo;: native, cygwin,
+uwin, pw, etc.  For instance, cygwin DLLs typically use
+<emphasis remap='CW'>`--dll-search-prefix=cyg'</emphasis>.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--enable-auto-import</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--enable-auto-import</secondary></indexterm>
+Do sophisticated linking of <emphasis remap='CW'>`_symbol'</emphasis> to <emphasis remap='CW'>`_&thinsp;_imp_&thinsp;_symbol'</emphasis> for
+<?troff ps -1?>DATA<?troff ps 0?> imports from DLLs, and create the necessary thunking symbols when
+building the import libraries with those <?troff ps -1?>DATA<?troff ps 0?> exports. Note: Use of the
+'auto-import' extension will cause the text section of the image file
+to be made writable. This does not conform to the PE-COFF format
+specification published by Microsoft.</para>
+
+<para>Using 'auto-import' generally will 'just work' &mdash; but sometimes you may
+see this message:</para>
+
+<para>"variable '&lt;var&gt;' can't be auto-imported. Please read the
+documentation for ld's <emphasis remap='CW'>`--enable-auto-import'</emphasis> for details."</para>
+
+<para>This message occurs when some (sub)expression accesses an address
+ultimately given by the sum of two constants (Win32 import tables only
+allow one).  Instances where this may occur include accesses to member 
+fields of struct variables imported from a <?troff ps -1?>DLL<?troff ps 0?>, as well as using a 
+constant index into an array variable imported from a <?troff ps -1?>DLL<?troff ps 0?>.  Any 
+multiword variable (arrays, structs, long long, etc) may trigger
+this error condition.  However, regardless of the exact data type
+of the offending exported variable, ld will always detect it, issue
+the warning, and exit.</para>
+
+<para>There are several ways to address this difficulty, regardless of the
+data type of the exported variable:</para>
+
+<para>One way is to use --enable-runtime-pseudo-reloc switch. This leaves the task
+of adjusting references in your client code for runtime environment, so
+this method works only when runtime environment supports this feature.</para>
+
+<para>A second solution is to force one of the 'constants' to be a variable &mdash; 
+that is, unknown and un-optimizable at compile time.  For arrays, 
+there are two possibilities: a) make the indexee (the array's address) 
+a variable, or b) make the 'constant' index a variable.  Thus:</para>
+
+<literallayout remap='Vb'>
+        extern type extern_array[];
+        extern_array[1] --&gt; 
+           { volatile type *t=extern_array; t[1] }
+</literallayout> <!-- remap='Ve' -->
+
+<para>or</para>
+
+<programlisting remap='Vb'>
+        extern type extern_array[];
+        extern_array[1] --&gt; 
+           { volatile int t=1; extern_array[t] }
+</programlisting> <!-- remap='Ve' -->
+
+<para>For structs (and most other multiword data types) the only option 
+is to make the struct itself (or the long long, or the ...) variable:</para>
+
+<programlisting remap='Vb'>
+        extern struct s extern_struct;
+        extern_struct.field --&gt; 
+           { volatile struct s *t=&amp;extern_struct; t-&gt;field }
+</programlisting> <!-- remap='Ve' -->
+
+<para>or</para>
+
+<literallayout remap='Vb'>
+        extern long long extern_ll;
+        extern_ll --&gt;
+          { volatile long long * local_ll=&amp;extern_ll; *local_ll }
+</literallayout> <!-- remap='Ve' -->
+
+<para>A third method of dealing with this difficulty is to abandon
+'auto-import' for the offending symbol and mark it with 
+<emphasis remap='CW'>`_&thinsp;_declspec(dllimport)'</emphasis>.  However, in practise that
+requires using compile-time #defines to indicate whether you are
+building a <?troff ps -1?>DLL<?troff ps 0?>, building client code that will link to the <?troff ps -1?>DLL<?troff ps 0?>, or 
+merely building/linking to a static library.   In making the choice 
+between the various methods of resolving the 'direct address with 
+constant offset' problem, you should consider typical real-world usage:</para>
+
+<para>Original:</para>
+
+<literallayout remap='Vb'>
+        --foo.h
+<funcsynopsis>
+<funcsynopsisinfo>
+        extern int arr[];
+</funcsynopsisinfo>
+</funcsynopsis>
+        --foo.c
+<funcsynopsis>
+<funcsynopsisinfo>
+        #include "foo.h"
+</funcsynopsisinfo>
+</funcsynopsis>
+        void main(int argc, char **argv){
+<funcsynopsis>
+<funcprototype>
+<funcdef><function>printf</function></funcdef>
+    <paramdef><parameter>"%d&bsol;n"</parameter></paramdef>
+    <paramdef>arr [ 1 ] <parameter></parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+        }
+
+</literallayout> <!-- remap='Ve' -->
+<para>Solution 1:</para>
+
+<literallayout remap='Vb'>
+        --foo.h
+<funcsynopsis>
+<funcsynopsisinfo>
+        extern int arr[];
+</funcsynopsisinfo>
+</funcsynopsis>
+        --foo.c
+<funcsynopsis>
+<funcsynopsisinfo>
+        #include "foo.h"
+</funcsynopsisinfo>
+</funcsynopsis>
+        void main(int argc, char **argv){
+<funcsynopsis>
+<funcsynopsisinfo>
+          /* This workaround is for win32 and cygwin; do not "optimize" */
+</funcsynopsisinfo>
+<funcsynopsisinfo>
+          volatile int *parr = arr;
+</funcsynopsisinfo>
+<funcprototype>
+<funcdef><function>printf</function></funcdef>
+    <paramdef><parameter>"%d&bsol;n"</parameter></paramdef>
+    <paramdef>parr [ 1 ] <parameter></parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+        }
+
+</literallayout> <!-- remap='Ve' -->
+<para>Solution 2:</para>
+
+<literallayout remap='Vb'>
+        --foo.h
+        /* Note: auto-export is assumed (no _&thinsp;_declspec(dllexport)) */
+<funcsynopsis>
+<funcsynopsisinfo>
+        #if (defined(_WIN32) || defined(__CYGWIN__)) &amp;&amp; &bsol;
+</funcsynopsisinfo>
+</funcsynopsis>
+          !(defined(FOO_BUILD_DLL) || defined(FOO_STATIC))
+<funcsynopsis>
+<funcsynopsisinfo>
+        #define FOO_IMPORT __declspec(dllimport)
+</funcsynopsisinfo>
+</funcsynopsis>
+        #else
+<funcsynopsis>
+<funcsynopsisinfo>
+        #define FOO_IMPORT
+        #endif
+        extern FOO_IMPORT int arr[];
+</funcsynopsisinfo>
+</funcsynopsis>
+        --foo.c
+<funcsynopsis>
+<funcsynopsisinfo>
+        #include "foo.h"
+</funcsynopsisinfo>
+</funcsynopsis>
+        void main(int argc, char **argv){
+<funcsynopsis>
+<funcprototype>
+<funcdef><function>printf</function></funcdef>
+    <paramdef><parameter>"%d&bsol;n"</parameter></paramdef>
+    <paramdef>arr [ 1 ] <parameter></parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+        }
+
+</literallayout> <!-- remap='Ve' -->
+<para>A fourth way to avoid this problem is to re-code your 
+library to use a functional interface rather than a data interface
+for the offending variables (e.g. <function>set_foo()</function> and <function>get_foo()</function> accessor
+functions).
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--disable-auto-import</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--disable-auto-import</secondary></indexterm>
+Do not attempt to do sophisticated linking of <emphasis remap='CW'>`_symbol'</emphasis> to 
+<emphasis remap='CW'>`_&thinsp;_imp_&thinsp;_symbol'</emphasis> for <?troff ps -1?>DATA<?troff ps 0?> imports from DLLs.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--enable-runtime-pseudo-reloc</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--enable-runtime-pseudo-reloc</secondary></indexterm>
+If your code contains expressions described in --enable-auto-import section,
+that is, <?troff ps -1?>DATA<?troff ps 0?> imports from <?troff ps -1?>DLL<?troff ps 0?> with non-zero offset, this switch will create
+a vector of 'runtime pseudo relocations' which can be used by runtime
+environment to adjust references to such data in your client code. 
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--disable-runtime-pseudo-reloc</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--disable-runtime-pseudo-reloc</secondary></indexterm>
+Do not create pseudo relocations for non-zero offset <?troff ps -1?>DATA<?troff ps 0?> imports from
+DLLs.  This is the default.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--enable-extra-pe-debug</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--enable-extra-pe-debug</secondary></indexterm>
+Show additional debug info related to auto-import symbol thunking.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--section-alignment</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--section-alignment</secondary></indexterm>
+Sets the section alignment.  Sections in memory will always begin at
+addresses which are a multiple of this number.  Defaults to 0x1000.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--stack</emphasis> <emphasis remap='I'>reserve</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--stack reserve</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--stack</emphasis> <emphasis remap='I'>reserve</emphasis><emphasis role='strong' remap='B'>,</emphasis><emphasis remap='I'>commit</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--stack reserve,commit</secondary></indexterm>
+<!-- PD -->
+Specify the amount of memory to reserve (and optionally commit) to be
+used as stack for this program.  The default is 2Mb reserved, 4K
+committed.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--subsystem</emphasis> <emphasis remap='I'>which</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--subsystem which</secondary></indexterm></para>
+<!-- PD 0 -->
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--subsystem</emphasis> <emphasis remap='I'>which</emphasis><emphasis role='strong' remap='B'>:</emphasis><emphasis remap='I'>major</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--subsystem which:major</secondary></indexterm></para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--subsystem</emphasis> <emphasis remap='I'>which</emphasis><emphasis role='strong' remap='B'>:</emphasis><emphasis remap='I'>major</emphasis><emphasis role='strong' remap='B'>.</emphasis><emphasis remap='I'>minor</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--subsystem which:major.minor</secondary></indexterm>
+<!-- PD -->
+Specifies the subsystem under which your program will execute.  The
+legal values for <emphasis remap='I'>which</emphasis> are <emphasis remap='CW'>`native'</emphasis>, <emphasis remap='CW'>`windows'</emphasis>,
+<emphasis remap='CW'>`console'</emphasis>, <emphasis remap='CW'>`posix'</emphasis>, and <emphasis remap='CW'>`xbox'</emphasis>.  You may optionally set
+the subsystem version also.  Numeric values are also accepted for
+<emphasis remap='I'>which</emphasis>.
+[This option is specific to the i386 <?troff ps -1?>PE<?troff ps 0?> targeted port of the linker]</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+
+<para>The 68HC11 and 68HC12 linkers support specific options to control the
+memory bank switching mapping and trampoline code generation.</para>
+<variablelist remap='IP'>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--no-trampoline</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--no-trampoline</secondary></indexterm>
+This option disables the generation of trampoline. By default a trampoline
+is generated for each far function which is called using a <emphasis remap='CW'>`jsr'</emphasis>
+instruction (this happens when a pointer to a far function is taken).</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><emphasis role='strong' remap='B'>--bank-window</emphasis> <emphasis remap='I'>name</emphasis></term>
+  <listitem>
+<para><indexterm><primary>Item</primary><secondary>--bank-window name</secondary></indexterm>
+This option indicates to the linker the name of the memory region in
+the <emphasis role='strong' remap='B'><?troff ps -1?>MEMORY<?troff ps 0?></emphasis> specification that describes the memory bank window.
+The definition of such region is then used by the linker to compute
+paging and addresses within the memory window.</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 xml:id='doclifter-environment'><title>ENVIRONMENT</title>
+<para><indexterm><primary>Header</primary><secondary>ENVIRONMENT</secondary></indexterm>
+You can change the behaviour of <emphasis role='strong' remap='B'>ld</emphasis> with the environment variables
+<emphasis remap='CW'>`GNUTARGET'</emphasis>,
+<emphasis remap='CW'>`LDEMULATION'</emphasis> and <emphasis remap='CW'>`COLLECT_NO_DEMANGLE'</emphasis>.</para>
+
+<para><emphasis remap='CW'>`GNUTARGET'</emphasis> determines the input-file object format if you don't
+use <emphasis role='strong' remap='B'>-b</emphasis> (or its synonym <emphasis role='strong' remap='B'>--format</emphasis>).  Its value should be one
+of the <?troff ps -1?>BFD<?troff ps 0?> names for an input format.  If there is no
+<emphasis remap='CW'>`GNUTARGET'</emphasis> in the environment, <emphasis role='strong' remap='B'>ld</emphasis> uses the natural format
+of the target. If <emphasis remap='CW'>`GNUTARGET'</emphasis> is set to <emphasis remap='CW'>`default'</emphasis> then <?troff ps -1?>BFD<?troff ps 0?>
+attempts to discover the input format by examining binary input files;
+this method often succeeds, but there are potential ambiguities, since
+there is no method of ensuring that the magic number used to specify
+object-file formats is unique.  However, the configuration procedure for
+<?troff ps -1?>BFD<?troff ps 0?> on each system places the conventional format for that system first
+in the search-list, so ambiguities are resolved in favor of convention.</para>
+
+<para><emphasis remap='CW'>`LDEMULATION'</emphasis> determines the default emulation if you don't use the
+<emphasis role='strong' remap='B'>-m</emphasis> option.  The emulation can affect various aspects of linker
+behaviour, particularly the default linker script.  You can list the
+available emulations with the <emphasis role='strong' remap='B'>--verbose</emphasis> or <emphasis role='strong' remap='B'>-V</emphasis> options.  If
+the <emphasis role='strong' remap='B'>-m</emphasis> option is not used, and the <emphasis remap='CW'>`LDEMULATION'</emphasis> environment
+variable is not defined, the default emulation depends upon how the
+linker was configured.</para>
+
+<para>Normally, the linker will default to demangling symbols.  However, if
+<emphasis remap='CW'>`COLLECT_NO_DEMANGLE'</emphasis> is set in the environment, then it will
+default to not demangling symbols.  This environment variable is used in
+a similar fashion by the <emphasis remap='CW'>`gcc'</emphasis> linker wrapper program.  The default
+may be overridden by the <emphasis role='strong' remap='B'>--demangle</emphasis> and <emphasis role='strong' remap='B'>--no-demangle</emphasis>
+options.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-see_also'><title>SEE ALSO</title>
+<para><indexterm><primary>Header</primary><secondary>SEE ALSO</secondary></indexterm>
+<citerefentry><refentrytitle>ar</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>nm</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>objcopy</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>objdump</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>readelf</refentrytitle><manvolnum>1</manvolnum></citerefentry> and
+the Info entries for <emphasis remap='I'>binutils</emphasis> and
+<command>ld</command>.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-copyright'><title>COPYRIGHT</title>
+<para><indexterm><primary>Header</primary><secondary>COPYRIGHT</secondary></indexterm>
+Copyright (c) 1991, 92, 93, 94, 95, 96, 97, 98, 99, 2000, 2001,
+2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.</para>
+
+<para>Permission is granted to copy, distribute and/or modify this document
+under the terms of the <?troff ps -1?>GNU<?troff ps 0?> Free Documentation License, Version 1.1
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, with no Front-Cover Texts, and with no
+Back-Cover Texts.  A copy of the license is included in the
+section entitled &ldquo;<?troff ps -1?>GNU<?troff ps 0?> Free Documentation License&rdquo;.</para>
+</refsect1>
+</refentry>
+
