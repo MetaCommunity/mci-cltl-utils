@@ -27,6 +27,10 @@
   `(= (the character-code ,c)
       (the character-code ,code)))
 
+(declaim (inline name-start-char-p name-char-p
+                 #| read-name-string read-characters |#
+                 ))
+
 (defun name-start-char-p (c)
   ;; cf. http://www.w3.org/TR/xml/#NT-NameStartChar
   (declare (type (or character character-code) c)

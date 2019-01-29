@@ -94,8 +94,14 @@ contents of STRING."
 ;; => T
 
 (defmacro string-position (char str &body rest)
+  ;; Macro expands to a type-dispatched wrapper for CL:POSITION
+  ;;
   ;; a type-dispatching form, towards applying compiler optimizations 
   ;; at runtime, cf. SB-KERNEL:%FIND-POSITION, and no-/doubt similar in CMUCL
+
+  ;; NB SBCL emits 'deleting unreachable code' when compiling this
+  ;; macroexpansion within SPLIT-STRING-1. It may be considering the
+  ;; default (t) form unreachable, there.
   (with-gensym (%char %str)
     `(let ((,%char ,char)
 	   (,%str ,str))
@@ -144,6 +150,9 @@ contents of STRING."
                                   key (test #'char=) test-not )
   ;; FIXME_DOCS See also `split-string'
   ;; FIXME_DOCS note use of CL:SIMPLE-STRING as a refinement onto CL:STRING
+  ;;
+  ;; Concerning a "deleting unreachable code" message from SBCL when
+  ;; compiling this function, see commentary in STRING-POSITION src.
   (declare (type string str)
 	   (values simple-string 
 		   (or simple-string null)
