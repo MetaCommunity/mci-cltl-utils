@@ -62,7 +62,9 @@
   ())
 
 
-(defmacro compile* (form &optional optimization)
+(defmacro compile** (form &optional optimization)
+  ;; FIXME: Align onto the error/waning handling semantics of COMPILE*
+  ;; see misc-utils.lisp
   (with-gensym (%form fn warnedp failurep)
     `(with-optimization (,@optimization)
        (let ((,%form ,form))
@@ -86,10 +88,10 @@
              (t (values ,fn))))))))
 
 
-;; (compile* '(lambda () (foo bar)) (debug 3))
+;; (compile** '(lambda () (foo bar)) (debug 3))
 
-;; (compile* '(lambda () (cl:print)) (debug 3))
+;; (compile** '(lambda () (cl:print)) (debug 3))
 
-;; (compile* '(lambda () (foo bar)))
+;; (compile** '(lambda () (foo bar)))
 
-;; (compile* '(lambda () (+ 1 a)))
+;; (compile** '(lambda () (+ 1 a)))

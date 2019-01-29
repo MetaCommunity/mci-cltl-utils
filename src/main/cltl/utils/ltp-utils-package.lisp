@@ -97,8 +97,8 @@
    #:simple-compilation-warning
    #:compilation-error
    #:simple-compilation-error
-   #:compile*
-   
+   #:compile** ;; FIXME - need unified COMPILE*/COMPILE** condition semantics
+
    #:push-last
    #:simplify-vector
    #:do-vector

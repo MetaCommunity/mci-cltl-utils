@@ -109,6 +109,8 @@ behavior is analogous onto `CL:DEFCONSTANT'"
 
 
 (defun compile* (name &optional defn)
+  ;; FIXME: Align onto the error/waning handling semantics of COMPILE**
+  ;; see opt-utils.lisp
   "Evalute COMPILE on NAME and DEFN. 
 
 If COMPILE indicates errors during compilation, an error of type
