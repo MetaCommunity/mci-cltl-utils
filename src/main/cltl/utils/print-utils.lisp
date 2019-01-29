@@ -11,11 +11,45 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-;; FIXME_DOCS - document the generic fumctions and methods defined
-;; here. Refer to subsequent commentaey, this file
+;; FIXME_DOCS - document the generic functions and methods defined
+;; here. Refer to subsequent commentary, this file
+
+
+;; FIXME_DESIGN - Reconsider the ad hoc design of this API. Considerations:
+;; - 'Object Label' as a short-form Object Identity string
+;;
+;;    - principally designed for use with "The normal REPL printer" as
+;;      in regards to the "Name" part of object identity printouts for
+;;      unreadable objects.
+;;
+;;    - may also be reused within MAKE-LOAD-FORM forms, but note that
+;;      these would need a management API to ensure a sense of
+;;      managability to the same, principally for the Common Lisp
+;;      systems developer (in FOSS environments)
+;;
+;; - 'Object Name' as a long-form Object Identity string
+;;
+;;    - principally designed for use in "Pretty Printing" applications,
+;;      in console and desktop environments
+;;
+;; - "Pretty Printer" as a novel concept (Shoutout to the Multics developers)
+;;
+;;    - principally towards utilizing the 'Object Name' of an object as  "When Pretty Printing".
+;;
+;;      - note the ANSI CL/CLtL2 API for Pretty Printing, namely concerning global variables designed for "The Pretty Printer"
+;;
+;;    - furthermore towards "Pretty Printing" in graphical desktop environments.
+;;
+;;      - see also: Garnet KR
+;;
+
 
 (in-package #:ltp-utils)
 
+;; NB: These generic functions might be typically used for slot value writer methods.
+;;
+;; Note the class PRETTY-PRINTABLE-OBJECT
+;;
 (defgeneric (setf object-print-name) (new-value object))
 (defgeneric (setf object-print-label) (new-value object))
 
@@ -305,6 +339,8 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 (defgeneric (setf object-name) (new-value object))
 
 (defclass associative-object ()
+
+  ;; FIXME - clarify the design of this. see also #<system:ltp-mop-utils:aclass.lisp>
   ((name
     :accessor object-name
     :type symbol
