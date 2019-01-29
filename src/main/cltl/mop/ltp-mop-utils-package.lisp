@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial Implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -29,7 +29,7 @@
    #:defgeneric
    #:standard-class
    )
-  #+(or SBCL CMU CCL ALLEGRO) 
+  #+(or SBCL CMU CCL ALLEGRO)
   ;; TO DO: Keep this synchronized onto PCL-PORT
   ;;
   ;; TBD: Why C2MOP shadows MOP implementations?
@@ -51,7 +51,7 @@
   ;; implementation? [A Review of C2MOP]
   ;;
   ;;   (package-shadowing-symbols (find-package '#:c2mop))
-  
+
   (:export
    #:validate-class
    #:associative-index
@@ -77,6 +77,6 @@
        (s (package-shadowing-symbols p)))
   ;; NB: No package loxk held, during this operation
   (do-external-symbols (xs '#:c2mop)
-    (unless (find (the symbol xs) (the list s) 
+    (unless (find (the symbol xs) (the list s)
                   :test #'eq)
       (export s p))))

@@ -29,7 +29,7 @@
 ;;   - Test Naming
 ;;   - Test Grouping
 ;;   - Test Evaluation Constraints
-;;     - Code Evaluation Phase (onto ANSI CL vis. standard syntax and 
+;;     - Code Evaluation Phase (onto ANSI CL vis. standard syntax and
 ;;       behaviors of CL:EVAL-WHEN)
 ;;     - Test Code Constraint onto Dependent Tests
 ;;       (when-success/when-fail)

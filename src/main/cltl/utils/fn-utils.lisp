@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial API and implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -20,7 +20,7 @@
   '(cons (eql lambda) (cons list t)))
 
 (deftype function-designator ()
-  '(or symbol function 
+  '(or symbol function
     setf-function-designator
     lambda-function-designator))
 
@@ -57,11 +57,11 @@ Valid Syntax of FORM:
 
 
 (defmacro with-safe-frefs (specs &body body)
-  "Evaluate BODY in a lexiccal environment in which each element of SPECS denotes a function 
+  "Evaluate BODY in a lexiccal environment in which each element of SPECS denotes a function
 
 Syntax:
 >    WITH-SAFE-FREFS ({SPECIFIER}*) {DECLARATION} {FORM}*
-> 
+>
 >    SPECIFIER: A _safe function reference_
 
 >    DECLARATION, FORM: Like as in [CLHS]
@@ -70,7 +70,7 @@ A _safe function reference_ denotes a function name with optional pacakge specif
 
 Example:
 
-    (with-safe-frefs 
+    (with-safe-frefs
         ((l #:list #:cl)
          (c #:compute-function))
       (funcall l c 2))
@@ -90,8 +90,8 @@ Example:
 	       ((or string character)
 		(values p)))))
       `(let (,@(mapcar (lambda (spec)
-			 (destructuring-bind 
-			       (name fn &optional 
+			 (destructuring-bind
+			       (name fn &optional
 				     (package
 				      (etypecase fn
 					(symbol
@@ -124,7 +124,7 @@ Example:
 
 #+NIL ;; Instance Test
 (macroexpand (quote
-(with-safe-frefs 
+(with-safe-frefs
     ((l #:list #:cl)
      (c #:compute-function))
   (funcall l (funcall c 'expt) 2))

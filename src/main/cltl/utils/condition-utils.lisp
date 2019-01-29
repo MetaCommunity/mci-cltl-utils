@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial Implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -21,7 +21,7 @@
   ())
 
 (defmacro simple-style-warning (fmt-ctrl &rest args)
-  `(warn 'simple-style-warning 
+  `(warn 'simple-style-warning
 	 :format-control ,fmt-ctrl
 	 :format-arguments (list ,@args)))
 
@@ -36,7 +36,7 @@
 
 
 (defgeneric format-condition (condition stream)
-  (:documentation 
+  (:documentation
    "CLOS Utility for application within condition class REPORT forms
 
 Example:
@@ -53,7 +53,7 @@ Example:
    (when (next-method-p)
       (terpri s)
       (call-next-method)))
- 
+
  (define-condition weather-error (error weather-condition)
    ())
 
@@ -67,14 +67,14 @@ Example:
      :accessor ece-quality)
     (vehicle-type
      :initarg :vehicle-type
-     :initform '(airplane paper) 
+     :initform '(airplane paper)
      :accessor ece-vtype)
     (vehicle-applicaiton
      :initarg :vehicle-application
      :initform 'acrobatics
      :accessor ece-vapplication)))
 
- (defmethod format-condition :around ((c rainy-locomotion-error) 
+ (defmethod format-condition :around ((c rainy-locomotion-error)
                                       (s stream))
   (call-next-method)
   (terpri s)
@@ -90,11 +90,11 @@ Example:
 
   (:method ((condition condition) (stream symbol))
     ;; FIXME_DESIGN symbol as stream designator => constant
-"Dispatch for FORMAT-CONDITION onto a symbolic output stream designator. 
+"Dispatch for FORMAT-CONDITION onto a symbolic output stream designator.
 This method allows for symbolic indication of an output stream to
 FORMAT-CONDITION, with a syntax compatible onto ANSI CL (CLtL2)"
 ;; FIXME_DOCS See also: CL:PRINT; LTP `string-designator' type; LTP
-;; `compute-output-stream' 
+;; `compute-output-stream'
     (format-condition condition
                       (ecase stream
                         ((t) *terminal-io*)
@@ -125,7 +125,7 @@ method has returned, and before the direct format procedure in this method"
 
 #+NIL ;; Test for print function
 (error 'simple-condition :format-control "Random event ~S at ~S"
-       :format-arguments (list (gensym "e-") 
+       :format-arguments (list (gensym "e-")
                                (get-universal-time)))
 
 ;; -

@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial API and implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -46,24 +46,24 @@ behavior is analogous onto `CL:DEFCONSTANT'"
       ;; any complete debug of this particular issue.
       ;;
       ;; affected forms (McCLIM MCi fork)
-      ;; * AUTOMATON::+MIN-CHAR-CODE+ (Drei state-and-transition.lisp) 
+      ;; * AUTOMATON::+MIN-CHAR-CODE+ (Drei state-and-transition.lisp)
       ;; * AUTOMATON::+INTERSECTION+ and later constants (Drei regexp.lisp)
-      ;; 
+      ;;
       ;; Each of those symbols is bound to a FIXNUM.
-      ;; 
+      ;;
       ;; Workaround: Use DEFCONSTANT instead, in those
       ;; bindings, considering: A FIXNUM is always EQL to itself
       ;;
       ;; Issue encountered in:
       ;;  * SBCL 1.2.5 Linux 64 bit
       ;;  * SBCL 1.2.5.76-65a44db Linux 64 bit
-      `(defconstant ,name 
+      `(defconstant ,name
          (cond
            ((boundp (quote ,%name))
             (let ((,%previous (symbol-value (quote ,%name)))
                   (,%value ,value))
               (unless (equalp ,%value ,%previous)
-                (simple-style-warning 
+                (simple-style-warning
                  "~<Ignoring non-EQUALP redefintion of constant ~S,~> ~
 ~<existing value ~S~> ~<ignored value ~S~>"
                  (quote ,%name) ,%previous ,%value))
@@ -111,7 +111,7 @@ behavior is analogous onto `CL:DEFCONSTANT'"
 (defun compile* (name &optional defn)
   ;; FIXME: Align onto the error/waning handling semantics of COMPILE**
   ;; see opt-utils.lisp
-  "Evalute COMPILE on NAME and DEFN. 
+  "Evalute COMPILE on NAME and DEFN.
 
 If COMPILE indicates errors during compilation, an error of type
 `ERRORS-DURING-COMPILE' is signaled.
@@ -130,10 +130,10 @@ In other instances, the compiled function is returned."
 	 (error 'errors-during-compile
 		:function-name name
 		:lambda-form defn))
-	(warnings-p 
+	(warnings-p
 	 ;; Note that this effectively makes a full WARNING out of a
 	 ;; STYLE-WARNING, with anything short of a full HANDLER-CASE
-	 ;; or such 
+	 ;; or such
 	 (warn 'warnings-during-compile
 	       :function-name name
 	       :lambda-form defn)
@@ -160,7 +160,7 @@ In other instances, the compiled function is returned."
 
 ;; (symbol-status 's)
 ;; => :INTERNAL, #<PACKAGE "INFO.METACOMMUNITY.CLTL.UTILS">
-	
+
 ;; (symbol-status 'print)
 ;; => :EXTERNAL, #<PACKAGE "COMMON-LISP">
 
@@ -180,11 +180,11 @@ In other instances, the compiled function is returned."
 (defun package-exports-symbols (pkg)
   (declare (type package-designator pkg)
            (values list))
-  (let ((buffer 
+  (let ((buffer
          (make-array 8 :fill-pointer 0)))
     (declare (type (array t (*)) buffer))
     (do-external-symbols (s pkg  (coerce buffer 'list))
       (vector-push-extend s buffer))))
 
-;; Test form (ad hoc): 
+;; Test form (ad hoc):
 ;; (package-exports-symbols '#:c2mop)

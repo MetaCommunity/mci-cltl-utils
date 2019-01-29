@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial API and implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -19,8 +19,8 @@
   ;; FIXME use SETF forms
   (with-gensym (%l)
     `(let ((,%l ,l))
-       (cond 
-	 ((consp ,%l) 
+       (cond
+	 ((consp ,%l)
 	  (rplacd (last ,%l) (list ,a))
 	  ,%l)
 	 (t (list ,a))))))
@@ -70,13 +70,13 @@
 
 (defun simplify-string (string)
   "If STRING can be coerced to a SIMPLE-BASE-STRING, then return a
-SIMPLE-BASE-STRING representative of the contents of STRING. 
-Otherwise, return a SIMPLE-STRING representative of the 
+SIMPLE-BASE-STRING representative of the contents of STRING.
+Otherwise, return a SIMPLE-STRING representative of the
 contents of STRING."
   (declare (type string string)
 	   (inline coerce)
 	   (values (or simple-string simple-base-string)))
-  (handler-case 
+  (handler-case
       (coerce string 'simple-base-string)
     (type-error ()
       (coerce string 'simple-string))))
@@ -96,7 +96,7 @@ contents of STRING."
 (defmacro string-position (char str &body rest)
   ;; Macro expands to a type-dispatched wrapper for CL:POSITION
   ;;
-  ;; a type-dispatching form, towards applying compiler optimizations 
+  ;; a type-dispatching form, towards applying compiler optimizations
   ;; at runtime, cf. SB-KERNEL:%FIND-POSITION, and no-/doubt similar in CMUCL
 
   ;; NB SBCL emits 'deleting unreachable code' when compiling this
@@ -116,7 +116,7 @@ contents of STRING."
                       ,@rest))))))
 
 
-(defconstant* +null-string+ 
+(defconstant* +null-string+
     (make-string 0 :element-type 'base-char))
 
 (defun null-string ()
@@ -132,10 +132,10 @@ contents of STRING."
   (or (eq str +null-string+)
       ;; FIXME_DOCS note opportunities for object reuse in ANSI CL
       ;; programs, and correspondingly, opportunities for using EQ as
-      ;; an equivalence test 
-      (and (typep str 'string) 
+      ;; an equivalence test
+      (and (typep str 'string)
 	   (zerop (length (the string str))))))
-    
+
 
 (deftype array-dimension-designator ()
   ;; FIXME_DOCS See also `array-length'
@@ -146,7 +146,7 @@ contents of STRING."
   ;; FIXME_DOCS See also `array-dimension'
     '(integer 0 #.array-dimension-limit))
 
-(defun split-string-1 (char str &key (start 0) end from-end 
+(defun split-string-1 (char str &key (start 0) end from-end
                                   key (test #'char=) test-not )
   ;; FIXME_DOCS See also `split-string'
   ;; FIXME_DOCS note use of CL:SIMPLE-STRING as a refinement onto CL:STRING
@@ -154,16 +154,16 @@ contents of STRING."
   ;; Concerning a "deleting unreachable code" message from SBCL when
   ;; compiling this function, see commentary in STRING-POSITION src.
   (declare (type string str)
-	   (values simple-string 
+	   (values simple-string
 		   (or simple-string null)
 		   (or array-dimension-designator null)))
-  (let ((n (string-position char str 
-	     :start start :end end 
-	     :from-end from-end :key key 
+  (let ((n (string-position char str
+	     :start start :end end
+	     :from-end from-end :key key
 	     :test test :test-not test-not)))
     (cond
       ((and n (zerop n))
-       (values +null-string+ 
+       (values +null-string+
 	       (subseq str 1)
 	       0))
       (n (values (subseq str 0 n)
@@ -180,8 +180,8 @@ contents of STRING."
 ;; (split-string-1 #\. (simplify-string "ab"))
 ;; => "ab", NIL, NIL
 
-(defun split-string (char str &key (start 0)  end 
-				from-end  key 
+(defun split-string (char str &key (start 0)  end
+				from-end  key
 				(test #'char=)
 				test-not)
   ;; FIXME_DOCS See also `split-string-1'
@@ -192,9 +192,9 @@ contents of STRING."
 	       (declare (type string str)
 			(type list buffer))
 	       (multiple-value-bind (start rest n)
-		   (split-string-1 char str2 
-				   :start start :end end 
-				   :from-end from-end :key key  
+		   (split-string-1 char str2
+				   :start start :end end
+				   :from-end from-end :key key
 				   :test test :test-not test-not)
 		 (cond
 		   (n
@@ -209,7 +209,7 @@ contents of STRING."
 
 ;; (split-string #\. (simplify-string ".b.c.d"))
 ;; => "" "b" "c" "d")
-  
+
 ;; (split-string #\. (simplify-string "abcd"))
 ;; => ("abcd")
 

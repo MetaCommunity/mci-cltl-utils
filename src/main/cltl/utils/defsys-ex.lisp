@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial Implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -14,7 +14,7 @@
 (in-package #:cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defpackage #:info.metacommunity.cltl.defsys 
+  (defpackage #:info.metacommunity.cltl.defsys
     (:nicknames #:defsys)
     (:use #:asdf #:cl)))
 
@@ -29,7 +29,7 @@
 ;;       as with reqards to system dependencies
 ;;
 ;;        * Example for a "Component tree" view: Garnet Gadgets
-;;            * Garnet Gadgets may be as represented by their definitive 
+;;            * Garnet Gadgets may be as represented by their definitive
 ;;               KR schema and by their definitions as defined in
 ;;               correlated source files
 ;;
@@ -39,7 +39,7 @@
 ;;            * An application may depend, directly, on only a subset
 ;;              of the full set of Garnet Gadgets
 ;;
-;;            * An embedded application "Should not" be required to 
+;;            * An embedded application "Should not" be required to
 ;;              load the entire Garnet Gadget system, for utilizing
 ;;              only a small number of Garnet Gadgets, directly
 ;;
@@ -52,7 +52,7 @@
 ;;         * e.g. ASDF DEFSYSTEM [ASDF 3.1.3.8] effectively
 ;;           overrides some extensions onto compnent pathname handling
 ;;
-;;             * Case in point: 
+;;             * Case in point:
 ;;                 SHARED-INITIALIZE :AROUND GARNET-SYSTEMS:CURSOR T
 ;;                   &REST INITARGS &KEY &ALLOW-OTHER-KEYS
 ;;
@@ -100,7 +100,7 @@
 ;;                  * A set of IDL interface definitions may be
 ;;                    defined around the SWANK protocol, as for
 ;;                    purpose of defining a CORBA interface
-;;                    for program interaction with a  Common Lisp 
+;;                    for program interaction with a  Common Lisp
 ;;                    implementation via an Object Request Broker
 ;;                    (ORB)
 ;;
@@ -164,7 +164,7 @@
 ;;                            not be feasible by all approaches, in
 ;;                            all Common Lisp implementations
 ;;                            (referencing: concerns about interrupt
-;;                            handling in SBCL, such that effectively 
+;;                            handling in SBCL, such that effectively
 ;;                            interferes CL+J in SBCL)
 ;;
 ;;                          * Another possible approach: Update and
@@ -178,17 +178,17 @@
 ;;                                superficially, compared to an idea
 ;;                                of "implementing FFI" onto an
 ;;                                existing ORB iplementation such that
-;;                                supports both of "IIOP over SSH" and 
+;;                                supports both of "IIOP over SSH" and
 ;;                                Kerberos authentication, already,
 ;;                                namely JacORB. Of course, that may
 ;;                                also serve to require FFI interfaces
 ;;                                onto a Kerberos implementation and
-;;                                OpenSSL. 
+;;                                OpenSSL.
 ;;
 ;;                              * In a sense of "Software reusability"
 ;;                                beyond specific programming language
 ;;                                platforms, the "Use FFI" idea may be
-;;                                ideal. 
+;;                                ideal.
 ;;
 ;;              * Possibly related concep (in a far reach) :
 ;;                Mobile/embedded computing, desktop virtualization
@@ -210,7 +210,7 @@
 ;;              * Possibly related concept (in a furtherx reach) :
 ;;                 Realtime CORBA as a protocol for inter-application
 ;;                 communications within an embedded computing
-;;                 platform 
+;;                 platform
 ;;                  * May be developed to prototype, on an Android
 ;;                    platform and/or other ARM architectures
 ;;                    e.g. Samsung Chromebook w/ Crouton or CruBuntu
@@ -219,7 +219,7 @@
 
 ;;; * [Sidebar] RESOURCE-SYSTEM
 
-(defclass resource (component) 
+(defclass resource (component)
   ())
 
 (defclass resource-file (resource static-file)
@@ -239,17 +239,17 @@
 
 
 ;;; * ...
- 
+
 #| [Sidebar] Initial prototype for a URI format for dependency specifiers
 
  format: urn:x-dep:<app>:<app-specific-part>
 
     for <app> ::= maven
           Context: ABCL / CL+J / FOIL / ...
-          The <app-specific-part> must constitute a 
+          The <app-specific-part> must constitute a
 
     for <app> ::= ivy
-          Context: ABCL / CL+J / FOIL / ...       
+          Context: ABCL / CL+J / FOIL / ...
           (Specification TBD) (TO DO: Study Ivy documentation)
 
     for <app> ::=  deb
@@ -278,11 +278,11 @@
     for <app> ::= ASDF
           Context: Common Lisp systems (typicaly, Common Lisp software code)
           <app-specific-part> would denote .... ?
-      
+
           Thoughts:
 
             0. Generic instance: <app-specific-part> would denote a
-               'path' to an ASDF component, e.g. 
+               'path' to an ASDF component, e.g.
 
                  "urn:x-dep:asdf:clim-gtkairo:Backends/gtkairo;ffi"
 
@@ -305,7 +305,7 @@
                       within Maven archives (TBD)
 
                     * Advantage: "This approach" would serve to extend
-                      of the Maven resource distribution architecture 
+                      of the Maven resource distribution architecture
                       (alternately Apache Ivy), likewise extending of
                       Maven's support for HTTP authentication,
                       resource repository selection, resource
@@ -324,7 +324,7 @@
   ;;   {A D B}
   ;;
   ;; denoting:
-  ;;   COMPONENT (subject) 'A' 
+  ;;   COMPONENT (subject) 'A'
   ;;    depends on OBJECT 'B'
   ;;    by way of DEPENCNCY D
   ;;
@@ -355,7 +355,7 @@
   ;; For purpose of convenience in this application, a semantics
   ;; extending of ASDF is applied instead of a semantics extending of
   ;; the Resource Description Framework [RDF] for dependency version
-  ;; annotation 
+  ;; annotation
   ())
 
 ;;;; Dependency classes for dependency specifiers normative in ASDF,
@@ -390,8 +390,8 @@
 
 (defclass host-package (dependency)
   ;; for specifying dependencies onto a host packaging system
-  ;; e.g. 
-  ;;   Debian packaging 
+  ;; e.g.
+  ;;   Debian packaging
   ;;      e.g. dpkg-query -f '${db:status-abbrev}${binary:package} ${version}\n' -W pngcrush
   ;;      ....expecting only one package entry listed
   ;
@@ -441,7 +441,7 @@
 
   (:method ((name (eql :os-package)) body)
     ;; initialize  as an instance of a subclass of HOST-PACKAGE
-    ;; specific to the host OS 
+    ;; specific to the host OS
     ;;
     ;; TO DO: Protocol for determining the identtity of the host OS
     ;;  FIRST: `uname -o' if available
@@ -452,8 +452,8 @@
     ;; with a architecture specifier , explicitly:
     ;;       e.g amd64 or ia32
     ;; or else the architecture defaults to that of ... a
-    ;; distribtion-specific architeture designator extending of 
-    ;;   `uname -m' (unofficial) .e.g 
+    ;; distribtion-specific architeture designator extending of
+    ;;   `uname -m' (unofficial) .e.g
     ;;          x86_64 [kernel machine type] =i.e.=> amd64 [host OS architecture]
     )
 
@@ -461,7 +461,7 @@
   ;; next are for compat with ASDF:DEFSYSTEM
   ;; cf. ASDF/PARSE-DEFSYSTEM::PARSE-DEPENDENCY-DEF
   ;;
-  
+
   (:method ((name (eql :feature) body))
     ;; Nb. Semantically similar to a :REQUIRE dependency
     ;; Intialize as FEATURE-DEPENCENCY
@@ -503,7 +503,7 @@
 
 ;; (describe (find-component* "c.2" "c"))
 ;; ^ note the asdf::sideway-dependencies slot
-;; see also: 
+;; see also:
 ;;   ASDF:COMPONENT-SIDEWAY-DEPENDENCIES
 ;;   ASDF:SIDEWAY-OPERATION
 ;;   ASDF:PREPARE-OP

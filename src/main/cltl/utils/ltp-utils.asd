@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ  - Initial implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -32,12 +32,12 @@
 
 
 (defsystem #:ltp-utils
-  :description 
+  :description
   "Generic utilities for programming with Common Lisp and ASDF"
   :version "1.0"
 ;;  :homepage "https://github.com/MetaCommunity/mci-cltl-utils"
 ;;  :license "https://github.com/MetaCommunity/mci-cltl-utils/blob/master/LICENSE"
-  :components 
+  :components
   ((:file "ltp-utils-package")
    (:file "macro-utils"
 	  :depends-on ("ltp-utils-package"))
@@ -51,7 +51,7 @@
 	  :depends-on ("ltp-utils-package"))
    (:file "stream-utils"
           :depends-on ("ltp-utils-package"))
-   (:file "misc-utils" 
+   (:file "misc-utils"
           :depends-on ("stream-utils" "macro-utils" "condition-utils"))
    (:file "print-utils"
 	  :depends-on ("misc-utils" "fn-utils"))

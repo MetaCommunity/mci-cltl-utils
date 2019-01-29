@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial API and implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -48,13 +48,13 @@
        (code-in-range cc #xC0 #xD6)
        (code-in-range cc #xD8 #xF6)
        (code-in-range cc #xF8 #x2FF)
-       (code-in-range cc #x370 #x37D)  
+       (code-in-range cc #x370 #x37D)
        (code-in-range cc #x37F #x1FFF)
-       (code-in-range cc #x200C #x200D)  
+       (code-in-range cc #x200C #x200D)
        (code-in-range cc #x2070 #x218F)
-       (code-in-range cc #x2C00 #x2FEF)  
+       (code-in-range cc #x2C00 #x2FEF)
        (code-in-range cc #x3001 #xD7FF)
-       (code-in-range cc #xF900 #xFDCF) 
+       (code-in-range cc #xF900 #xFDCF)
        (code-in-range cc #xFDF0 #xFFFD)
        (code-in-range cc #x10000 #xEFFFF)))))
 
@@ -74,7 +74,7 @@
 	  (code= cc #.(char-code #\-))
 	  (code= cc #.(char-code #\.))
 	  (code= cc #xB7)
-	  (code-in-range cc #x0300 #x036F) 
+	  (code-in-range cc #x0300 #x036F)
 	  (code-in-range cc #x203F #x2040)))))
 
 ;; (name-char-p #\A)
@@ -97,7 +97,7 @@
 	      (when (zerop n) (setq n 1))
 	      (write-char (read-char s) buff))
 	     ((zerop n) ;; EOF
-	      (cond 
+	      (cond
 		(eof-error-p
 		 (error 'end-of-file :stream s))
 		(t (return-from read-name-string eof-value))))
@@ -127,7 +127,7 @@ and of the specified ELEMENT-TYPE as a sequence of those characters,
 second value NIL, and third value, the value N
 
 If end of file is encountered on the STREAM before N many characters
-have been read: 
+have been read:
  1. If EOF-ERROR-P is NON-NIL then an END-OF-FILE error is signaled
  2. Otherwise, if EOF-ERROR-P is NIL then EOF-VALUE is returned as the
     first value, with the second return value being the string as
@@ -150,7 +150,7 @@ have been read:
       (declare (type array-dimension-designator %n))
       (let ((c (read-char stream nil eof)))
 	(cond
-	  ((eq c eof)	   
+	  ((eq c eof)
 	   (cond (eof-error-p
 		  (error 'end-of-file :stream stream))
 		 (t (return (values eof-value buff %n)))))

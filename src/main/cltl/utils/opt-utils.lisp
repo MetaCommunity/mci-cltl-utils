@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial API and implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -24,7 +24,7 @@
 ;;  http://ecls.sourceforge.net/new-manual/ch02.html#ansi.declarations.optimize
 
 (defmacro with-tail-recursion (&body body)
-  `(with-optimization (#-allegro (debug 2) 
+  `(with-optimization (#-allegro (debug 2)
 				 #+allegro (debug 1)
 				 (speed 3) (safety 2))
      ,@body))
@@ -38,7 +38,7 @@
 		,@body))
 	   (test-tail (&rest opt)
 	     `(with-opt-env (env ,@opt)
-		#+CCL 
+		#+CCL
 		(ccl::policy.allow-tail-recursion-elimination env)
                 ;; FIXME implement test form here
                 )))
@@ -74,15 +74,15 @@
              (warn 'simple-compilation-warning
                    :format-control
                    "~<Compiler warned while compiling ~S~>~
-~@[ ~<[using optimization ~S]~>~]" 
+~@[ ~<[using optimization ~S]~>~]"
                    :format-arguments (list ,%form (quote ,optimization))))
            (cond
-             (,failurep 
+             (,failurep
               (cerror  (format nil "Continue, returning ~s"  ,fn)
                        'simple-compilation-error
                        :format-control
                        "~<Compiler erred while compiling ~S~>~
-~@[ ~<[using optimization ~S]~>~]" 
+~@[ ~<[using optimization ~S]~>~]"
                        :format-arguments (list ,%form (quote ,optimization)))
               (values ,fn))
              (t (values ,fn))))))))

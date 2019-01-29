@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial Implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -16,7 +16,7 @@
 
 (defmacro validate-class (class &optional (superclass 'standard-class))
   #+(or SBCL CMU CCL ALLEGRO)
-  `(progn 
+  `(progn
      (defmethod validate-superclass ((a ,class) (b ,superclass))
        (values t))
      (defmethod validate-superclass ((a ,superclass) (b ,class))

@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial API and implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -29,14 +29,14 @@
  string value.
 
 
- For an object of a type that is a subclass of PRETTY-PRINTABLE-OBJECT, 
+ For an object of a type that is a subclass of PRETTY-PRINTABLE-OBJECT,
  the functions OBJECT-PRINT-NAME and OBJECT-PRINT-LABEL, respectively,
  may dispatch to slot-value accessors methods specialized onto the
  PRETTY-PRINTABLE-OBJECT, unless the accessor methods are overridden.
 
  Typically, an object's print-label would represents a succinct
  identity of the object, whereas an object's print-name would
- represent a less succinct identity. 
+ represent a less succinct identity.
 
  Examples
 
@@ -58,8 +58,8 @@
  for instances in which an object's name represents the structural
  quaities of an object, such that may be indivdiually printed to an
  output stream string for constructing the structured name or label of
- the object. 
-  
+ the object.
+
  OBJECT-PRINT-NAME and OBJECT-PRINT-LABEL, altrenatey, may be most
  useful for objects of which a single string represents each of the
  object's name and label qualities -- for instance, for the
@@ -200,7 +200,7 @@ See also: `object-print-label'")
 
   ;; FIXME: Generic function FTYPE declarations
   ;; => ftype (function (t) simple-string)
-  (:documentation 
+  (:documentation
    "Return a succinct, unique, human-readable label for OBJECT
 
 See also: `object-print-name'")
@@ -240,11 +240,11 @@ See also: `object-print-name'")
     :initarg :print-label
     :type simple-string
     :accessor object-print-label)
-   (print-name 
+   (print-name
     :initarg :print-name
     :type simple-string
     :accessor object-print-name))
-   (:documentation 
+   (:documentation
     "Mixin class for OBJECT-PRINT-LABEL, OBJECT-PRINT-NAME functions.
 
 See also:
@@ -276,7 +276,7 @@ Example:
 If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied onto ARG"
     (declare (ignore colon-p))
     (cond
-      (at-p 
+      (at-p
        (princ (object-print-name arg) stream))
       (t
        (princ (object-print-label arg) stream)))))
@@ -285,12 +285,12 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 ;; (format nil "Class ~/utils:format-label/" (find-class 'string))
 ;; => "Class CL:STRING"
 
-(defun print-hash-table (table 
+(defun print-hash-table (table
                          &key
 			   (stream *standard-output*)
-			   (format-control 
-			    (load-time-value 
-			     (compile nil 
+			   (format-control
+			    (load-time-value
+			     (compile nil
 				      (formatter "~%~/ltp-utils:format-label/ : ~/ltp-utils:format-label/")))))
   (declare (type hash-table table)
 	   (type format-control format-control)

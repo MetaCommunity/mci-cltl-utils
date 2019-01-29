@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial API and implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -14,7 +14,7 @@
 (in-package #:ltp-utils)
 
 (deftype stream-designator ()
-  '(or (and symbol (member nil t)) stream 
+  '(or (and symbol (member nil t)) stream
     (and string (satisfies array-has-fill-pointer-p))))
 
 
@@ -41,7 +41,7 @@ See also: `compute-input-stream'"
     (stream (values s))
     (null (values *standard-output*))
     ((eql t) (values *terminal-io*))))
-  
+
 
 (defun compute-input-stream (s)
   "Given a stream designator, S, return:
