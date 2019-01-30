@@ -49,7 +49,7 @@ See also: `simplify-string'"
 
 (defmacro intern* (s &optional (package *package*))
   "Intern a symbol with a name equivalent to the symbol S, interned in
-  the designated PACKAGE"
+the designated PACKAGE"
   `(intern (symbol-name ,s)
 	   ,package))
 
