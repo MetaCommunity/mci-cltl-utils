@@ -16,7 +16,11 @@
 (in-package #:ltp-utils)
 
 (defmacro format* (ctrl &rest args)
-  "Return a simple string formatted of the format conrtol string CTRL
+  ;; NB: Defined here, rather than in seq-utils.lisp
+  ;;     so as to avoid a certain dependency loop, as
+  ;;     would occur if it was defined in that file.
+  ;;
+  "Return a simple string formatted with the format conrtol string CTRL
 and the format arguments ARGS.
 
 See also: `simplify-string'"
@@ -36,7 +40,7 @@ See also: `simplify-string'"
 (defmacro with-symbols ((&rest names) &body body)
   ;; as an alternative to with-gensym
   ;;
-  ;; FIXME Documentation. Note divergence onto the common-ish "with-gensyms" pattern
+  ;; FIXME Documentation. Note divergence onto the "with-gensyms" pattern
   `(let (,@(mapcar (lambda (name)
 		     (let ((tmp (make-symbol (format* "%~A-" name))))
 		       `(,name (quote ,tmp))))
@@ -46,7 +50,6 @@ See also: `simplify-string'"
 (defmacro intern* (s &optional (package *package*))
   "Intern a symbol with a name equivalent to the symbol S, interned in
   the designated PACKAGE"
-  ;; FIXME =RENAME=> intern-alt
   `(intern (symbol-name ,s)
 	   ,package))
 
@@ -54,12 +57,7 @@ See also: `simplify-string'"
 
 
 (defmacro intern-formatted (ctrl &rest args)
-  ;; FIXME Define and apply a MAKE-SYMBOL-FORMATTED macro, where
-  ;; apropos.
-  ;;
-  ;; FIXME Review this "Intern read-from-string" form, pursuant
-  ;; towards documentation for this macro def.
-  `(intern* (read-from-string (format* ,ctrl ,@args))))
+  ;; TD Define and apply a MAKE-SYMBOL-FORMATTED macro
+  `(intern (format* ,ctrl ,@args)))
 
-;; (intern-formatted "#:g-~a-foo" 'widget)
-
+;; (intern-formatted "g_~a_foo" 'widget)
