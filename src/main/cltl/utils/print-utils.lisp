@@ -99,6 +99,8 @@
   (:method ((object function) (stream stream))
     (print-name (function-name object) stream))
   (:method ((object symbol) (stream stream))
+    ;; Ed. NB: Note the specific handling, here. Reusable, moreover,
+    ;; for printing any Common Lisp symbol onto any STREAM
     (multiple-value-bind (status pkg)
 	(symbol-status object)
       (let ((keyword-p
@@ -106,6 +108,7 @@
 	(cond
 	  (keyword-p
 	   (write-char #\: stream))
+          ;; NB : may fall through to PRINT-NAME for PKG
 	  (pkg (princ (object-print-name pkg) stream))
 	  (t (write-char #\# stream)
 	     (write-char #\: stream)))
@@ -131,26 +134,36 @@
   (:method (object (stream stream))
     (princ object stream))
   (:method ((object package) (stream stream))
-    ;; prefer package short name
+    ;; prefer package short name - cf the corresponding method
+    ;; onto OBJECT-PRINT-LABEL
     (print-label (object-print-label object) stream))
   (:method ((object class) (stream stream))
     (print-label (class-name object) stream))
   (:method ((object function) (stream stream))
     (print-label (function-name object) stream))
   (:method ((object symbol) (stream stream))
+    ;; FIXME - this duplicates PRINT-NAME (SYMBOL STREAM)
+    ;; in lieu of making any nested call to PRINT-NAME. The main
+    ;; difference is in the call to OBJECT-PRINT-LABEL for the symbol
+    ;; package of an interned symbol - in lieu of OBJECT-PRINT-NAME in
+    ;; the PRINT-NAME form of this method definition
+    ;;
+    ;; It may represents something of a PRINT-CANONC-SYMBOL macro, broadly.
     (multiple-value-bind (status pkg)
 	(symbol-status object)
       (let ((keyword-p
 	     (and pkg (eq pkg (find-package '#:keyword)))))
 	(cond
 	  (keyword-p
+           ;; [NB]
 	   (write-char #\: stream))
+          ;; NB : may fall through to PRINT-LABEL for PKG
 	  (pkg (princ (object-print-label pkg) stream))
 	  (t (write-char #\# stream)
 	     (write-char #\: stream)))
 	(case status
 	  (:external
-	   (unless keyword-p
+	   (unless keyword-p ;; [NB]
 	     (write-char #\: stream)))
 	  ((:internal :inherited)
 	   (write-char #\: stream)
@@ -161,7 +174,7 @@
 ;; => "CL:STRING"
 
 
-(defgeneric object-print-name (object)
+(defgeneric object-print-name (object)  ;; FIXME: rename to OBJECT-PRINT-NAME
   ;; FIXME: #I18N
 
   ;; FIXME: Generic function FTYPE declarations
@@ -178,7 +191,7 @@ See also: `object-print-label'")
       (print-name object s)))
   (:method ((object string))
     (values object))
-  (:method ((object package))
+  (:method ((object package)) ;; NB: Simple package name form
     (package-name object))
   (:method ((object symbol))
     (with-output-to-string (s)
@@ -195,7 +208,7 @@ See also: `object-print-label'")
 ;; (object-print-name ':test)
 ;; = ":TEST"
 
-(defgeneric object-print-label (object)
+(defgeneric object-print-label (object) ;; FIXME: rename to OBJECT-PRINT-LABEL
   ;; FIXME: This updates some qualities of the dobelle-app source tree
 
   ;; FIXME: Generic function FTYPE declarations
@@ -209,6 +222,13 @@ See also: `object-print-name'")
   (:method ((object string))
     (values object))
   (:method ((object package))
+    ;; NB return the shortest string from the set of the package name
+    ;; and any pacakge nicknames.
+    ;;
+    ;; In an estimate that that would typically comprise a short set,
+    ;; this methodology produces some "Consing," for using a simple
+    ;; "Sort a List" form, rather than developing any more per se
+    ;; tedious iteration for computing the shortest string.
     (let ((name (package-name object))
 	  (nicknames (package-nicknames object)))
       (car (sort (cons name (copy-list nicknames))
@@ -305,12 +325,19 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 (defgeneric (setf object-name) (new-value object))
 
 (defclass associative-object ()
+  ;; FIXME - used in AFFTA, may be of some limited use in any "elsewhere"
+  ;;
+  ;; see also: ../mop/aclass.lisp
   ((name
     :accessor object-name
     :type symbol
+    ;; ED. NB: Note that this proposes a slot with type SYMBOL as an "Index Key" slot
     :initarg :name))
-  (:documentation
-   "Analogy of an associatve list element, onto CLOS"))
+  (:documentation "Prototype"))
+
+;; Ed. NB: These generalized methods were defined to use PRINC, in lieu
+;; of making nested calls to PRINT-NAME or PRINT-LABEL for an object-name
+;; known to be of type SYMBOL (FIXME: Cheap decision)
 
 (defmethod print-name ((object associative-object) (stream stream))
   (princ (object-name object) stream))
