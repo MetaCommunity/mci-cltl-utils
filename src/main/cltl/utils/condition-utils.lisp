@@ -52,41 +52,7 @@ Example:
       (weather-condition-weather c))
    (when (next-method-p)
       (terpri s)
-      (call-next-method)))
-
- (define-condition weather-error (error weather-condition)
-   ())
-
- (define-condition rain-error (weather-error)
-   ((weather
-     :initform \"Rainy\")))
-
- (define-condition rainy-locomotion-error (rain-error)
-   ((quality
-     :initarg :quality
-     :accessor ece-quality)
-    (vehicle-type
-     :initarg :vehicle-type
-     :initform '(airplane paper)
-     :accessor ece-vtype)
-    (vehicle-applicaiton
-     :initarg :vehicle-application
-     :initform 'acrobatics
-     :accessor ece-vapplication)))
-
- (defmethod format-condition :around ((c rainy-locomotion-error)
-                                      (s stream))
-  (call-next-method)
-  (terpri s)
-  (format s \"Caution: ~A for ~A ~A\"
-     (ece-quality c)
-     (ece-vtype c)
-     (ece-vapplication c)))
-
- (error 'rainy-locomotion-error
-   :quality \"Unsafe\"
-   :vehicle-type '(airplane canvas)
-   :vehicle-application '(taxi (parking outdoor) flight))")
+      (call-next-method)))")
 
   (:method ((condition condition) (stream symbol))
     ;; FIXME_DESIGN symbol as stream designator => constant
@@ -116,9 +82,9 @@ method has returned, and before the direct format procedure in this method"
     (when (next-method-p)
       (call-next-method)
       (terpri stream))
-    ;; FIXME_DESIGN should APPLY FORMAT, certainly
-    (format stream (simple-condition-format-control condition)
-            (simple-condition-format-arguments condition)))
+    (apply #'format (the stream stream)
+           (simple-condition-format-control condition)
+           (simple-condition-format-arguments condition)))
   (:method :after ((condition condition) (stream stream))
            "Ensure FINISH-OUTPUT is called onto STREAM"
            (finish-output stream)))
