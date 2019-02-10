@@ -14,6 +14,16 @@
 (in-package #:ltp-mop-utils)
 
 
+;; Ed. NB: This source code was designed in a manner complimentary to
+;; a definition of "Indexed Test" classes for the AFFTA system.
+;;
+;; This also corresponds to the definition of the ASSOCIATIVE-OBJECT
+;; class, presently defined (FIXME) in ../utils/print-utils.lisp
+;;
+;; The class SIMPLE-ASSOCIATIVE-INDEX itself is used in the definition
+;; of AFFTA:TEST-SUITE
+
+
 ;;; % Associative Index
 
 (defgeneric object-table-lock (index))
