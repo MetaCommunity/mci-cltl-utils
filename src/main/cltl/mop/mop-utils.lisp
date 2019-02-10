@@ -22,4 +22,9 @@
      (defmethod validate-superclass ((a ,superclass) (b ,class))
        (values t)))
   #-(or SBCL CMU CCL ALLEGRO)
-  `(values))
+  `(progn
+     (simple-style-warning
+      "~<validate-class -~> ~<No known class/superclass validation ~
+in this implementation -~> ~<class ~s with superclass ~s~>"
+      (quote ,class) (quote ,superclass))
+     (values)))

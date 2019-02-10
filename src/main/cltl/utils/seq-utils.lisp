@@ -49,14 +49,14 @@
 ;; (simplify-vector (make-array 1 :fill-pointer 1 :element-type 'fixnum :initial-element 0))
 ;; => #(0)
 
-(defmacro do-vector ((elt v return) &body body)
+(defmacro do-vector ((elt v &optional return) &body body)
   (with-gensym (%v len n)
     `(let* ((,%v ,v)
 	    (,len (length ,%v)))
        (declare (type vector ,%v)
 		(type array-dimension-designator ,len))
        (dotimes (,n ,len ,return)
-	 (declare (type array-dimension-designator n))
+	 (declare (type array-dimension-designator ,n))
 	 (let ((,elt (aref ,%v ,n)))
 	   ,@body)))))
 

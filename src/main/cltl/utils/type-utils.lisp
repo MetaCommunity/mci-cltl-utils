@@ -14,10 +14,10 @@
 (in-package #:ltp-utils)
 
 (deftype file-name ()
-  `(or string pathname))
+  '(or string pathname))
 
 (deftype file-designator ()
-  `(or string pathname file-stream))
+  '(or string pathname file-stream))
 
 (deftype class-designator ()
   '(or symbol class))
@@ -41,3 +41,15 @@
 
 (deftype unsigned-fixnum ()
   '(integer 0 #.most-positive-fixnum))
+
+
+;; Novel but unused
+#-(and)
+(defun unsigned-size-of (uint)
+  ;; NB: This does not align to either fixnum or bignum boundaries 
+  (declare (type (integer 0) uint)
+           (values (integer 0) &optional))
+  (values (ceiling (log uint 2))))
+
+;; (unsigned-size-of (expt 2 8))
+;; => 8

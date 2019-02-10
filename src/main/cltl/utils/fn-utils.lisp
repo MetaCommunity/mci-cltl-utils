@@ -59,6 +59,11 @@ Valid Syntax of FORM:
 
 
 (defmacro with-safe-frefs (specs &body body)
+  ;;; NB: Prototype of a utility that could be useful for PERFORM
+  ;;; methods within ASDF system definitions - in effect for making a
+  ;;; forward reference to a function, without trying to intern a symbol
+  ;;; in a package as yet undefined.
+
   "Evaluate BODY in a lexiccal environment in which each element of SPECS denotes a function
 
 Syntax:

@@ -12,7 +12,7 @@
 ;;------------------------------------------------------------------------------
 
 (defpackage #:ltp-mop-utils
-  (:use  #:utils.ltp.thinkum.space
+  (:use  #:ltp-utils
          #:c2mop
          #+LTP_PROTOTYPES #:bordeaux-threads
          #:cl
@@ -21,7 +21,7 @@
   (:shadowing-import-from
    #+SBCL #:SB-MOP
    #+CMU #:PCL
-   #+CCL #:CCL
+   #+(or MCL OPENMCL) #:CCL
    #+ALLEGRO #:MOP
    #:validate-superclass
    #:standard-generic-function
@@ -30,15 +30,16 @@
    #:standard-class
    )
   #+(or SBCL CMU CCL ALLEGRO)
-  ;; TO DO: Keep this synchronized onto PCL-PORT
-  ;;
-  ;; TBD: Why C2MOP shadows MOP implementations?
+  ;; NB: C2MOP shadows MOP implementations.
   ;;
   ;;     Possible issue: When shadowing a MOP implementaion, an
-  ;;       application may also effectively be shadowing any compiler
-  ;;       optimizaitons defined for the MOP implementation, such as
-  ;;       may be defined in a manner specific to the individual MOP
-  ;;       implementation.
+  ;;       application may also effectively be shadowing some compiler
+  ;;       optimizaitons, such as may be defined in a manner specific to
+  ;;       the individual MOP implementation.
+  ;;
+  ;;
+  ;;     This system will endeavor to un-shadow the MOP implementation.
+  ;;
   (:export
    #:validate-superclass ;; PCL
    #:standard-generic-function
@@ -47,13 +48,18 @@
    #:standard-class
    )
 
+
+  (:export 
+   #:validate-class
+   )
+  
   ;; TBD: Does the return value for the following form differ per
   ;; implementation? [A Review of C2MOP]
   ;;
   ;;   (package-shadowing-symbols (find-package '#:c2mop))
 
+  #+LTP_PROTOTYPES
   (:export
-   #:validate-class
    #:associative-index
    #:associative-table-index
    #:object-table-lock
@@ -73,9 +79,13 @@
 
   )
 
+
+;; Make C2MOP symbols avaialble from this package,
+;; except for those shadowed by this package.
+
 (let* ((p (find-package '#:ltp-mop-utils))
        (s (package-shadowing-symbols p)))
-  ;; NB: No package loxk held, during this operation
+  ;; NB: No package lock held, during this operation
   (do-external-symbols (xs '#:c2mop)
     (unless (find (the symbol xs) (the list s)
                   :test #'eq)
