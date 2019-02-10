@@ -13,6 +13,10 @@
 
 (in-package #:ltp-utils)
 
+;; FIXME/NB: Up to and including NAME-CHAR-P the following definitions
+;; represent something of an approach for developing a simple
+;; character-oriented name parser such that may be intrinsically
+;; interopable with name strings in XML syntax.
 
 (deftype character-code ()
   '(integer 0 (#.char-code-limit)))
@@ -44,7 +48,8 @@
        (code-in-range cc #.(char-code #\a) #.(char-code #\z))
        (code-in-range cc #.(char-code #\A) #.(char-code #\Z))
        (code= cc #.(char-code #\_))
-       (code= cc #.(char-code #\:))
+       (code= cc #.(char-code #\:)) ;; NB ":" as a name start char - valid for some XML, but inadvisable cf. [XMLNS]
+       ;; see also : {other sys}:ncname-start-char-p
        (code-in-range cc #xC0 #xD6)
        (code-in-range cc #xD8 #xF6)
        (code-in-range cc #xF8 #x2FF)

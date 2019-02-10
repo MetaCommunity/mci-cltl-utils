@@ -146,6 +146,8 @@ In other instances, the compiled function is returned."
 
 
 (defun symbol-status (s)
+  ;; Ed. NB: used in PRINT-NAME (SYMBOL STREAM)
+  ;; and in PRINT-LABEL (SYMBOL STREAM)
   (declare (type symbol s)
 	   (values symbol (or package null)))
   (let ((pkg (symbol-package s)))
