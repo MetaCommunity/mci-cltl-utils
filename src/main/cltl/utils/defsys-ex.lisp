@@ -23,10 +23,10 @@
 
 ;; A few thoughts towards an alternate DEFSYSTEM macro, DEFSYS
 ;;
-;; * Deependency paths
+;; * Dependency paths
 ;;
 ;;     * "Opaque system" and "Component tree" views of an ASDF system
-;;       as with reqards to system dependencies
+;;       as with regards to system dependencies
 ;;
 ;;        * Example for a "Component tree" view: Garnet Gadgets
 ;;            * Garnet Gadgets may be as represented by their definitive
@@ -50,7 +50,7 @@
 ;;        expected by system developers
 ;;
 ;;         * e.g. ASDF DEFSYSTEM [ASDF 3.1.3.8] effectively
-;;           overrides some extensions onto compnent pathname handling
+;;           overrides some extensions onto component pathname handling
 ;;
 ;;             * Case in point:
 ;;                 SHARED-INITIALIZE :AROUND GARNET-SYSTEMS:CURSOR T
@@ -58,7 +58,7 @@
 ;;
 ;;                 * {refer to source code}
 ;;
-;;                 * Observation: One "only way" for the _CURSOR pathname
+;;                 * Observation: One of an "only way" for the _CURSOR pathname
 ;;                   defaulting_ to be exactly implemented is by way
 ;;                   of "hacking" the INITARGS in SHARED-INITIALIZE
 ;;                   :AROUND, before CALL-NEXT-METHOD
@@ -70,10 +70,7 @@
 ;;
 ;;  * IDE integration
 ;;
-;;;     * Sidebar: The social and technical ecosystem of the Eclipse
-;;;       Foundation (Eclipse) and Eclipse sponsored projects
-;;
-;;      * Concept: IDE-driven interaction with functional testing
+;;      * Concept: IDE-supported interaction with functional testing
 ;;        frameworks
 ;;
 ;;          * Example: jUnit support in the Eclipse IDE
@@ -81,15 +78,12 @@
 ;;          * Concept: Extending onto the hypothetical CORBA for
 ;;            Remote Common Lisp framework, with extensions for
 ;;            defining test suites, etc, and their relations to
-;;            specific source code resources, in IDL, with
-;;            corresponding implementations in Common Lisp and
-;;            (cf. Dandelion, JacORB) also in the Java programming
-;;            language
+;;            specific source code resources, in IDL and otherwise
 ;;
 ;;      * Concept: IDE-driven controls for advancing a codebase from
 ;;        "testing" to "release"
 ;;
-;;          * Sidebar: The Eclipse Mylyn framework
+;;          * Sidebar: The Eclipse Mylyn framework and 'QA'
 ;;
 ;;      * Prerequisite: A consistent concept of an IDE in Common Lisp
 ;;
@@ -104,21 +98,21 @@
 ;;                    implementation via an Object Request Broker
 ;;                    (ORB)
 ;;
-;;              * Possibly related concept: The Dandelin plugin
+;;              * Possibly related concept: The Dandelion plugin
 ;;                for the Eclipse IDE
 ;;
 ;;                  * Dandelion may provide a helpful baseline for
-;;                    an extenstion implementing the same Lisp ORB
+;;                    an extension implementing the same Lisp ORB
 ;;                    Interaction model, in the Eclipse IDE
 ;;
 ;;                  * Whereas Dandelion is a plugin for the Eclipse
 ;;                    IDE, the Eclipse IDE itself would serve to
 ;;                    provide a reference framework, in addressing
-;;                    quesitons such as: How to define an IDL
+;;                    questions such as: How to define an IDL
 ;;                    interface by which a Common Lisp editing
 ;;                    platform -- if not a formal, Common Lisp
 ;;                    application debugger (FOSS) for "production
-;;                    applicaitons" [!!] -- may be able to "Browse the
+;;                    applications" [!!] -- may be able to "Browse the
 ;;                    source location" of the definition of a
 ;;                    function, class, or other Common Lisp object
 ;;                    defined in an exacting source file?
@@ -127,13 +121,13 @@
 ;;                        available on the same network as the
 ;;                        connecting debugger application, the source
 ;;                        file may be represented -- via the
-;;                        respective IDL implementaiton -- with a URL
+;;                        respective IDL implementation -- with a URL
 ;;                        denoting the source file's location.
 ;;
 ;;                      * The Eclipse IDE offers a "remote servers"
 ;;                        framework, such that could be extended onto,
 ;;                        in facilitating the remote access for Common
-;;                        Lisp appliation debugging.
+;;                        Lisp application debugging.
 ;;
 ;;                  * "This project", then, may present an
 ;;                    opportunity towards extending Dandelion for
@@ -144,7 +138,7 @@
 ;;                    an implementation of the IDL interface
 ;;                    definitions within the respective Common Lisp
 ;;                    implementation - towards which effect, the
-;;                    SLIME/SWANK souce code would likewise serve as a
+;;                    SLIME/SWANK source code would likewise serve as a
 ;;                    reference, then leaving a simple question of how
 ;;                    best to define an interface to an object request
 ;;                    broker, in Common Lisp?)
@@ -171,13 +165,13 @@
 ;;                            extend CLORB
 ;;
 ;;                              * May be ideal, as with regards to
-;;                                limiting Common Lisp applicatins'
+;;                                limiting Common Lisp applications'
 ;;                                dependencies onto an external JVM
 ;;
-;;                              * May seem like an ardous task,
+;;                              * May seem like an arduous task,
 ;;                                superficially, compared to an idea
 ;;                                of "implementing FFI" onto an
-;;                                existing ORB iplementation such that
+;;                                existing ORB implementation such that
 ;;                                supports both of "IIOP over SSH" and
 ;;                                Kerberos authentication, already,
 ;;                                namely JacORB. Of course, that may
@@ -190,7 +184,7 @@
 ;;                                platforms, the "Use FFI" idea may be
 ;;                                ideal.
 ;;
-;;              * Possibly related concep (in a far reach) :
+;;              * Possibly related concept (in a far reach) :
 ;;                Mobile/embedded computing, desktop virtualization
 ;;                architectures, and CORBA
 ;;
@@ -200,14 +194,14 @@
 ;;                  * DXPC as an extensional X Window System protocol
 ;;
 ;;                  * NoMachine's NX architecture - a combination of
-;;                    open source (e.g nxcodec) and prorietary
+;;                    open source (e.g nxcodec) and proprietary
 ;;                    (e.g. commercial support) components
 ;;
 ;;                  * Citrix Receiver and Xen
 ;;
 ;;                  * Sidebar: Xen and Microkernel architectures
 ;;
-;;              * Possibly related concept (in a furtherx reach) :
+;;              * Possibly related concept (in a further reach) :
 ;;                 Realtime CORBA as a protocol for inter-application
 ;;                 communications within an embedded computing
 ;;                 platform
@@ -255,10 +249,10 @@
     for <app> ::=  deb
           Context: Host OS packaging system (Debian)
           <app-specific-part> must be (TO DO) of a format to identify,
-          at minimum, a debian package -- optionally, with a
+          at minimum, a Debian package -- optionally, with a
           dependency range specifier (c.f Debian packaging system
           'control' files) and a distribution-specific architecture
-          specifier (TO DO: reference the standard distiribution
+          specifier (TO DO: reference the standard distribution
           specifiers for Debian and Ubuntu distros, here)
 
           e.g
@@ -276,7 +270,7 @@
            string sort order, in "this protocol"
 
     for <app> ::= ASDF
-          Context: Common Lisp systems (typicaly, Common Lisp software code)
+          Context: Common Lisp systems (typically, Common Lisp software code)
           <app-specific-part> would denote .... ?
 
           Thoughts:
@@ -290,7 +284,7 @@
               a context of ASDF system definitions
 
     Inevitable sidebar: Integrating a Maven repository into ASDF
-     or, extending ASDF::*SOURCE-REGISTROY* onto Apache Maven
+     or, extending ASDF::*SOURCE-REGISTRY* onto Apache Maven
 
             1. Using ASDF to load a system definition directly from an
                HTTP server?
@@ -319,14 +313,14 @@
 
 (defclass dependency ()
   ;; an instance of this class effectively serves as a predicate in an
-  ;; expression -  for SYSTEM A, COMPONENT B, AND DEPDENCY D
+  ;; expression -  for SYSTEM A, COMPONENT B, AND DEPENDENCY D
   ;;
   ;;   {A D B}
   ;;
   ;; denoting:
   ;;   COMPONENT (subject) 'A'
   ;;    depends on OBJECT 'B'
-  ;;    by way of DEPENCNCY D
+  ;;    by way of DEPENDENCY D
   ;;
   ((object
     ;; the object of the dependency - conventionally a component
@@ -341,8 +335,8 @@
 
 
 (defclass versioned-dependency ()
-  ;; In some terms - as  perhaps may be reminicent of the Web Ontoogy
-  ;; Language [OWL] - a VERSIONED-DEPENDENCY efectively
+  ;; In some terms - as  perhaps may be reminiscent of the Web Ontology
+  ;; Language [OWL] - a VERSIONED-DEPENDENCY effectively
   ;; provides an annotation to a DEPENDENCY D
   ;;
   ;;   {A D B}
@@ -375,7 +369,7 @@
     :accessor dependency-feature)))
 
 
-(defclass module-dependency (feature-depencency)
+(defclass module-dependency (feature-dependency)
   ;; for ASDF :REQUIRE dependency specifiers
   ())
 
@@ -408,7 +402,7 @@
 (defclass cygwin-package (host-package)
   ())
 
-;; To Do: HOST-PACAKGE subclass for Gentoo?
+;; To Do: HOST-PACKAGE subclass for Gentoo?
 
 
 
@@ -419,7 +413,7 @@
     ;; evaluate BODY as a path to a component's subcomponent
     )
   (:method ((name string) (body null))
-    ;; evalue NAME as a system name
+    ;; evaluate NAME as a system name
     )
   #+TO-DO
   (:method ((name iri) (body null))
@@ -428,7 +422,7 @@
 
 
     ;;  Prerequisites:
-    ;;   1. IRI handling protocol for applicaiton
+    ;;   1. IRI handling protocol for application
     ;;        suggestion: Similar to the KDE KIO framework,
     ;;           dispatch on IRI scheme
     ;;        concern: Semantics and application of a resource proxy
@@ -443,7 +437,7 @@
     ;; initialize  as an instance of a subclass of HOST-PACKAGE
     ;; specific to the host OS
     ;;
-    ;; TO DO: Protocol for determining the identtity of the host OS
+    ;; TO DO: Protocol for determining the identity of the host OS
     ;;  FIRST: `uname -o' if available
     ;;   if "GNU/Linux" case: then also (e.g) 'lsb_release -a'
     ;;   if 'Cygwin' case: ???
@@ -452,7 +446,7 @@
     ;; with a architecture specifier , explicitly:
     ;;       e.g amd64 or ia32
     ;; or else the architecture defaults to that of ... a
-    ;; distribtion-specific architeture designator extending of
+    ;; distribution-specific architecture designator extending of
     ;;   `uname -m' (unofficial) .e.g
     ;;          x86_64 [kernel machine type] =i.e.=> amd64 [host OS architecture]
     )
@@ -509,3 +503,7 @@
 ;;   ASDF:PREPARE-OP
 
 
+
+;; Local Variables:
+;; ispell-buffer-session-localwords: ("ABCL" "CLORB" "CLOS" "CORBA" "Checksums" "Citrix" "CruBuntu" "Cygwin" "DEFSYSTEM" "DEPENCENCY" "DXPC" "FFI" "FIXME" "FOSS" "IDL" "IIOP" "INITARGS" "Intialize" "JVM" "JacORB" "KDE" "KIO" "Kerberos" "Microkernel" "Mylyn" "NX" "NoMachine's" "OpenSSL" "RDF" "Realtime" "SBCL" "SIDEWAY" "TBD" "URI" "XLIB" "Xen" "accessor" "amd" "args" "asdf" "centric" "checksums" "codebase" "compat" "cygcheck" "cygwin" "debian" "defclass" "defgeneric" "defmethod" "defpackage" "defsys" "defsystem" "defun" "dep" "designator" "destructuring" "distros" "dpkg" "eql" "etypecase" "eval" "ffi" "ia" "initarg" "initargs" "iri" "jUnit" "lsb" "macroexpansion" "nr" "nxcodec" "os" "pathname" "pngcrush" "reusability" "sbcl" "specializer" "speciifer" "subcomponent" "toplevel" "uname" "unbundle" "utils")
+;; End:
