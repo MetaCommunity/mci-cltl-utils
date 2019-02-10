@@ -34,7 +34,8 @@
   ((:file "ltp-mop-utils-package") ;; c2mop integration
    (:file "mop-utils" ;; validate-[super]class (convenience macro)
           :depends-on ("ltp-mop-utils-package"))
+
    #+LTP_PROTOTYPES
    (:file "aclass"
-          :depends-on ("mop-utils")).
+          :depends-on ("mop-utils"))
    ))
