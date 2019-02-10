@@ -21,6 +21,8 @@
 
 (in-package #:defsys)
 
+;; NB: AIC-SYS; CBSE; FRAMEWORKS
+
 ;; A few thoughts towards an alternate DEFSYSTEM macro, DEFSYS
 ;;
 ;; * Dependency paths

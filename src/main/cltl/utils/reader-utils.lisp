@@ -13,6 +13,9 @@
 
 (in-package #:ltp-utils)
 
+;; NB: This assumes a Unicode manner of character encoding, and may not
+;; be thoroughly portable as such.
+
 
 (deftype character-code ()
   '(integer 0 (#.char-code-limit)))

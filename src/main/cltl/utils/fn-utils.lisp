@@ -13,6 +13,8 @@
 
 (in-package #:ltp-utils)
 
+;; TD: DEFMACRO DEFUN* => (progn (declaim (ftype ...)) (defun ...))
+
 (deftype setf-function-designator ()
   '(cons (eql setf) (cons symbol null)))
 
