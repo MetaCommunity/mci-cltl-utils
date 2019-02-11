@@ -114,8 +114,8 @@
    #:character-code
    #:code-in-range
    #:code=
-   #:name-star-char-p
-   #:name-char-p
+   #:code-name-start-char-p #:char-name-start-char-p
+   #:code-name-char-p #:char-name-char-p
    #:read-name-string
    #:read-characters
    ))

@@ -30,60 +30,71 @@
        (the character-code ,rmax)))
 
 
+;; NB: The following forms are defined principally for operation onto
+;; numeric character codes.
+;;
+;; Note also the CL-BABEL API for charset compat across implementations
+
 (defmacro code= (c code)
   `(= (the character-code ,c)
       (the character-code ,code)))
 
-(declaim (inline name-start-char-p name-char-p
+(declaim (inline name-start-char-p
+                 code-name-char-p char-name-char-p
                  #| read-name-string read-characters |#
                  ))
 
-(defun name-start-char-p (c)
+(defun code-name-start-char-p (c)
   ;; cf. http://www.w3.org/TR/xml/#NT-NameStartChar
-  (declare (type (or character character-code) c)
+  (declare (type character-code c)
 	   (values boolean))
-  (let ((cc (etypecase c
-	      (character (char-code c))
-	      (character-code c))))
-    (declare (type character-code cc))
-    (unless (code=  cc #.(char-code #\Space ))
-      (or
-       (code-in-range cc #.(char-code #\a) #.(char-code #\z))
-       (code-in-range cc #.(char-code #\A) #.(char-code #\Z))
-       (code= cc #.(char-code #\_))
-       (code= cc #.(char-code #\:)) ;; NB ":" as a name start char - valid for some XML, but inadvisable cf. [XMLNS]
-       ;; see also : {other sys}:ncname-start-char-p
-       (code-in-range cc #xC0 #xD6)
-       (code-in-range cc #xD8 #xF6)
-       (code-in-range cc #xF8 #x2FF)
-       (code-in-range cc #x370 #x37D)
-       (code-in-range cc #x37F #x1FFF)
-       (code-in-range cc #x200C #x200D)
-       (code-in-range cc #x2070 #x218F)
-       (code-in-range cc #x2C00 #x2FEF)
-       (code-in-range cc #x3001 #xD7FF)
-       (code-in-range cc #xF900 #xFDCF)
-       (code-in-range cc #xFDF0 #xFFFD)
-       (code-in-range cc #x10000 #xEFFFF)))))
+  (unless (code=  c #.(char-code #\Space ))
+    (or
+     (code-in-range c #.(char-code #\a) #.(char-code #\z))
+     (code-in-range c #.(char-code #\A) #.(char-code #\Z))
+     (code= c #.(char-code #\_))
+     (code= c #.(char-code #\:)) ;; NB ":" as a name start char - valid for some XML, but inadvisable cf. [XMLNS]
+     ;; see also : {other sys}:ncname-start-char-p
+     (code-in-range c #xC0 #xD6)
+     (code-in-range c #xD8 #xF6)
+     (code-in-range c #xF8 #x2FF)
+     (code-in-range c #x370 #x37D)
+     (code-in-range c #x37F #x1FFF)
+     (code-in-range c #x200C #x200D)
+     (code-in-range c #x2070 #x218F)
+     (code-in-range c #x2C00 #x2FEF)
+     (code-in-range c #x3001 #xD7FF)
+     (code-in-range c #xF900 #xFDCF)
+     (code-in-range c #xFDF0 #xFFFD)
+     (code-in-range c #x10000 #xEFFFF))))
+
+(defun char-name-start-char-p (c)
+  (declare (type character c)
+           (values boolean))
+  (code-name-start-char-p (char-code c)))
 
 
-(defun name-char-p (c)
+(defun code-name-char-p (c)
   ;; cf. http://www.w3.org/TR/xml/#NT-NameChar
-  (declare (type (or character character-code) c)
+  ;;
+  ;; NB: This API has define separate CODE-NAME-CHAR-P and
+  ;; CHAR-NAME-CHAR-P functions, to one effect of obviating an
+  ;; "Unreachable Code" error  from SBCL when compiling READ-NAME-STRING
+  ;; w/ this function inline.
+  ;;
+  ;; The principal effect has been of developing one specialized
+  ;; function for each type of argument, C.
+  (declare (type character-code c)
 	   (values boolean)
 	   (inline name-start-char-p))
-  (let ((cc (etypecase c
-	      (character (char-code c))
-	      (character-code c))))
-    (declare (type character-code cc))
-    (unless (code=  cc #.(char-code #\Space ))
-      (or (name-start-char-p cc)
-	  (code-in-range cc #.(char-code #\0) #.(char-code #\9))
-	  (code= cc #.(char-code #\-))
-	  (code= cc #.(char-code #\.))
-	  (code= cc #xB7)
-	  (code-in-range cc #x0300 #x036F)
-	  (code-in-range cc #x203F #x2040)))))
+  (unless (code=  c #.(char-code #\Space ))
+    (or (code-name-start-char-p c)
+	(code-in-range c #.(char-code #\0) #.(char-code #\9))
+	(code= c #.(char-code #\-))
+	(code= c #.(char-code #\.))
+	(code= c #xB7)
+	(code-in-range c #x0300 #x036F)
+	(code-in-range c #x203F #x2040))))
 
 ;; (name-char-p #\A)
 ;; => T
@@ -91,6 +102,15 @@
 ;; => T
 ;; (name-char-p #\Space)
 ;; => NIL
+
+
+(defun char-name-char-p (c)
+  (declare (type character c)
+           (values boolean)
+           (inline code-name-char-p))
+  (code-name-char-p (char-code c)))
+
+
 
 (defun read-name-string (s &optional (eof-error-p t) eof-value)
   (declare (type stream s)
@@ -101,8 +121,8 @@
       (loop
 	 (let ((c (peek-char nil s nil)))
 	   (cond
-	     ((and c (name-char-p c))
-	      (when (zerop n) (setq n 1))
+	     ((and c (char-name-char-p c))
+	      (when (zerop n) (setq n 1)) ;; [?]
 	      (write-char (read-char s) buff))
 	     ((zerop n) ;; EOF
 	      (cond
