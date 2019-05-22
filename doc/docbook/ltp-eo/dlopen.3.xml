@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- lifted from mdoc+troff by doclifter -->
+<refentry xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en' xml:id='doclifter-dlopen3'>
+<!-- This source code is a product of Sun Microsystems, Inc. and is provided
+for unrestricted use provided that this legend is included on all tape
+media and as a part of the software program in whole or part.  Users
+may copy or modify this source code without charge, but are not authorized
+to license or distribute it to anyone else except as part of a product or
+program developed by the user. -->
+
+<!-- THIS PROGRAM CONTAINS SOURCE CODE COPYRIGHTED BY SUN MICROSYSTEMS, INC.
+SUN MICROSYSTEMS, INC., MAKES NO REPRESENTATIONS ABOUT THE SUITABLITY
+OF SUCH SOURCE CODE FOR ANY PURPOSE.  IT IS PROVIDED "AS IS" WITHOUT
+EXPRESS OR IMPLIED WARRANTY OF ANY KIND.  SUN MICROSYSTEMS, INC. DISCLAIMS
+ALL WARRANTIES WITH REGARD TO SUCH SOURCE CODE, INCLUDING ALL IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  IN
+NO EVENT SHALL SUN MICROSYSTEMS, INC. BE LIABLE FOR ANY SPECIAL, INDIRECT,
+INCIDENTAL, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
+FROM USE OF SUCH SOURCE CODE, REGARDLESS OF THE THEORY OF LIABILITY. -->
+
+<!-- This source code is provided with no support and without any obligation on
+the part of Sun Microsystems, Inc. to assist in its use, correction,
+modification or enhancement. -->
+
+<!-- SUN MICROSYSTEMS, INC. SHALL HAVE NO LIABILITY WITH RESPECT TO THE
+INFRINGEMENT OF COPYRIGHTS, TRADE SECRETS OR ANY PATENTS BY THIS
+SOURCE CODE OR ANY PART THEREOF. -->
+
+<!-- Sun Microsystems, Inc.
+2550 Garcia Avenue
+Mountain View, California 94043 -->
+
+<!-- Copyright (c) 1991 Sun Microsystems, Inc. -->
+
+<!-- @(#) dlopen.3 1.6 90/01/31 SMI
+$FreeBSD: stable/11/lib/libc/gen/dlopen.3 278758 2015&bsol;-02&bsol;-14 15:14:41Z tijl $ -->
+
+
+
+
+
+
+
+
+<refmeta>
+<refentrytitle>DLOPEN</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv xml:id='doclifter-purpose'>
+<refname>dlopen</refname>
+<!--
+     NB: Doclifter added a @GLUE@ token to the initial refname.
+     That was removed, in this text.
+
+     The following were transposed from the original dlopen.3
+-->
+<refname>fdlopen</refname>
+<refname>dlsym</refname>
+<refname>dlfunc</refname>
+<refname>dlerror</refname>
+<refname>dlclose</refname>
+<refpurpose> programmatic interface to the dynamic linker </refpurpose>
+</refnamediv>
+<!-- body begins here -->
+<refsynopsisdiv xml:id='doclifter-synopsis'>
+<funcsynopsis>
+<funcsynopsisinfo>
+#include &lt;dlfcn.h&gt;
+</funcsynopsisinfo>
+<funcprototype>
+<funcdef>void *<function>dlopen</function></funcdef>
+    <paramdef>const char * <parameter>path</parameter></paramdef>
+    <paramdef>int <parameter>mode</parameter></paramdef>
+</funcprototype>
+<funcprototype>
+<funcdef>void *<function>fdlopen</function></funcdef>
+    <paramdef>int <parameter>fd</parameter></paramdef>
+    <paramdef>int <parameter>mode</parameter></paramdef>
+</funcprototype>
+<funcprototype>
+<funcdef>void *<function>dlsym</function></funcdef>
+    <paramdef>void *restrict <parameter>handle</parameter></paramdef>
+    <paramdef>const char *restrict <parameter>symbol</parameter></paramdef>
+</funcprototype>
+<funcprototype>
+<funcdef>dlfunc_t <function>dlfunc</function></funcdef>
+    <paramdef>void *restrict <parameter>handle</parameter></paramdef>
+    <paramdef>const char *restrict <parameter>symbol</parameter></paramdef>
+</funcprototype>
+<funcprototype>
+<funcdef>char *<function>dlerror</function></funcdef>
+    <paramdef><parameter>void</parameter></paramdef>
+</funcprototype>
+<funcprototype>
+<funcdef>int <function>dlclose</function></funcdef>
+    <paramdef>void * <parameter>handle</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+
+<refsect1 xml:id='doclifter-library'><title>LIBRARY</title>
+<para><citetitle>Standard C Library (libc, -lc)</citetitle></para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-description'><title>DESCRIPTION</title>
+<para>These functions provide a simple programmatic interface to the services of the
+dynamic linker.
+Operations are provided to add new shared objects to a
+program's address space, to obtain the address bindings of symbols
+defined by such
+objects, and to remove such objects when their use is no longer required.</para>
+
+<para>The
+dlopen();
+function
+provides access to the shared object in
+<emphasis remap='Fa'>path</emphasis>,
+returning a descriptor that can be used for later
+references to the object in calls to
+dlsym();
+and
+dlclose(.);
+If
+<emphasis remap='Fa'>path</emphasis>
+was not in the address space prior to the call to
+dlopen(,);
+it is placed in the address space.
+When an object is first loaded into the address space in this way, its
+function
+_init(,);
+if any, is called by the dynamic linker.
+If
+<emphasis remap='Fa'>path</emphasis>
+has already been placed in the address space in a previous call to
+dlopen(,);
+it is not added a second time, although a reference count of
+dlopen();
+operations on
+<emphasis remap='Fa'>path</emphasis>
+is maintained.
+A null pointer supplied for
+<emphasis remap='Fa'>path</emphasis>
+is interpreted as a reference to the main
+executable of the process.
+The
+<emphasis remap='Fa'>mode</emphasis>
+argument
+controls the way in which external function references from the
+loaded object are bound to their referents.
+It must contain one of the following values, possibly ORed with
+additional flags which will be described subsequently:</para>
+<variablelist remap='Bl -tag -width RTLD_LAZYX'>
+<varlistentry>
+<term><constant>RTLD_LAZY</constant></term>
+<listitem>
+<para>Each external function reference is resolved when the function is first
+called.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><constant>RTLD_NOW</constant></term>
+<listitem>
+<para>All external function references are bound immediately by
+dlopen(.);</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para><constant>RTLD_LAZY</constant>
+is normally preferred, for reasons of efficiency.
+However,
+<constant>RTLD_NOW</constant>
+is useful to ensure that any undefined symbols are discovered during the
+call to
+dlopen(.);</para>
+
+<para>One of the following flags may be ORed into the
+<emphasis remap='Fa'>mode</emphasis>
+argument:</para>
+<variablelist remap='Bl -tag -width RTLD_NODELETE'>
+<varlistentry>
+<term><constant>RTLD_GLOBAL</constant></term>
+<listitem>
+<para>Symbols from this shared object and its directed acyclic graph (DAG)
+of needed objects will be available for resolving undefined references
+from all other shared objects.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><constant>RTLD_LOCAL</constant></term>
+<listitem>
+<para>Symbols in this shared object and its DAG of needed objects will be
+available for resolving undefined references only from other objects
+in the same DAG.
+This is the default, but it may be specified
+explicitly with this flag.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><constant>RTLD_TRACE</constant></term>
+<listitem>
+<para>When set, causes dynamic linker to exit after loading all objects
+needed by this shared object and printing a summary which includes
+the absolute pathnames of all objects, to standard output.
+With this flag
+dlopen();
+will return to the caller only in the case of error.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><constant>RTLD_NODELETE</constant></term>
+<listitem>
+<para>Prevents unload of the loaded object on
+dlclose(.);
+The same behaviour may be requested by
+<option>-z nodelete</option>
+option of the static linker
+<citerefentry><refentrytitle>ld</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><constant>RTLD_NOLOAD</constant></term>
+<listitem>
+<para>Only return valid handle for the object if it is already loaded in
+the process address space, otherwise
+<constant>NULL</constant>
+is returned.
+Other mode flags may be specified, which will be applied for promotion
+for the found object.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>If
+dlopen();
+fails, it returns a null pointer, and sets an error condition which may
+be interrogated with
+dlerror(.);</para>
+
+<para>The
+fdlopen();
+function is similar to
+dlopen(,);
+but it takes the file descriptor argument
+<emphasis remap='Fa'>fd</emphasis>,
+which is used for the file operations needed to load an object
+into the address space.
+The file descriptor
+<emphasis remap='Fa'>fd</emphasis>
+is not closed by the function regardless a result of execution,
+but a duplicate of the file descriptor is.
+This may be important if a
+<citerefentry><refentrytitle>lockf</refentrytitle><manvolnum>3</manvolnum></citerefentry>
+lock is held on the passed descriptor.
+The
+<emphasis remap='Fa'>fd</emphasis>
+argument -1 is interpreted as a reference to the main
+executable of the process, similar to
+<varname>NULL</varname>
+value for the
+<emphasis remap='Fa'>name</emphasis>
+argument to
+dlopen(.);
+The
+fdlopen();
+function can be used by the code that needs to perform
+additional checks on the loaded objects, to prevent races with
+symlinking or renames.</para>
+
+<para>The
+dlsym();
+function
+returns the address binding of the symbol described in the null-terminated
+character string
+<emphasis remap='Fa'>symbol</emphasis>,
+as it occurs in the shared object identified by
+<emphasis remap='Fa'>handle</emphasis>.
+The symbols exported by objects added to the address space by
+dlopen();
+can be accessed only through calls to
+dlsym(.);
+Such symbols do not supersede any definition of those symbols already present
+in the address space when the object is loaded, nor are they available to
+satisfy normal dynamic linking references.</para>
+
+<para>If
+dlsym();
+is called with the special
+<emphasis remap='Fa'>handle</emphasis>
+<constant>NULL</constant>,
+it is interpreted as a reference to the executable or shared object
+from which the call
+is being made.
+Thus a shared object can reference its own symbols.</para>
+
+<para>If
+dlsym();
+is called with the special
+<emphasis remap='Fa'>handle</emphasis>
+<constant>RTLD_DEFAULT</constant>,
+the search for the symbol follows the algorithm used for resolving
+undefined symbols when objects are loaded.
+The objects searched are
+as follows, in the given order:</para>
+<orderedlist remap='Bl -enum'>
+<listitem>
+<para>The referencing object itself (or the object from which the call to
+dlsym();
+is made), if that object was linked using the
+<option>-Bsymbolic</option>
+option to
+<citerefentry><refentrytitle>ld</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
+</listitem>
+<listitem>
+<para>All objects loaded at program start-up.</para>
+</listitem>
+<listitem>
+<para>All objects loaded via
+dlopen();
+with the
+<constant>RTLD_GLOBAL</constant>
+flag set in the
+<emphasis remap='Fa'>mode</emphasis>
+argument.</para>
+</listitem>
+<listitem>
+<para>All objects loaded via
+dlopen();
+which are in needed-object DAGs that also contain the referencing object.</para>
+</listitem>
+</orderedlist>
+
+<para>If
+dlsym();
+is called with the special
+<emphasis remap='Fa'>handle</emphasis>
+<constant>RTLD_NEXT</constant>,
+then the search for the symbol is limited to the shared objects
+which were loaded after the one issuing the call to
+dlsym(.);
+Thus, if the function is called from the main program, all
+the shared libraries are searched.
+If it is called from a shared library, all subsequent shared
+libraries are searched.
+<constant>RTLD_NEXT</constant>
+is useful for implementing wrappers around library functions.
+For example, a wrapper function
+getpid();
+could access the
+&ldquo;real&rdquo;
+getpid();
+with
+<literal>dlsym(RTLD_NEXT,</literal> <literal>"getpid")</literal>.
+(Actually, the
+dlfunc();
+interface, below, should be used, since
+getpid();
+is a function and not a data object.)</para>
+
+<para>If
+dlsym();
+is called with the special
+<emphasis remap='Fa'>handle</emphasis>
+<constant>RTLD_SELF</constant>,
+then the search for the symbol is limited to the shared object
+issuing the call to
+dlsym();
+and those shared objects which were loaded after it.</para>
+
+<para>The
+dlsym();
+function
+returns a null pointer if the symbol cannot be found, and sets an error
+condition which may be queried with
+dlerror(.);</para>
+
+<para>The
+dlfunc();
+function
+implements all of the behavior of
+dlsym(,);
+but has a return type which can be cast to a function pointer without
+triggering compiler diagnostics.
+(The
+dlsym();
+function
+returns a data pointer; in the C standard, conversions between
+data and function pointer types are undefined.
+Some compilers and
+<citerefentry><refentrytitle>lint</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+utilities warn about such casts.)
+The precise return type of
+dlfunc();
+is unspecified; applications must cast it to an appropriate function pointer
+type.</para>
+
+<para>The
+dlerror();
+function
+returns a null-terminated character string describing the last error that
+occurred during a call to
+dlopen(,);
+dladdr(,);
+dlinfo(,);
+dlsym(,);
+dlfunc(,);
+or
+dlclose(.);
+If no such error has occurred,
+dlerror();
+returns a null pointer.
+At each call to
+dlerror(,);
+the error indication is reset.
+Thus in the case of two calls
+to
+dlerror(,);
+where the second call follows the first immediately, the second call
+will always return a null pointer.</para>
+
+<para>The
+dlclose();
+function
+deletes a reference to the shared object referenced by
+<emphasis remap='Fa'>handle</emphasis>.
+If the reference count drops to 0, the object is removed from the
+address space, and
+<emphasis remap='Fa'>handle</emphasis>
+is rendered invalid.
+Just before removing a shared object in this way, the dynamic linker
+calls the object's
+_fini();
+function, if such a function is defined by the object.
+If
+dlclose();
+is successful, it returns a value of 0.
+Otherwise it returns -1, and sets an error condition that can be
+interrogated with
+dlerror(.);</para>
+
+<para>The object-intrinsic functions
+_init();
+and
+_fini();
+are called with no arguments, and are not expected to return values.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-notes'><title>NOTES</title>
+<para>ELF executables need to be linked
+using the
+<option>-export-dynamic</option>
+option to
+<citerefentry><refentrytitle>ld</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+for symbols defined in the executable to become visible to
+dlsym(.);</para>
+
+<para>In previous implementations, it was necessary to prepend an underscore
+to all external symbols in order to gain symbol
+compatibility with object code compiled from the C language.
+This is
+still the case when using the (obsolete)
+<option>-aout</option>
+option to the C language compiler.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-errors'><title>ERRORS</title>
+<para>The
+dlopen(,);
+fdlopen(,);
+dlsym(,);
+and
+dlfunc();
+functions
+return a null pointer in the event of errors.
+The
+dlclose();
+function
+returns 0 on success, or -1 if an error occurred.
+Whenever an error has been detected, a message detailing it can be
+retrieved via a call to
+dlerror(.);</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-see_also'><title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>ld</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>rtld</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>dladdr</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>dlinfo</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>link</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+</refsect1>
+</refentry>
+

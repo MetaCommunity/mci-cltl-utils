@@ -1,0 +1,868 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- lifted from mdoc+troff by doclifter -->
+<refentry xmlns='http://docbook.org/ns/docbook' version='5.0' xml:lang='en' xml:id='doclifter-link5'>
+<!-- Copyright (c) 1993 Paul Kranenburg
+All rights reserved. -->
+
+<!-- Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+3. All advertising materials mentioning features or use of this software
+must display the following acknowledgement:
+This product includes software developed by Paul Kranenburg.
+3. The name of the author may not be used to endorse or promote products
+derived from this software without specific prior written permission -->
+
+<!-- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. -->
+
+<!-- $FreeBSD: stable/11/share/man/man5/link.5 213573 2010&bsol;-10&bsol;-08 12:40:16Z uqs $ -->
+
+
+
+<refmeta>
+<refentrytitle>LINK</refentrytitle>
+<manvolnum>5</manvolnum>
+</refmeta>
+
+<refnamediv xml:id='doclifter-purpose'>
+<refname> link </refname>
+<refpurpose> dynamic loader and link editor interface </refpurpose>
+</refnamediv>
+<!-- body begins here -->
+<refsynopsisdiv xml:id='doclifter-synopsis'>
+<funcsynopsis>
+<funcsynopsisinfo>
+#include &lt;sys/types.h&gt;
+#include &lt;nlist.h&gt;
+#include &lt;link.h&gt;
+</funcsynopsisinfo>
+</funcsynopsis>
+</refsynopsisdiv>
+
+
+<refsect1 xml:id='doclifter-description'><title>DESCRIPTION</title>
+<para>The include file
+#include &lt;link.h&gt;
+declares several structures that are present in dynamically linked
+programs and libraries.
+The structures define the interface between several components of the
+link-editor and loader mechanism.
+The layout of a number of these
+structures within the binaries resembles the a.out format in many places
+as it serves such similar functions as symbol definitions (including the
+accompanying string table) and relocation records needed to resolve
+references to external entities.
+It also records a number of data structures
+unique to the dynamic loading and linking process.
+These include references
+to other objects that are required to complete the link-editing process and
+indirection tables to facilitate
+<emphasis remap='Em'>Position</emphasis> <emphasis remap='Em'>Independent</emphasis> <emphasis remap='Em'>Code</emphasis>
+(PIC for short) to improve sharing of code pages among different processes.
+The collection of data structures described here will be referred to as the
+<emphasis remap='Em'>Run-time</emphasis> <emphasis remap='Em'>Relocation</emphasis> <emphasis remap='Em'>Section</emphasis> <emphasis remap='Em'>(RRS)</emphasis>
+and is embedded in the standard text and data segments of the dynamically
+linked program or shared object image as the existing
+<citerefentry><refentrytitle>a.out</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+format offers no room for it elsewhere.</para>
+
+<para>Several utilities cooperate to ensure that the task of getting a program
+ready to run can complete successfully in a way that optimizes the use
+of system resources.
+The compiler emits PIC code from which shared libraries
+can be built by
+<citerefentry><refentrytitle>ld</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
+The compiler also includes size information of any initialized data items
+through the .size assembler directive.
+PIC code differs from conventional code
+in that it accesses data variables through an indirection table, the
+Global Offset Table, by convention accessible by the reserved name
+<constant>_GLOBAL_OFFSET_TABLE_</constant>.
+The exact mechanism used for this is machine dependent, usually a machine
+register is reserved for the purpose.
+The rational behind this construct
+is to generate code that is independent of the actual load address.
+Only
+the values contained in the Global Offset Table may need updating at run-time
+depending on the load addresses of the various shared objects in the address
+space.</para>
+
+<para>Likewise, procedure calls to globally defined functions are redirected through
+the Procedure Linkage Table (PLT) residing in the data segment of the core
+image.
+Again, this is done to avoid run-time modifications to the text segment.</para>
+
+<para>The linker-editor allocates the Global Offset Table and Procedure Linkage Table
+when combining PIC object files into an image suitable for mapping into the
+process address space.
+It also collects all symbols that may be needed by the
+run-time link-editor and stores these along with the image's text and data bits.
+Another reserved symbol,
+<emphasis remap='Em'>_DYNAMIC</emphasis>
+is used to indicate the presence of the run-time linker structures.
+Whenever
+_DYNAMIC is relocated to 0, there is no need to invoke the run-time
+link-editor.
+If this symbol is non-zero, it points at a data structure from
+which the location of the necessary relocation- and symbol information can
+be derived.
+This is most notably used by the start-up module,
+<emphasis remap='Em'>crt0</emphasis>.
+The _DYNAMIC structure is conventionally located at the start of the data
+segment of the image to which it pertains.</para>
+</refsect1>
+
+<refsect1 xml:id='doclifter-data_structures'><title>DATA STRUCTURES</title>
+<para>The data structures supporting dynamic linking and run-time relocation
+reside both in the text and data segments of the image they apply to.
+The text segments contain read-only data such as symbols descriptions and
+names, while the data segments contain the tables that need to be modified by
+during the relocation process.</para>
+
+<para>The _DYNAMIC symbol references a
+<emphasis remap='Fa'>_dynamic</emphasis>
+structure:</para>
+<programlisting remap='Bd'>
+struct	_dynamic {
+	int	d_version;
+	struct 	so_debug *d_debug;
+	union {
+		struct section_dispatch_table *d_sdt;
+	} d_un;
+	struct  ld_entry *d_entry;
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width d_version'>
+<varlistentry>
+<term><emphasis remap='Fa'>d_version</emphasis></term>
+<listitem>
+<para>This field provides for different versions of the dynamic linking
+implementation.
+The current version numbers understood by
+<citerefentry><refentrytitle>ld</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+and
+<citerefentry><refentrytitle>ld.so</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+are
+<emphasis remap='Em'>LD_VERSION_SUN</emphasis> <emphasis remap='Em'>(3)</emphasis>,
+which is used by the
+<phrase remap='Tn'>SunOS</phrase>
+4.x releases, and
+<emphasis remap='Em'>LD_VERSION_BSD</emphasis> <emphasis remap='Em'>(8)</emphasis>,
+which has been in use since
+<productname>FreeBSD 1.1</productname></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>d_un</emphasis></term>
+<listitem>
+<para>Refers to a
+<emphasis remap='Em'>d_version</emphasis>
+dependent data structure.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>so_debug</emphasis></term>
+<listitem>
+<para>this field provides debuggers with a hook to access symbol tables of shared
+objects loaded as a result of the actions of the run-time link-editor.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>The
+<emphasis remap='Fa'>section_dispatch_table</emphasis>
+structure is the main
+&ldquo;dispatcher&rdquo;
+table, containing offsets into the image's segments where various symbol
+and relocation information is located.</para>
+<programlisting remap='Bd'>
+struct section_dispatch_table {
+	struct	so_map *sdt_loaded;
+	long	sdt_sods;
+	long	sdt_filler1;
+	long	sdt_got;
+	long	sdt_plt;
+	long	sdt_rel;
+	long	sdt_hash;
+	long	sdt_nzlist;
+	long	sdt_filler2;
+	long	sdt_buckets;
+	long	sdt_strings;
+	long	sdt_str_sz;
+	long	sdt_text_sz;
+	long	sdt_plt_sz;
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width sdt_filler1'>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_loaded</emphasis></term>
+<listitem>
+<para>A pointer to the first link map loaded (see below).
+This field is set by
+<command remap='Nm'> link </command></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_sods</emphasis></term>
+<listitem>
+<para>The start of a (linked) list of shared object descriptors needed by
+<emphasis remap='Em'>this</emphasis>
+object.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_filler1</emphasis></term>
+<listitem>
+<para>Deprecated (used by SunOS to specify library search rules).</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_got</emphasis></term>
+<listitem>
+<para>The location of the Global Offset Table within this image.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_plt</emphasis></term>
+<listitem>
+<para>The location of the Procedure Linkage Table within this image.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_rel</emphasis></term>
+<listitem>
+<para>The location of an array of
+<emphasis remap='Fa'>relocation_info</emphasis>
+structures
+(see
+<citerefentry><refentrytitle>a.out</refentrytitle><manvolnum>5</manvolnum></citerefentry>)
+specifying run-time relocations.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_hash</emphasis></term>
+<listitem>
+<para>The location of the hash table for fast symbol lookup in this object's
+symbol table.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_nzlist</emphasis></term>
+<listitem>
+<para>The location of the symbol table.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_filler2</emphasis></term>
+<listitem>
+<para>Currently unused.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_buckets</emphasis></term>
+<listitem>
+<para>The number of buckets in
+<emphasis remap='Fa'>sdt_hash</emphasis></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_strings</emphasis></term>
+<listitem>
+<para>The location of the symbol string table that goes with
+<emphasis remap='Fa'>sdt_nzlist</emphasis>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_str_sz</emphasis></term>
+<listitem>
+<para>The size of the string table.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_text_sz</emphasis></term>
+<listitem>
+<para>The size of the object's text segment.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sdt_plt_sz</emphasis></term>
+<listitem>
+<para>The size of the Procedure Linkage Table.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>A
+<emphasis remap='Fa'>sod</emphasis>
+structure describes a shared object that is needed
+to complete the link edit process of the object containing it.
+A list of such objects
+(chained through
+<emphasis remap='Fa'>sod_next</emphasis>)
+is pointed at
+by the
+<emphasis remap='Fa'>sdt_sods</emphasis>
+in the section_dispatch_table structure.</para>
+<programlisting remap='Bd'>
+struct sod {
+	long	sod_name;
+	u_int	sod_library : 1,
+		sod_reserved : 31;
+	short	sod_major;
+	short	sod_minor;
+	long	sod_next;
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width sod_library'>
+<varlistentry>
+<term><emphasis remap='Fa'>sod_name</emphasis></term>
+<listitem>
+<para>The offset in the text segment of a string describing this link object.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sod_library</emphasis></term>
+<listitem>
+<para>If set,
+<emphasis remap='Fa'>sod_name</emphasis>
+specifies a library that is to be searched for by
+<command remap='Nm'> link </command>
+The path name
+is obtained by searching a set of directories
+(see also
+<citerefentry><refentrytitle>ldconfig</refentrytitle><manvolnum>8</manvolnum></citerefentry>)
+for a shared object matching
+<emphasis remap='Em'>lib&lt;sod_name&gt;.so.n.m</emphasis>.
+If not set,
+<emphasis remap='Fa'>sod_name</emphasis>
+should point at a full path name for the desired shared object.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sod_major</emphasis></term>
+<listitem>
+<para>Specifies the major version number of the shared object to load.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>sod_minor</emphasis></term>
+<listitem>
+<para>Specifies the preferred minor version number of the shared object to load.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>The run-time link-editor maintains a list of structures called
+<emphasis remap='Em'>link</emphasis> <emphasis remap='Em'>maps</emphasis>
+to keep track of all shared objects loaded into a process' address space.
+These structures are only used at run-time and do not occur within
+the text or data segment of an executable or shared library.</para>
+<programlisting remap='Bd'>
+struct so_map {
+	caddr_t	som_addr;
+	char 	*som_path;
+	struct	so_map *som_next;
+	struct	sod *som_sod;
+	caddr_t som_sodbase;
+	u_int	som_write : 1;
+	struct	_dynamic *som_dynamic;
+	caddr_t	som_spd;
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width som_dynamic'>
+<varlistentry>
+<term><emphasis remap='Fa'>som_addr</emphasis></term>
+<listitem>
+<para>The address at which the shared object associated with this link map has
+been loaded.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>som_path</emphasis></term>
+<listitem>
+<para>The full path name of the loaded object.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>som_next</emphasis></term>
+<listitem>
+<para>Pointer to the next link map.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>som_sod</emphasis></term>
+<listitem>
+<para>The
+<emphasis remap='Fa'>sod</emphasis>
+structure that was responsible for loading this shared object.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>som_sodbase</emphasis></term>
+<listitem>
+<para>Tossed out in later versions of the run-time linker.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>som_write</emphasis></term>
+<listitem>
+<para>Set if (some portion of) this object's text segment is currently writable.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>som_dynamic</emphasis></term>
+<listitem>
+<para>Pointer to this object's
+<emphasis remap='Fa'>_dynamic</emphasis>
+structure.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>som_spd</emphasis></term>
+<listitem>
+<para>Hook for attaching private data maintained by the run-time link-editor.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>Symbol description with size.
+This is simply an
+<emphasis remap='Fa'>nlist</emphasis>
+structure with one field
+(Fa nz_size)
+added.
+Used to convey size information on items in the data segment
+of shared objects.
+An array of these lives in the shared object's
+text segment and is addressed by the
+<emphasis remap='Fa'>sdt_nzlist</emphasis>
+field of
+<emphasis remap='Fa'>section_dispatch_table</emphasis>.</para>
+<programlisting remap='Bd'>
+struct nzlist {
+	struct nlist	nlist;
+	u_long		nz_size;
+#define nz_un		nlist.n_un
+#define nz_strx		nlist.n_un.n_strx
+#define nz_name		nlist.n_un.n_name
+#define nz_type		nlist.n_type
+#define nz_value	nlist.n_value
+#define nz_desc		nlist.n_desc
+#define nz_other	nlist.n_other
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width nz_size'>
+<varlistentry>
+<term><emphasis remap='Fa'>nlist</emphasis></term>
+<listitem>
+<para>(see
+<citerefentry><refentrytitle>nlist</refentrytitle><manvolnum>3</manvolnum></citerefentry>).</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>nz_size</emphasis></term>
+<listitem>
+<para>The size of the data represented by this symbol.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>A hash table is included within the text segment of shared object
+to facilitate quick lookup of symbols during run-time link-editing.
+The
+<emphasis remap='Fa'>sdt_hash</emphasis>
+field of the
+<emphasis remap='Fa'>section_dispatch_table</emphasis>
+structure points at an array of
+<emphasis remap='Fa'>rrs_hash</emphasis>
+structures:</para>
+<programlisting remap='Bd'>
+struct rrs_hash {
+	int	rh_symbolnum;		/* symbol number */
+	int	rh_next;		/* next hash entry */
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width rh_symbolnum'>
+<varlistentry>
+<term><emphasis remap='Fa'>rh_symbolnum</emphasis></term>
+<listitem>
+<para>The index of the symbol in the shared object's symbol table (as given by the
+<emphasis remap='Fa'>ld_symbols</emphasis>
+field).</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>rh_next</emphasis></term>
+<listitem>
+<para>In case of collisions, this field is the offset of the next entry in this
+hash table bucket.
+It is zero for the last bucket element.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+<para>The
+<emphasis remap='Fa'>rt_symbol</emphasis>
+structure is used to keep track of run-time allocated commons
+and data items copied from shared objects.
+These items are kept on linked list
+and is exported through the
+<emphasis remap='Fa'>dd_cc</emphasis>
+field in the
+<emphasis remap='Fa'>so_debug</emphasis>
+structure (see below) for use by debuggers.</para>
+<programlisting remap='Bd'>
+struct rt_symbol {
+	struct nzlist		*rt_sp;
+	struct rt_symbol	*rt_next;
+	struct rt_symbol	*rt_link;
+	caddr_t			rt_srcaddr;
+	struct so_map		*rt_smp;
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width rt_scraddr'>
+<varlistentry>
+<term><emphasis remap='Fa'>rt_sp</emphasis></term>
+<listitem>
+<para>The symbol description.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>rt_next</emphasis></term>
+<listitem>
+<para>Virtual address of next rt_symbol.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>rt_link</emphasis></term>
+<listitem>
+<para>Next in hash bucket.
+Used internally by
+<command remap='Nm'> link </command></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>rt_srcaddr</emphasis></term>
+<listitem>
+<para>Location of the source of initialized data within a shared object.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>rt_smp</emphasis></term>
+<listitem>
+<para>The shared object which is the original source of the data that this
+run-time symbol describes.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>The
+<emphasis remap='Fa'>so_debug</emphasis>
+structure is used by debuggers to gain knowledge of any shared objects
+that have been loaded in the process's address space as a result of run-time
+link-editing.
+Since the run-time link-editor runs as a part of process
+initialization, a debugger that wishes to access symbols from shared objects
+can only do so after the link-editor has been called from crt0.
+A dynamically linked binary contains a
+<emphasis remap='Fa'>so_debug</emphasis>
+structure which can be located by means of the
+<emphasis remap='Fa'>d_debug</emphasis>
+field in
+<emphasis remap='Fa'>_dynamic</emphasis>.</para>
+<programlisting remap='Bd'>
+struct 	so_debug {
+	int	dd_version;
+	int	dd_in_debugger;
+	int	dd_sym_loaded;
+	char    *dd_bpt_addr;
+	int	dd_bpt_shadow;
+	struct rt_symbol *dd_cc;
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width dd_in_debugger'>
+<varlistentry>
+<term><emphasis remap='Fa'>dd_version</emphasis></term>
+<listitem>
+<para>Version number of this interface.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>dd_in_debugger</emphasis></term>
+<listitem>
+<para>Set by the debugger to indicate to the run-time linker that the program is
+run under control of a debugger.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>dd_sym_loaded</emphasis></term>
+<listitem>
+<para>Set by the run-time linker whenever it adds symbols by loading shared objects.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>dd_bpt_addr</emphasis></term>
+<listitem>
+<para>The address where a breakpoint will be set by the run-time linker to
+divert control to the debugger.
+This address is determined by the start-up
+module,
+<filename>crt0.o</filename>,
+to be some convenient place before the call to _main.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>dd_bpt_shadow</emphasis></term>
+<listitem>
+<para>Contains the original instruction that was at
+<emphasis remap='Fa'>dd_bpt_addr</emphasis>.
+The debugger is expected to put this instruction back before continuing the
+program.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>dd_cc</emphasis></term>
+<listitem>
+<para>A pointer to the linked list of run-time allocated symbols that the debugger
+may be interested in.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>The
+<emphasis remap='Em'>ld_entry</emphasis>
+structure defines a set of service routines within
+<command remap='Nm'> link </command></para>
+<!-- See
+.Xr libdl.a
+for more information. -->
+<programlisting remap='Bd'>
+<funcsynopsis>
+<funcsynopsisinfo>
+struct ld_entry {
+	void	*(*dlopen)(char *, int);
+	int	(*dlclose)(void *);
+	void	*(*dlsym)(void *, char *);
+	char	*(*dlerror)(void);
+};
+</funcsynopsisinfo>
+</funcsynopsis>
+</programlisting> <!-- remap='Ed (block)' -->
+<para>The
+<emphasis remap='Fa'>crt_ldso</emphasis>
+structure defines the interface between the start-up code in crt0 and
+<command remap='Nm'> link </command></para>
+<programlisting remap='Bd'>
+struct crt_ldso {
+	int		crt_ba;
+	int		crt_dzfd;
+	int		crt_ldfd;
+	struct _dynamic	*crt_dp;
+	char		**crt_ep;
+	caddr_t		crt_bp;
+	char		*crt_prog;
+	char		*crt_ldso;
+	struct ld_entry	*crt_ldentry;
+};
+#define CRT_VERSION_SUN		1
+#define CRT_VERSION_BSD_2	2
+#define CRT_VERSION_BSD_3	3
+#define	CRT_VERSION_BSD_4	4
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width crt_dzfd'>
+<varlistentry>
+<term><emphasis remap='Fa'>crt_ba</emphasis></term>
+<listitem>
+<para>The virtual address at which
+<command remap='Nm'> link </command>
+was loaded by crt0.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>crt_dzfd</emphasis></term>
+<listitem>
+<para>On SunOS systems, this field contains an open file descriptor to
+&ldquo;Pa /dev/zero&rdquo;
+used to get demand paged zeroed pages.
+On
+<productname>FreeBSD</productname>
+systems it contains -1.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>crt_ldfd</emphasis></term>
+<listitem>
+<para>Contains an open file descriptor that was used by crt0 to load
+<command remap='Nm'> link </command></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>crt_dp</emphasis></term>
+<listitem>
+<para>A pointer to main's
+<emphasis remap='Fa'>_dynamic</emphasis>
+structure.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>crt_ep</emphasis></term>
+<listitem>
+<para>A pointer to the environment strings.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>crt_bp</emphasis></term>
+<listitem>
+<para>The address at which a breakpoint will be placed by the run-time linker
+if the main program is run by a debugger.
+See
+<emphasis remap='Fa'>so_debug</emphasis></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>crt_prog</emphasis></term>
+<listitem>
+<para>The name of the main program as determined by crt0 (CRT_VERSION_BSD3 only).</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>crt_ldso</emphasis></term>
+<listitem>
+<para>The path of the run-time linker as mapped by crt0 (CRT_VERSION_BSD4 only).</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>The
+<emphasis remap='Fa'>hints_header</emphasis>
+and
+<emphasis remap='Fa'>hints_bucket</emphasis>
+structures define the layout of the library hints, normally found in
+&ldquo;Pa /var/run/ld.so.hints&rdquo;,
+which is used by
+<command remap='Nm'> link </command>
+to quickly locate the shared object images in the
+file system.
+The organization of the hints file is not unlike that of an
+&ldquo;a.out&rdquo;
+object file, in that it contains a header determining the offset and size
+of a table of fixed sized hash buckets and a common string pool.</para>
+<programlisting remap='Bd'>
+struct hints_header {
+	long		hh_magic;
+#define HH_MAGIC	011421044151
+	long		hh_version;
+#define LD_HINTS_VERSION_1	1
+	long		hh_hashtab;
+	long		hh_nbucket;
+	long		hh_strtab;
+	long		hh_strtab_sz;
+	long		hh_ehints;
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width hh_strtab_sz'>
+<varlistentry>
+<term><emphasis remap='Fa'>hh_magic</emphasis></term>
+<listitem>
+<para>Hints file magic number.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>hh_version</emphasis></term>
+<listitem>
+<para>Interface version number.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>hh_hashtab</emphasis></term>
+<listitem>
+<para>Offset of hash table.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>hh_strtab</emphasis></term>
+<listitem>
+<para>Offset of string table.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>hh_strtab_sz</emphasis></term>
+<listitem>
+<para>Size of strings.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>hh_ehints</emphasis></term>
+<listitem>
+<para>Maximum usable offset in hints file.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+<programlisting remap='Bd'>
+<filename>/*</filename>
+ * Hash table element in hints file.
+ */
+struct hints_bucket {
+	int		hi_namex;
+	int		hi_pathx;
+	int		hi_dewey[MAXDEWEY];
+	int		hi_ndewey;
+#define hi_major hi_dewey[0]
+#define hi_minor hi_dewey[1]
+	int		hi_next;
+};
+</programlisting> <!-- remap='Ed (block)' -->
+<variablelist remap='Bl -tag -width hi_ndewey'>
+<varlistentry>
+<term><emphasis remap='Fa'>hi_namex</emphasis></term>
+<listitem>
+<para>Index of the string identifying the library.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>hi_pathx</emphasis></term>
+<listitem>
+<para>Index of the string representing the full path name of the library.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>hi_dewey</emphasis></term>
+<listitem>
+<para>The version numbers of the shared library.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>hi_ndewey</emphasis></term>
+<listitem>
+<para>The number of valid entries in
+<emphasis remap='Fa'>hi_dewey</emphasis>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis remap='Fa'>hi_next</emphasis></term>
+<listitem>
+<para>Next bucket in case of hashing collisions.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 xml:id='doclifter-caveats'><title>CAVEATS</title>
+<para>Only the (GNU) C compiler currently supports the creation of shared libraries.
+Other programming languages cannot be used.</para>
+</refsect1>
+</refentry>
+

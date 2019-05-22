@@ -201,6 +201,7 @@ x
       :optional-features '(:futex) :clean t )) ;; ??</programlisting>
 
       <remark>To Do: Address :OPENMCL-NATIVE-THREADS</remark>
+
     </simplesect>
 
   </stnote>
