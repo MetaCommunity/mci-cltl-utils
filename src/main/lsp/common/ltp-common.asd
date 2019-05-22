@@ -62,7 +62,7 @@
    (:file "common-print"
 	  :depends-on ("common-misc" "common-fn"))
    (:file "common-opt"
-	  :depends-on ("common-package" "macro"))
+	  :depends-on ("common-package" "common-macro"))
    (:file "common-seq"
 	  :depends-on ("common-opt"))
    (:file "common-reader"
