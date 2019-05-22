@@ -12,6 +12,7 @@
 ;;------------------------------------------------------------------------------
 
 (defpackage #:ltp/common/mop
+  (:nicknames #:ltp.common.mop)
   (:use  #:ltp/common
          #:c2mop
          #+LTP_PROTOTYPES #:bordeaux-threads

@@ -24,6 +24,7 @@
 
 
 (defpackage #:ltp/common
+  (:nicknames #:ltp.common)
   (:use #:asdf #:cl)
 
   (:export
