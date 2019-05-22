@@ -106,7 +106,7 @@
    #:string-position
    #:null-string
    #:string-null-p
-   #:array-dimension-designator
+   #:array-dim
    #:array-length
    #:split-string-1
    #:split-string

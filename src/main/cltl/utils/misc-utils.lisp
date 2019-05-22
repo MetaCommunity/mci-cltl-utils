@@ -28,7 +28,7 @@ retained in all instances of BOUNDP NAME.
 
 If NAME does not denote an existing variable, then this macro's
 behavior is analogous onto `CL:DEFCONSTANT'"
-  (with-gensym (%value %previous)
+  (with-symbols (%value %previous)
     ;; FIXME arbitrary discard of return values from GET-SETF-EXPANSION
     (let ((%name (nth-value 4  (get-setf-expansion name env))))
       ;; Ed. note: SBCL 1.2.5 was not handling a simpler form

@@ -35,7 +35,7 @@
 inverted character case"
   (let* ((len (length str))
          (strcp (unless (zerop len) (array-mkproto str))))
-    (declare (type array-dimension-designator len))
+    (declare (type array-dim len))
     (cond
       ((zerop len) (copy-seq str))
       (t
@@ -76,7 +76,7 @@ have a character case inverted to its orignal value.
 
 The object STR will be returned"
   (let ((len (length str)))
-    (declare (type array-dimension-designator len))
+    (declare (type array-dim len))
     (cond
       ((zerop len) (values str))
       (t

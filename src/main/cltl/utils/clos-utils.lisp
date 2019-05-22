@@ -16,7 +16,7 @@
 
 
 (defmacro call-next-method* (&rest args)
-  (with-gensym (%nmp)
+  (with-symbols (%nmp)
     `(let ((,%nmp (next-method-p)))
        (cond
 	 (,%nmp (call-next-method ,@args))
@@ -25,7 +25,7 @@
 (defmacro slot-value* (object slot &optional default)
   ;; NOTE: This is defined as a macro, so as to allow the compiler to
   ;; optimize the SLOT-VALUE call, if applicable
-  (with-gensym (o s)
+  (with-symbols (o s)
     `(let ((,o ,object)
            (,s ,slot))
        (cond
@@ -37,6 +37,8 @@
 
 
 (defmacro when-slot-init ((instance name sl-names-var) &body body)
+  ;; FIXME QA - Usage of the NAME parameter (??)
+
   "WHEN-SLOT-INIT provides a convenience macro for initialization of
 slot values with effective initial forms, within SHARED-INITIALIZE.
 
@@ -76,7 +78,7 @@ Footnotes
  [1] i.e when SL-NAMES-VAR is T or when SL-NAMES-VAR is a CONS and NAME is
      an element of SL-NAMES-VAR
 "
-  (with-gensym (%inst %name %sl-names-var)
+  (with-symbols (%inst %name %sl-names-var)
     `(let ((,%inst ,instance)
            (,%name (quote ,name))
            (,%sl-names-var ,sl-names-var))

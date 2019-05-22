@@ -65,7 +65,7 @@
 (defmacro compile** (form &optional optimization)
   ;; FIXME: Align onto the error/waning handling semantics of COMPILE*
   ;; see misc-utils.lisp
-  (with-gensym (%form fn warnedp failurep)
+  (with-symbols (%form fn warnedp failurep)
     `(with-optimization (,@optimization)
        (let ((,%form ,form))
          (multiple-value-bind  (,fn ,warnedp ,failurep)

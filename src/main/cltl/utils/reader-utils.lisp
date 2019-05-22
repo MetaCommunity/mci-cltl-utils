@@ -162,10 +162,10 @@ have been read:
     initalized until EOF, and as the third return value, the number of
     characters read from STREAM until EOF."
   (declare (type stream-designator stream)
-	   (type array-dimension-designator n)
+	   (type array-dim n)
 	   (type type-designator element-type)
 	   (values t (or simple-string null)
-		   array-dimension-designator))
+		   array-dim))
   #+NIL ;; FIXME: Implement this as a compiler warning?
   (when (and eof-value (null eof-error-p))
     (simple-style-warning "EOF-VALUE specified with EOF-ERROR-P NIL: ~S"
@@ -175,7 +175,7 @@ have been read:
     (declare (type simple-string buff)
 	     (type symbol eof))
     (dotimes (%n n (values buff nil n))
-      (declare (type array-dimension-designator %n))
+      (declare (type array-dim %n))
       (let ((c (read-char stream nil eof)))
 	(cond
 	  ((eq c eof)
