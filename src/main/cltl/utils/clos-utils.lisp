@@ -37,10 +37,19 @@
 
 
 (defmacro when-slot-init ((instance name sl-names-var) &body body)
-  ;; FIXME QA - Usage of the NAME parameter (??)
 
   "WHEN-SLOT-INIT provides a convenience macro for initialization of
 slot values with effective initial forms, within SHARED-INITIALIZE.
+
+The INSTANCE expression should evaluate to an object provided to
+SHARED-INITIALIZE.
+
+The NAME expression should denote a symbol naming the slot to be
+initialized. This expression will not be evaluated.
+
+The SL-NAMES-VAR expression should evalute to the object provided as the
+second argument to SHARED-INITIALIZE
+
 
 The BODY form will be evaluated under the intersection of the
 following conditions:
