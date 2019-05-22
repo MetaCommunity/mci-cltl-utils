@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:ltp-utils)
+(in-package #:ltp/common)
 
 (deftype stream-designator ()
   '(or (and symbol (member nil t)) stream

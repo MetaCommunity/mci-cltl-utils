@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:ltp-utils)
+(in-package #:ltp/common)
 
 (defmacro with-optimization ((&rest policy) &body body)
   `(locally (declare (optimize ,@policy))

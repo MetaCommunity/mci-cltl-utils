@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:ltp-utils)
+(in-package #:ltp/common)
 
 ;; NB: This assumes a Unicode manner of character encoding, and may not
 ;; be thoroughly portable as such.

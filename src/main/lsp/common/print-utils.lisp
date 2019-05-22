@@ -44,7 +44,7 @@
 ;;
 
 
-(in-package #:ltp-utils)
+(in-package #:ltp/common)
 
 ;; NB: These generic functions might be typically used for slot value writer methods.
 ;;
@@ -345,7 +345,7 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 			   (format-control
 			    (load-time-value
 			     (compile nil
-				      (formatter "~%~/ltp-utils:format-label/ : ~/ltp-utils:format-label/")))))
+				      (formatter "~%~/ltp/common:format-label/ : ~/ltp-utils:format-label/")))))
   (declare (type hash-table table)
 	   (type format-control format-control)
            (type stream-designator stream))

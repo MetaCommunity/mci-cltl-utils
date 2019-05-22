@@ -13,7 +13,7 @@
 
 ;; FIXME The annotations in this file obviously need to be managed in something like documentation
 
-(in-package #:ltp-utils)
+(in-package #:ltp/common)
 
 (eval-when (:compile-toplevel :eval)
   (defmacro array-mkproto (arr)
@@ -416,7 +416,7 @@ Orthogonally note (apropos "addr" '#:ccl)
 
  (defun low-types ()
            (let ((typel (list nil)))
-             (ltp-utils:do-vector (s ccl::*heap-utilization-vector-type-names* (cdr typel))
+             (ltp/common:do-vector (s ccl::*heap-utilization-vector-type-names* (cdr typel))
                (unless (or (null s) (eq s 'ccl::bogus))
                  (rplacd (last typel)
                          (cons s nil))))))

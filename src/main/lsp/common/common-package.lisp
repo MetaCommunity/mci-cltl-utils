@@ -1,4 +1,4 @@
-;; utils-package.lisp
+;; common-package.lisp
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
@@ -23,7 +23,7 @@
 (in-package #:cl-user)
 
 
-(defpackage #:ltp-utils
+(defpackage #:ltp/common
   (:use #:asdf #:cl)
 
   (:export

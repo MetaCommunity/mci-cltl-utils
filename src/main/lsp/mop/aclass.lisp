@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:ltp-mop-utils)
+(in-package #:ltp/common/mop)
 
 
 ;; Ed. NB: This source code was designed in a manner complimentary to

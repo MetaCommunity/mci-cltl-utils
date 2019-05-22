@@ -11,13 +11,13 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(defpackage #:ltp-mop-utils
-  (:use  #:ltp-utils
+(defpackage #:ltp/common/mop
+  (:use  #:ltp/common
          #:c2mop
          #+LTP_PROTOTYPES #:bordeaux-threads
          #:cl
          )
-  #+(or SBCL CMU CCL ALLEGRO) ;; FIXME: PCL-PORT
+  #+(or SBCL CMU CCL ALLEGRO) ;; NB: PCL
   (:shadowing-import-from
    #+SBCL #:SB-MOP
    #+CMU #:PCL
@@ -33,12 +33,14 @@
   ;; NB: C2MOP shadows MOP implementations.
   ;;
   ;;     Possible issue: When shadowing a MOP implementaion, an
-  ;;       application may also effectively be shadowing some compiler
-  ;;       optimizaitons, such as may be defined in a manner specific to
-  ;;       the individual MOP implementation.
+  ;;     application may also effectively be shadowing any compiler
+  ;;     optimizaitons, such as may be defined in a manner specific to
+  ;;     the individual MOP implementation.
   ;;
   ;;
-  ;;     This system will endeavor to un-shadow the MOP implementation.
+  ;;     In CMUCL, SBCL, CCl, and Allegro Lisp implementations, this
+  ;;     system will endeavor to un-shadow the underyling MOP
+  ;;     implementation.
   ;;
   (:export
    #:validate-superclass ;; PCL
@@ -49,10 +51,10 @@
    )
 
 
-  (:export 
+  (:export
    #:validate-class
    )
-  
+
   ;; TBD: Does the return value for the following form differ per
   ;; implementation? [A Review of C2MOP]
   ;;
@@ -83,7 +85,7 @@
 ;; Make C2MOP symbols avaialble from this package,
 ;; except for those shadowed by this package.
 
-(let* ((p (find-package '#:ltp-mop-utils))
+(let* ((p (find-package '#:ltp/common/mop))
        (s (package-shadowing-symbols p)))
   ;; NB: No package lock held, during this operation
   (do-external-symbols (xs '#:c2mop)

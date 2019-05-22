@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:ltp-utils)
+(in-package #:ltp/common)
 
 ;; NB: Better than trying to mangle "Shell Text" with Emacs' naive comint API
 

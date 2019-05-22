@@ -12,7 +12,7 @@
 ;;------------------------------------------------------------------------------
 
 
-(in-package #:ltp-utils)
+(in-package #:ltp/common)
 
 
 (defmacro call-next-method* (&rest args)

@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:ltp-mop-utils)
+(in-package #:ltp/common/mop)
 
 
 (defmacro validate-class (class &optional (superclass 'standard-class))

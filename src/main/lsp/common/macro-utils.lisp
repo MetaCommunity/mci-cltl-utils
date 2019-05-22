@@ -13,7 +13,7 @@
 
 
 
-(in-package #:ltp-utils)
+(in-package #:ltp/common)
 
 (defmacro format* (ctrl &rest args)
   ;; NB: Defined here, rather than in seq-utils.lisp

@@ -12,7 +12,7 @@
 ;;------------------------------------------------------------------------------
 
 
-(in-package #:ltp-utils)
+(in-package #:ltp/common)
 
 ;; NOTE analogous definitions in CMUCL, SBCL
 ;; NOTE portability (is not privatization)
