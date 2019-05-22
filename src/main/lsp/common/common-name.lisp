@@ -138,67 +138,41 @@ The object STR will be returned"
     (:invert (values (string-invert-case str)))))
 
 
-#| NB - CLSYS QA - Notice how things apart fall when *PRINT-READABLY*
+#| NB - CLSYS QA - SLIME/SWANK in SBCL when *PRINT-READABLY*
 
-Example:
+Example [SBCL]:
 
  A) after
      (setq *print-readably* t)
     in SLIME
 
- B) subsq of (find-symbol '<non-string-value>)
+ B) subsq of find-symbol '<non-string-value>)
 
- This:
+   #<TYPE-ERROR expected-type: STRING datum: <NON-STRING-VALUE>> cannot be printed readably.
+    [Condition of type PRINT-NOT-READABLE]
 
- #<TYPE-ERROR expected-type: STRING datum: <NON-STRING-VALUE>> cannot be printed readably.
-   [Condition of type PRINT-NOT-READABLE]
+ Alternately, with SLIME in CCL:
+
+   Attempt to print object #<TYPE-ERROR #x14B0DB8E> on stream #<STRING-OUTPUT-STREAM  #x14B17FF6> .
+
+ This may be interpreted as representing a program error,
 
 --
 
- NB MAKE-LOAD-FORM would not be applicable here.
-
-  Notice that the OBJECT, in this example -- that for which the
-  unadorned CLtl2 implementation cannot produce a printable
-  representation -- that it is an instance of a condition type. Although
-  an equivalent condition type could be produced, any such "New Object"
-  would not be EQ to the actual object for which a readable
-  representation is to be printed.
-
-  Here, as such, we may have an example of how the definition of the
-  semantics of the interactive Lisp REPL in Common Lisp specifications
-  has ultimately obscured the -- in a phrase -- the "hairy underside" of
-  memory management in Common Lisp applications.
+  NB MAKE-LOAD-FORM would not be applicable here.
 
 
-TBD: :AROUND methods for PRINT-OBJECT, dispatching locally when the object
+TBD: :AROUND methods for PRINT-OBJECT (in SLIME/SWANK?), dispatching when the object
  is denoted as to have an "Unreadable" printed represntation && *PRINT-READABLY*
 
- - NB: These :AROUND methods might be called from within
-   PRINT-UNREADABLE-OBJECT forms
+ - TBD: Portable function for determining whether an object has a
+   readable printed representation
 
- - NB: Printing a raw memory reference, for any single Common Lisp
-   application, may sometimes be completely advisable. (!) As to how any
-   such "raw memory reference" may be safely dereferenced - not
-   disregarding the behaviors of arbitrary GC threads - a novel
-   challenge for language development in Common Lisp, if not furthermore
-   for Systems Development in the UNIX applications environment.
-
-   Note, inasmuch - towards dereferncing a raw memory pointer onto the
-   Common Lisp heap or Common Lisp stack, in any single Common Lisp
-   implementation:
-
-   - Reference Object's Type - as may be displayed with PRINT-UNREADABLE-OBJECT
-
-   - Reference Object's Address - similarly, insofar as how most (??)
-      Common Lisp implementations handle the :IDENTITY arg for
-      PRINT-UNREADABLE-OBJECT
-
+ - TBD: Interoperability onto PRINT-UNREADABLE-OBJECT forms
 
 ----
 
-   And thus note - as inherited to SBCL via
-
-  (but NB this might seem very non-trivial to port onto e.g CCL, if not also MKCL, ECL, ...)
+  NB - implementation-specific concerns @ low-level system reflection
 
    - SB-KERNEL:GET-LISP-OBJ-ADDRESS
    - SB-KERNEL:MAKE-LISP-OBJ - AND NOTE THE SOURCE COMMENTS NEAR THIS' <DEFUN>. cf GC IN SBCL
