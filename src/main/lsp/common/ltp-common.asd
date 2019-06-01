@@ -67,4 +67,7 @@
 	  :depends-on ("common-opt"))
    (:file "common-reader"
 	  :depends-on ("common-type" "common-stream"))
+
+   (:file "common-lambda"
+          :depends-on ("common-macro"))
    ))
