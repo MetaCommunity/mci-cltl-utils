@@ -34,6 +34,8 @@
     (append +defun-lambda-param-kwd+
             '(&aux)))
 
+(defvar *default-ftype-values* '(values t))
+
 
 (defmacro defun* (name lambda &rest forms &environment env)
   ;; TD: LABELS* - refer to remarks, below. "Test here"
@@ -216,7 +218,7 @@
                        ))))
                  ;; Provide a default value for VDECL
                  (unless vdecl
-                   (setq vdecl '(values t)))
+                   (setq vdecl *default-ftype-values*))
                  (values `(ftype (function ,param-spec ,vdecl) ,name)))
                )
              (parse-meta (name llist forms)
@@ -258,15 +260,24 @@
 (frob+ 1 2 3)
 
 (defun* frob* (m n &optional (o 1))
-  "Trivially Typed +"
-  (declare (fixnum m) (type integer o)
+  "Trivially Typed *"
+  (declare (fixnum m)
            (values integer &optional))
-  (declare (dynamic-extent m n o))
+  (declare (type integer o)
+           (dynamic-extent m n o))
   (* m n o))
 
 (frob* 1 1)
 
 (frob* 1 1 2)
+
+
+(defun* frob- (m n &optional (o 1))
+  "Trivially Typed -"
+  (declare (fixnum m))
+  (declare (dynamic-extent m n o)
+           (type integer o))
+  (- m n o))
 
 )
 
