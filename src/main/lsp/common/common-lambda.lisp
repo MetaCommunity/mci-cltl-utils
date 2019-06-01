@@ -164,7 +164,7 @@
 
                  ;; ...
                  (values typed vdecl)))
-             (parse-ftype (name lvars type-map &optional (vdecl nil vdecl-p))
+             (parse-ftype (name lvars type-map vdecl)
                (declare (type list type-map))
                ;; NB vis a vis VALUES in DECLARE w/ CMUCL and SBCL,
                ;; and CL:FTYPE declarations
@@ -215,7 +215,7 @@
                          (pushl type param-spec)
                        ))))
                  ;; Provide a default value for VDECL
-                 (unless vdecl-p
+                 (unless vdecl
                    (setq vdecl '(values t)))
                  (values `(ftype (function ,param-spec ,vdecl) ,name)))
                )
