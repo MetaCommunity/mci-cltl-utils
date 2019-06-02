@@ -28,6 +28,8 @@
     (append '(type ftype) +declare-notype+))
 
 (defconstant* +defun-lambda-param-kwd+
+    ;; NB: This provides a more specialized set of symbols than
+    ;; CL:LAMBDA-LIST-KEYWORDS
   '(&optional &rest &key &allow-other-keys))
 
 (defconstant* +defun-lambda-kwd+
@@ -62,28 +64,80 @@
                    (t
                     (values forms decls)))))
              (parse-lambda-vars (llist)
-               ;; NB: Return value for PARSE-FTYPE LVARS
-               (let (vars context)
+               ;; NB: This function's return value is used for PARSE-FTYPE LVARS
+               ;;
+               ;; Usage - Within PARSE-FTYPE, this function's return
+               ;; value is processed within an iterative form, such that
+               ;; will compute a type for each lambda parameter parsed
+               ;; out by PARSE-LAMBDA-VARS.
+               ;;
+               ;; For &key arguments, these two functions will utilize a
+               ;; specific, list-based data structure:
+               ;;   (CONTEXT . (VAR . KEYNAME))
+               ;; juxtaposed to the data structure used for other lambda
+               ;; list parameters:
+               ;;   (CONTEXT . VAR)
+               (let ((kwdpkg (find-package '#:keyword))
+                     vars context)
+                 (declare (type package kwdpkg)
+                          (dynamic-extent kwdpkg))
                  (dolist (expr llist vars)
-                   (cond
-                     ((symbolp expr)
+                   (etypecase expr
+                     (symbol
                       (cond
                         ((find expr +defun-lambda-kwd+ :test #'eq)
                          (setq context expr))
-                        (t (pushl (cons expr context) vars))))
-                     (t ;; assumption: EXPR is a CONS
+                        ;; NB: All symbol type expressions not denoted
+                        ;; in +DEFUN-LAMBDA-KWD+ will be parsed subsq.
+                        ((eq context (quote &key))
+                         (let ((key (intern (symbol-name expr)
+                                            kwdpkg)))
+                           (pushl (cons context (cons expr key))
+                                  vars)))
+                        (t (pushl (cons context expr) vars))))
+                     (cons
+                      ;; assumptions: EXPR is a CONS - thus denoting an
+                      ;; &optional or &key parameter. These specifiers
+                      ;; will include further information than a
+                      ;; parameter name.
                       (let ((vexpr (car expr)))
-                        (etypecase vexpr
-                          (symbol (pushl (cons vexpr context) vars))
-                          ;; special &key forms:
-                          (cons (pushl (cons (cadr vexpr) context) vars)))))
-                     ))))
+                        (case context
+                          (&optional
+                           (pushl (cons context vexpr) vars))
+                          (&key
+                           (etypecase vexpr
+                             (symbol
+                              (let ((key (intern (symbol-name vexpr)
+                                                 kwdpkg)))
+                                (pushl (cons context (cons vexpr key))
+                                       vars)))
+                             (cons
+                              ;; Specialized &key forms
+                              (let ((key (car vexpr))
+                                    (var (cadr vexpr)))
+                                (pushl (cons context (cons var key))
+                                       vars)))))
+                          (&aux) ;; no-op
+                          ;; FIXME: This style warning introduces NAME
+                          ;; and LAMBDA from the calling lexical
+                          ;; environment. As such, it introduces a
+                          ;; concern with regards to porting this lambda
+                          ;; list parser for both LABELS* and DEFUN*
+                          ;;
+                          ;; Note also, BOA lambda list forms in
+                          ;; constructor specifications for DEFSTRUCT
+                          (t (simple-style-warning
+                              "~<Ignoring lambda list expression ~S ~S~>~
+~< in DEFUN* ~S ~S~>" context vexpr name lambda)))
+                        ))))))
 
              (parse-decl-types (decls env)
                ;; TBD: Return value for PARSE-FTYPE DECLS
-               (let (typed ;; ftyped cldecl classed other ;; unused lambda parser parameters
-                     vdecl
-                     )
+               (let (typed
+                     ;;; unused lambda parser parameters
+                     ;; ftyped cldecl classed other
+                     vdecl)
+
                  ;; NB: This does not need to provide a full, compiler-
                  ;; integrated defun (lambda) declarations parser. It
                  ;; must parse the declarations, to some extent, in
@@ -204,31 +258,46 @@
                (let (param-spec context)
                  ;; Re-map LVARS x TYPE-MAP into a lambda-like PARAM-SPEC
                  (dolist (bkt lvars)
-                   (destructuring-bind (var . ctxt) bkt
-                     (unless (eq ctxt '&aux) ;; TBD: &AUX in FTYPE
+                   ;; NB: for any &key parameter, the CDR of BKT will be
+                   ;; a list -- as produced within PARSE-LAMBDA-VARS --
+                   ;; to a general format: (CONTEXT . (VAR . KEYNAME))
+                   ;;
+                   ;; For any other lambda list parameter, the CDR of
+                   ;; BKT should be a symbol, denoting a variable name
+                   ;; within the specified lambda list context, CTXT
+                   (destructuring-bind (ctxt . varinfo ) bkt
+                     (unless (eq ctxt '&aux)
+                       ;; FIXME/TBD: &AUX in FTYPE. Here, it's skipped simply
                        (unless (eq ctxt context)
                          (setq context ctxt)
                          (pushl ctxt param-spec))
-                       (let ((type-n (position var type-map
-                                               :key #'car
-                                               :test #'eq))
-                             (type t))
+                       (let* ((varname (etypecase varinfo
+                                         (cons (car varinfo))
+                                         (symbol varinfo)))
+                              (type-n (position varname type-map
+                                                :key #'car
+                                                :test #'eq))
+                              ;; FIXME: Parameterize this default type
+                              (type t))
                          (when type-n
+                           ;; else, initial type 'T' is used
                            (setq type (cdr (nth type-n type-map))))
                          (case ctxt
+                           ;; (&rest)
+                           ;; FIXME use a default type LIST for any &REST param
                            (&key
-                            ;; FIXME not yet suitable for all &KEY forms
-                            (pushl (list (intern (symbol-name var)
-                                                 :keyword)
-                                         type) param-spec))
+                            (let ((kwd (cdr varinfo)))
+                              ;; Note the remark about "Specialized &key
+                              ;; forms" in PARSE-LAMBDA-VARS local defun
+                              (pushl (list kwd type) param-spec)))
                            (t
-                            (pushl type param-spec)))
-                       ))))
+                            (pushl type param-spec))))
+                       )))
                  ;; Provide a default value for VDECL
                  (unless vdecl
                    (setq vdecl *default-ftype-values*))
-                 (values `(ftype (function ,param-spec ,vdecl) ,name)))
-               )
+                 (values `(ftype (function ,param-spec ,vdecl) ,name))))
+
              (parse-meta (name llist forms)
                (let ((lvars (parse-lambda-vars llist)))
                  (multiple-value-bind (forms docs)
@@ -288,15 +357,28 @@
   (- m n o))
 
 
+
 (macroexpand (quote
-(defun* find-frob (token where &key (start 0) from-end
-                         &allow-other-keys
-                         &rest fluff)
+(defun* find-frob (digit where &rest kwlist
+                         &key ((:start %start) 0) from-end
+                         &allow-other-keys &aux (c (digit-char digit)))
   "Find NIL"
-  (declare (string token where)
-           (type (mod #.array-dimension-limit) start)
-  ))
+  (declare (type (mod 10) digit) (string where)
+           (ignore kwlist)
+           (type (mod #.array-dimension-limit) %start))
+  (let ((n
+         (position c where :test #'char= :start %start
+                   :from-end from-end)))
+    (declare (type base-char c))
+    (cond
+      (n (values c n))
+      (t (values nil nil )))))
 ))
+
+
+
+;; (find-frob 1 "54321012345")
+;; (find-frob 1 "54321012345" :from-end t)
 
 )
 
