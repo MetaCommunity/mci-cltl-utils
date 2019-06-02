@@ -60,7 +60,7 @@
    (:file "common-misc"
           :depends-on ("common-stream" "common-macro" "common-condition"))
    (:file "common-print"
-	  :depends-on ("common-misc" "common-fn"))
+	  :depends-on ("common-misc" "common-fn" "common-lambda"))
    (:file "common-opt"
 	  :depends-on ("common-package" "common-macro"))
    (:file "common-seq"

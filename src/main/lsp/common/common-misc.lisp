@@ -15,7 +15,7 @@
 
 
 (defmacro defconstant* (name value &optional docstring
-                                     &environment env)
+                        &environment env)
   "Define NAME as a constant variable with value VALUE and optional
 DOCSTRING
 
@@ -30,6 +30,8 @@ If NAME does not denote an existing variable, then this macro's
 behavior is analogous onto `CL:DEFCONSTANT'"
   (with-symbols (%value %previous)
     ;; FIXME arbitrary discard of return values from GET-SETF-EXPANSION
+
+    ;; FIXME Needs source review [LTP]
     (let ((%name (nth-value 4  (get-setf-expansion name env))))
       ;; Ed. note: SBCL 1.2.5 was not handling a simpler form
       ;; when a certain file when McCLIM was compiled and loaded. So,
@@ -61,6 +63,8 @@ behavior is analogous onto `CL:DEFCONSTANT'"
          (cond
            ((boundp (quote ,%name))
             (let ((,%previous (symbol-value (quote ,%name)))
+                  ;; NB This ensures, by side effect, that the VALUES
+                  ;; expression is always evaluated in DEFCONSTANT*
                   (,%value ,value))
               (unless (equalp ,%value ,%previous)
                 (simple-style-warning
@@ -71,6 +75,7 @@ behavior is analogous onto `CL:DEFCONSTANT'"
            (t ,value))
          ,@(when docstring
                  (list docstring))))))
+
 
 ;; (defconstant* quux "foo")
 ;;
@@ -144,33 +149,6 @@ In other instances, the compiled function is returned."
 ;; (compile* nil '(lambda () "FOO"))
 ;; (compile* nil '(lambda () unbound-foo))
 
-
-(defun symbol-status (s)
-  ;; Ed. NB: used in PRINT-NAME (SYMBOL STREAM)
-  ;; and in PRINT-LABEL (SYMBOL STREAM)
-  (declare (type symbol s)
-	   (values symbol (or package null)))
-  (let ((pkg (symbol-package s)))
-    (cond
-      (pkg
-       (multiple-value-bind (s status)
-	   (find-symbol (symbol-name s)
-			pkg)
-	 (declare (ignore s))
-	 (values status pkg)))
-      (t (values nil nil)))))
-
-;; (symbol-status 's)
-;; => :INTERNAL, #<PACKAGE "INFO.METACOMMUNITY.CLTL.UTILS">
-
-;; (symbol-status 'print)
-;; => :EXTERNAL, #<PACKAGE "COMMON-LISP">
-
-;; (symbol-status 'utils::print)
-;; => :EXTERNAL, #<PACKAGE "COMMON-LISP">
-
-;; (symbol-status '#:foo)
-;; => NIL, NIL
 
 (deftype string-designator ()
   '(or symbol string))
