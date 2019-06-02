@@ -17,7 +17,7 @@
 ;; NOTE analogous definitions in CMUCL, SBCL
 ;; NOTE portability (is not privatization)
 
-(define-condition simple-style-warning (style-warning simple-condition)
+(define-condition simple-style-warning (style-warning simple-warning
   ())
 
 (defmacro simple-style-warning (fmt-ctrl &rest args)
@@ -26,7 +26,7 @@
 	 :format-arguments (list ,@args)))
 
 
-(define-condition simple-program-error (program-error simple-condition)
+(define-condition simple-program-error (program-error simple-error)
   ())
 
 (defmacro simple-program-error (fmt-ctrl &rest args)
