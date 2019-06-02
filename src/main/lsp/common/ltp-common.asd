@@ -65,10 +65,12 @@
    (:file "common-opt"
 	  :depends-on ("common-package" "common-macro"))
    (:file "common-seq"
-	  :depends-on ("common-opt" "common-lambda"))
+	  :depends-on ("common-opt" "common-lambda" "common-macro"))
    (:file "common-reader"
 	  :depends-on ("common-type" "common-stream"))
 
    (:file "common-lambda"
-          :depends-on ("common-macro"))
+          :depends-on ("common-macro" ;; DEFCONSTANT*
+                       "common-condition" ;; SIMPLE-STYLE-WARNING
+                       ))
    ))

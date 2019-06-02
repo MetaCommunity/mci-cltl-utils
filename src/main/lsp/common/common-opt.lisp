@@ -46,6 +46,12 @@
 	  (test-tail  (debug 3) (speed 0) (safety 3) (space 0))))
 ;; #+CCL => #<CCL::LEXICAL-ENVIRONMENT ...> , ...
 
+
+;; --
+
+;; FIXME Fold-in w/ feature set impl in ./common-misc.lisp
+
+
 (define-condition compilation-condition ()
   ())
 
