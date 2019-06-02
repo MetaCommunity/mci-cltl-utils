@@ -17,7 +17,7 @@
 ;; NOTE analogous definitions in CMUCL, SBCL
 ;; NOTE portability (is not privatization)
 
-(define-condition simple-style-warning (style-warning simple-warning
+(define-condition simple-style-warning (style-warning simple-warning)
   ())
 
 (defmacro simple-style-warning (fmt-ctrl &rest args)
@@ -36,6 +36,7 @@
 
 
 (defgeneric format-condition (condition stream)
+  #+NIL
   (:documentation
    "CLOS Utility for application within condition class REPORT forms
 
@@ -56,6 +57,7 @@ Example:
 
   (:method ((condition condition) (stream symbol))
     ;; FIXME_DESIGN symbol as stream designator => constant
+    #+NIL
 "Dispatch for FORMAT-CONDITION onto a symbolic output stream designator.
 This method allows for symbolic indication of an output stream to
 FORMAT-CONDITION, with a syntax compatible onto ANSI CL (CLtL2)"
@@ -67,6 +69,7 @@ FORMAT-CONDITION, with a syntax compatible onto ANSI CL (CLtL2)"
                         ((nil) *standard-output*))))
 
   (:method ((condition simple-condition) (stream stream))
+    #+NIL
     "Apply the format control and format arguments for the CONDITION,
 with output to the specified STREAM.
 
@@ -86,6 +89,7 @@ method has returned, and before the direct format procedure in this method"
            (simple-condition-format-control condition)
            (simple-condition-format-arguments condition)))
   (:method :after ((condition condition) (stream stream))
+           #+NIL
            "Ensure FINISH-OUTPUT is called onto STREAM"
            (finish-output stream)))
 
