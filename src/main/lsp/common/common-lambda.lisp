@@ -102,6 +102,7 @@
                       ;; parameter name.
                       (let ((vexpr (car expr)))
                         (case context
+                          (&allow-other-keys) ;; no-op
                           (&optional
                            (pushl (cons context vexpr) vars))
                           (&key
@@ -284,7 +285,10 @@
                            (setq type (cdr (nth type-n type-map))))
                          (case ctxt
                            ;; (&rest)
-                           ;; FIXME use a default type LIST for any &REST param
+                           ;; FIXME use a default type LIST for any
+                           ;; &REST param
+                           (&allow-other-keys
+                            (pushl kwd param-spec))
                            (&key
                             (let ((kwd (cdr varinfo)))
                               ;; Note the remark about "Specialized &key
