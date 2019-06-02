@@ -63,13 +63,22 @@
                                                 (cdr frst))))
                    (t
                     (values forms decls)))))
-             (parse-lambda-vars (llist)
-               ;; NB: This function's return value is used for PARSE-FTYPE LVARS
+             (parse-lambda-params (llist)
+               ;; NB: This function's return value is used together with
+               ;; the return value from PARSE-DECL-TYPES, for computing
+               ;; an FTYPE declaration in PARSE-FTYPE
+               ;;
+               ;; This function, as such, provides a value for the
+               ;; LPARMS parameter to PARSE-FTYPE
                ;;
                ;; Usage - Within PARSE-FTYPE, this function's return
                ;; value is processed within an iterative form, such that
                ;; will compute a type for each lambda parameter parsed
-               ;; out by PARSE-LAMBDA-VARS.
+               ;; out by PARSE-LAMBDA-PARAMS. For any parameter not
+               ;; given an explicit type in any declaration forms,
+               ;; PARSE-FTYPE will provide a resonable default type -
+               ;; similarly, for the VALUES element in the resulting
+               ;; FTYPE declaration.
                ;;
                ;; For &key arguments, these two functions will utilize a
                ;; specific, list-based data structure:
@@ -86,22 +95,31 @@
                      (symbol
                       (cond
                         ((find expr +defun-lambda-kwd+ :test #'eq)
+                         (when (eq expr (quote &allow-other-keys))
+                           ;; NB: This does not match a VARINFO
+                           ;; bucket - using NIL as a placeholder for a
+                           ;; parameter name. In usage, the CDR of this
+                           ;; should ultimately be ignored - as for the
+                           ;; &allow-other-keys context
+                           (pushl (cons expr nil) vars))
                          (setq context expr))
                         ;; NB: All symbol type expressions not denoted
-                        ;; in +DEFUN-LAMBDA-KWD+ will be parsed subsq.
+                        ;; in +DEFUN-LAMBDA-KWD+ should be parsed subsq.
                         ((eq context (quote &key))
+                         ;; NB: already parsed the &KEY keyword
                          (let ((key (intern (symbol-name expr)
                                             kwdpkg)))
                            (pushl (cons context (cons expr key))
                                   vars)))
                         (t (pushl (cons context expr) vars))))
                      (cons
-                      ;; assumptions: EXPR is a CONS - thus denoting an
+                      ;; assumptions: EXPR is a CONS - thus decribing an
                       ;; &optional or &key parameter. These specifiers
                       ;; will include further information than a
-                      ;; parameter name.
+                      ;; parameter name, of course.
                       (let ((vexpr (car expr)))
                         (case context
+                          (&aux) ;; no-op
                           (&optional
                            (pushl (cons context vexpr) vars))
                           (&key
@@ -117,7 +135,6 @@
                                     (var (cadr vexpr)))
                                 (pushl (cons context (cons var key))
                                        vars)))))
-                          (&aux) ;; no-op
                           ;; FIXME: This style warning introduces NAME
                           ;; and LAMBDA from the calling lexical
                           ;; environment. As such, it introduces a
@@ -125,10 +142,14 @@
                           ;; list parser for both LABELS* and DEFUN*
                           ;;
                           ;; Note also, BOA lambda list forms in
-                          ;; constructor specifications for DEFSTRUCT
+                          ;; constructor specifications for DEFSTRUCT -
+                          ;; vis a vis, "Ways to define a class" in CLOS
+                          ;; and MOP systems.
                           (t (simple-style-warning
+                              ;; NB: Only reached for CONS type lamba
+                              ;; element exprs
                               "~<Ignoring lambda list expression ~S ~S~>~
-~< in DEFUN* ~S ~S~>" context vexpr name lambda)))
+~< in DEFUN* ~S ~S~>" context expr name lambda)))
                         ))))))
 
              (parse-decl-types (decls env)
@@ -221,7 +242,7 @@
 
                  ;; ...
                  (values typed vdecl)))
-             (parse-ftype (name lvars type-map vdecl)
+             (parse-ftype (name lparms type-map vdecl)
                (declare (type list type-map))
                ;; NB vis a vis VALUES in DECLARE w/ CMUCL and SBCL,
                ;; and CL:FTYPE declarations
@@ -256,18 +277,21 @@
                ;; ... b.c stong typing in Common Lisp programs, juxtaposed
                ;; to a casual DECLARATION decl in non-CMUCL-fam lisps
                (let (param-spec context)
-                 ;; Re-map LVARS x TYPE-MAP into a lambda-like PARAM-SPEC
-                 (dolist (bkt lvars)
+                 ;; Re-map LPARMS x TYPE-MAP into a lambda-like PARAM-SPEC
+                 (dolist (bkt lparms)
                    ;; NB: for any &key parameter, the CDR of BKT will be
-                   ;; a list -- as produced within PARSE-LAMBDA-VARS --
+                   ;; a list -- as produced within PARSE-LAMBDA-PARAMS --
                    ;; to a general format: (CONTEXT . (VAR . KEYNAME))
                    ;;
                    ;; For any other lambda list parameter, the CDR of
                    ;; BKT should be a symbol, denoting a variable name
                    ;; within the specified lambda list context, CTXT
                    (destructuring-bind (ctxt . varinfo ) bkt
-                     (unless (eq ctxt '&aux)
-                       ;; FIXME/TBD: &AUX in FTYPE. Here, it's skipped simply
+                     (case ctxt
+                       (&aux) ;; no-op
+                       (&allow-other-keys
+                        (pushl ctxt param-spec))
+                       (t
                        (unless (eq ctxt context)
                          (setq context ctxt)
                          (pushl ctxt param-spec))
@@ -283,23 +307,23 @@
                            ;; else, initial type 'T' is used
                            (setq type (cdr (nth type-n type-map))))
                          (case ctxt
-                           ;; (&rest)
-                           ;; FIXME use a default type LIST for any &REST param
+                           ;; FIXME use a default type LIST for any
+                           ;; &REST param
                            (&key
                             (let ((kwd (cdr varinfo)))
                               ;; Note the remark about "Specialized &key
-                              ;; forms" in PARSE-LAMBDA-VARS local defun
+                              ;; forms" in PARSE-LAMBDA-PARAMS local defun
                               (pushl (list kwd type) param-spec)))
                            (t
                             (pushl type param-spec))))
-                       )))
+                       )))) ;; DOLIST
                  ;; Provide a default value for VDECL
                  (unless vdecl
                    (setq vdecl *default-ftype-values*))
                  (values `(ftype (function ,param-spec ,vdecl) ,name))))
 
              (parse-meta (name llist forms)
-               (let ((lvars (parse-lambda-vars llist)))
+               (let ((lparms (parse-lambda-params llist)))
                  (multiple-value-bind (forms docs)
                      (parse-docs forms)
                    (multiple-value-bind (forms decls)
@@ -307,7 +331,7 @@
                      (multiple-value-bind (type-map vdecl)
                          (parse-decl-types decls env)
                        (multiple-value-bind (ftype)
-                           (parse-ftype name lvars type-map vdecl)
+                           (parse-ftype name lparms type-map vdecl)
                          (values ftype docs decls forms))))))
                ))
 
