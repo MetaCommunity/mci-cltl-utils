@@ -86,10 +86,14 @@
                      (symbol
                       (cond
                         ((find expr +defun-lambda-kwd+ :test #'eq)
+                         (when (eq expr (quote &allow-other-keys))
+                           ;; FIXME: This does not match a VARINFO bucket
+                           (pushl (cons expr nil) vars))
                          (setq context expr))
                         ;; NB: All symbol type expressions not denoted
-                        ;; in +DEFUN-LAMBDA-KWD+ will be parsed subsq.
+                        ;; in +DEFUN-LAMBDA-KWD+ should be parsed subsq.
                         ((eq context (quote &key))
+                         ;; NB: already parsed the &KEY keyword
                          (let ((key (intern (symbol-name expr)
                                             kwdpkg)))
                            (pushl (cons context (cons expr key))
@@ -102,6 +106,7 @@
                       ;; parameter name.
                       (let ((vexpr (car expr)))
                         (case context
+                          (&aux) ;; no-op
                           (&optional
                            (pushl (cons context vexpr) vars))
                           (&key
@@ -117,7 +122,6 @@
                                     (var (cadr vexpr)))
                                 (pushl (cons context (cons var key))
                                        vars)))))
-                          (&aux) ;; no-op
                           ;; FIXME: This style warning introduces NAME
                           ;; and LAMBDA from the calling lexical
                           ;; environment. As such, it introduces a
@@ -127,8 +131,10 @@
                           ;; Note also, BOA lambda list forms in
                           ;; constructor specifications for DEFSTRUCT
                           (t (simple-style-warning
+                              ;; NB: Only reached for CONS type lamba
+                              ;; element exprs
                               "~<Ignoring lambda list expression ~S ~S~>~
-~< in DEFUN* ~S ~S~>" context vexpr name lambda)))
+~< in DEFUN* ~S ~S~>" context expr name lambda)))
                         ))))))
 
              (parse-decl-types (decls env)
@@ -266,8 +272,11 @@
                    ;; BKT should be a symbol, denoting a variable name
                    ;; within the specified lambda list context, CTXT
                    (destructuring-bind (ctxt . varinfo ) bkt
-                     (unless (eq ctxt '&aux)
-                       ;; FIXME/TBD: &AUX in FTYPE. Here, it's skipped simply
+                     (case ctxt
+                       (&aux) ;; no-op
+                       (&allow-other-keys
+                        (pushl ctxt param-spec))
+                       (t
                        (unless (eq ctxt context)
                          (setq context ctxt)
                          (pushl ctxt param-spec))
@@ -283,8 +292,8 @@
                            ;; else, initial type 'T' is used
                            (setq type (cdr (nth type-n type-map))))
                          (case ctxt
-                           ;; (&rest)
-                           ;; FIXME use a default type LIST for any &REST param
+                           ;; FIXME use a default type LIST for any
+                           ;; &REST param
                            (&key
                             (let ((kwd (cdr varinfo)))
                               ;; Note the remark about "Specialized &key
@@ -292,7 +301,7 @@
                               (pushl (list kwd type) param-spec)))
                            (t
                             (pushl type param-spec))))
-                       )))
+                       )))) ;; DOLIST
                  ;; Provide a default value for VDECL
                  (unless vdecl
                    (setq vdecl *default-ftype-values*))
