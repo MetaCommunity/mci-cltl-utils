@@ -48,23 +48,24 @@
    (:file "common-macro"
 	  :depends-on ("common-package"))
    (:file "common-type"
-	  :depends-on ("common-package"))
+	  :depends-on ("common-package" "common-lambda"))
    (:file "common-clos"
 	  :depends-on ("common-macro"))
    (:file "common-fn"
-	  :depends-on ("common-package"))
+	  :depends-on ("common-package" "common-lambda"))
    (:file "common-condition"
 	  :depends-on ("common-package"))
    (:file "common-stream"
-          :depends-on ("common-package"))
+          :depends-on ("common-package" "common-lambda"))
    (:file "common-misc"
-          :depends-on ("common-stream" "common-macro" "common-condition"))
+          :depends-on ("common-stream" "common-macro" "common-condition"
+                                       "common-lambda"))
    (:file "common-print"
 	  :depends-on ("common-misc" "common-fn" "common-lambda"))
    (:file "common-opt"
 	  :depends-on ("common-package" "common-macro"))
    (:file "common-seq"
-	  :depends-on ("common-opt"))
+	  :depends-on ("common-opt" "common-lambda"))
    (:file "common-reader"
 	  :depends-on ("common-type" "common-stream"))
 

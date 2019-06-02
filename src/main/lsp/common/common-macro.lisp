@@ -12,7 +12,6 @@
 ;;------------------------------------------------------------------------------
 
 
-
 (in-package #:ltp/common)
 
 (defmacro format* (ctrl &rest args)
@@ -61,3 +60,4 @@ the designated PACKAGE"
   `(intern (format* ,ctrl ,@args)))
 
 ;; (intern-formatted "g_~a_foo" 'widget)
+

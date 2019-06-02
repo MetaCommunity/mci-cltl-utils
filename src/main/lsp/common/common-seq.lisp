@@ -58,9 +58,9 @@
 
 ;;; % Vector Utilities
 
-(defun simplify-vector (vector)
+(defun* simplify-vector (vector)
   (declare (type vector vector)
-	   (values simple-array))
+	   (values simple-array &optional))
   (coerce vector (list 'simple-array (array-element-type vector)
 		       (list (length vector)))))
 
@@ -111,14 +111,15 @@
 
 ;;; %% String Utilities
 
-(defun simplify-string (string)
+(defun* simplify-string (string)
   "If STRING can be coerced to a SIMPLE-BASE-STRING, then return a
 SIMPLE-BASE-STRING representative of the contents of STRING.
 Otherwise, return a SIMPLE-STRING representative of the
 contents of STRING."
   (declare (type string string)
 	   (inline coerce)
-	   (values (or simple-string simple-base-string)))
+	   (values (or simple-string simple-base-string)
+                   &optional))
   (handler-case
       (coerce string 'simple-base-string)
     (type-error ()
@@ -182,14 +183,14 @@ contents of STRING."
 
 ;; (declare (inline null-string string-null-p))
 
-(defun null-string ()
-  (declare (values simple-base-string))
+(defun* null-string ()
+  (declare (values simple-base-string &optional))
     ;; FIXME declare inline
   (values +null-string+))
 
-(defun string-null-p (str)
+(defun* string-null-p (str)
   (declare (type string str)
-	   (values boolean))
+	   (values boolean &optional))
   ;; FIXME: declare inline
   (or (eq str +null-string+)
       ;; FIXME_DOCS note opportunities for object reuse in ANSI CL
@@ -207,8 +208,8 @@ contents of STRING."
   ;; FIXME_DOCS See also `array-dim'
     '(integer 0 #.array-dimension-limit))
 
-(defun split-string-1 (char str &key (start 0) end from-end
-                                  key (test #'char=) test-not )
+(defun* split-string-1 (char str &key (start 0) end from-end
+                             key (test #'char=) test-not )
   ;; FIXME_DOCS See also `split-string'
   ;; FIXME_DOCS note use of CL:SIMPLE-STRING in the type signature for
   ;; the return values of this function
@@ -218,7 +219,8 @@ contents of STRING."
   (declare (type string str)
 	   (values simple-string
 		   (or simple-string null)
-		   (or array-dim null)))
+		   (or array-dim null)
+                   &optional))
   (let ((n (string-position char str
 	     :start start :end end
 	     :from-end from-end :key key
@@ -243,12 +245,12 @@ contents of STRING."
 ;; => "ab", NIL, NIL
 
 (defun split-string (char str &key (start 0)  end
-				from-end  key
-				(test #'char=)
-				test-not)
+                           from-end  key
+                           (test #'char=)
+                           test-not)
   ;; FIXME_DOCS See also `split-string-1'
   (declare (type string str)
-	   (values list))
+	   (values list &optional))
   (with-tail-recursion ;; FIXME_DOCS note usage case here
     (labels ((split (str2 buffer)
 	       (declare (type string str)

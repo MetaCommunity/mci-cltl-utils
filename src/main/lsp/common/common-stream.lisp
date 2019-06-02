@@ -14,6 +14,7 @@
 (in-package #:ltp/common)
 
 (deftype stream-designator ()
+  ;; FIXME revise - remove array-with-fill-pointer clause
   '(or (and symbol (member nil t)) stream
     (and string (satisfies array-has-fill-pointer-p))))
 
@@ -27,7 +28,7 @@
   '(or string function))
 
 
-(defun compute-output-stream (s)
+(defun* compute-output-stream (s)
   "Given a stream designator, S, return:
 
 * S if S is a STREAM
@@ -36,14 +37,14 @@
 
 See also: `compute-input-stream'"
   (declare (type stream-designator s)
-           (values stream))
+           (values stream &optional))
   (etypecase s
     (stream (values s))
     (null (values *standard-output*))
     ((eql t) (values *terminal-io*))))
 
 
-(defun compute-input-stream (s)
+(defun* compute-input-stream (s)
   "Given a stream designator, S, return:
 
 * S if S is a STREAM
@@ -52,7 +53,7 @@ See also: `compute-input-stream'"
 
 See also: `compute-output-stream'"
   (declare (type stream-designator s)
-           (values stream))
+           (values stream &optional))
   (etypecase s
     (stream (values s))
     (null (values *standard-input*))

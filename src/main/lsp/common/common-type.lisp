@@ -26,10 +26,10 @@
   '(or symbol class (cons symbol t)))
 
 
-(defun compute-class (ident &optional (errorp t)
-                              environment)
+(defun* compute-class (ident &optional (errorp t)
+                             environment)
   (declare (type class-designator ident)
-           (values (or class null)))
+           (values (or class null) &optional))
   (etypecase ident
     (symbol (find-class ident errorp environment))
     (class ident)))
@@ -46,7 +46,7 @@
 ;; Novel but unused
 #-(and)
 (defun unsigned-size-of (uint)
-  ;; NB: This does not align to either fixnum or bignum boundaries 
+  ;; NB: This does not align to either fixnum or bignum boundaries
   (declare (type (integer 0) uint)
            (values (integer 0) &optional))
   (values (ceiling (log uint 2))))

@@ -113,7 +113,7 @@ behavior is analogous onto `CL:DEFCONSTANT'"
 
 
 
-(defun compile* (name &optional defn)
+(defun* compile* (name &optional defn)
   ;; FIXME: Align onto the error/waning handling semantics of COMPILE**
   ;; see opt-utils.lisp
   "Evalute COMPILE on NAME and DEFN.
@@ -127,7 +127,7 @@ returned.
 
 In other instances, the compiled function is returned."
   (declare (type function-designator name)
-	   (values function))
+	   (values function &optional))
   (multiple-value-bind (fn warnings-p failure-p)
       (compile name defn)
       (cond
@@ -157,9 +157,9 @@ In other instances, the compiled function is returned."
   ;; cf. DEFPACKAGE [CLtL2]
   '(or string-designator package))
 
-(defun package-exports-symbols (pkg)
+(defun* package-exports-symbols (pkg)
   (declare (type package-designator pkg)
-           (values list))
+           (values list &optional))
   (let ((buffer
          (make-array 8 :fill-pointer 0)))
     (declare (type (array t (*)) buffer))

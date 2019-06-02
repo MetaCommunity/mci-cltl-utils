@@ -36,6 +36,7 @@
 
 (defvar *default-ftype-values* '(values t))
 
+;; FIXME update the FTYPE routines for specialized &KEY args
 
 (defmacro defun* (name lambda &rest forms &environment env)
   ;; TD: LABELS* - refer to remarks, below. "Test here"
@@ -214,7 +215,14 @@
                              (type t))
                          (when type-n
                            (setq type (cdr (nth type-n type-map))))
-                         (pushl type param-spec)
+                         (case ctxt
+                           (&key
+                            ;; FIXME not yet suitable for all &KEY forms
+                            (pushl (list (intern (symbol-name var)
+                                                 :keyword)
+                                         type) param-spec))
+                           (t
+                            (pushl type param-spec)))
                        ))))
                  ;; Provide a default value for VDECL
                  (unless vdecl
@@ -278,6 +286,17 @@
   (declare (dynamic-extent m n o)
            (type integer o))
   (- m n o))
+
+
+(macroexpand (quote
+(defun* find-frob (token where &key (start 0) from-end
+                         &allow-other-keys
+                         &rest fluff)
+  "Find NIL"
+  (declare (string token where)
+           (type (mod #.array-dimension-limit) start)
+  ))
+))
 
 )
 
