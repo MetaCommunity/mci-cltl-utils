@@ -128,7 +128,7 @@ behavior is analogous onto `CL:DEFCONSTANT'"
               (values ,%previous)))
            (t ,value))
          ,@(when docstring
-                 (list docstring))))))
+             (list docstring))))))
 
 
 ;; (defconstant* quux "foo")
