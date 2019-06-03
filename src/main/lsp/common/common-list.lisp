@@ -1,5 +1,5 @@
-;; common-list.lisp - utilities for Common Lisp listw
-;;-----------------------------------------------------------------------------
+;; common-list.lisp - utilities for Common Lisp lists
+;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2019 Sean Champ and others. All rights reserved.
 ;;
@@ -10,6 +10,7 @@
 ;; Contributors: Sean Champ - Initial API and implementation
 ;;
 ;;------------------------------------------------------------------------------
+
 
 (in-package #:ltp/common)
 
@@ -68,5 +69,4 @@ element becomes the LAST element of WHERE"
 ;; (let (a) (values (copy-list a) (npushl 1 a) a))
 
 ;; (let ((b '(1 5))) (values (copy-list b) (npushl 17 b) b))
-
 

@@ -69,8 +69,10 @@
    (:file "common-opt"
           ;; FIXME see remarks in common-packge.lisp
 	  :depends-on ("common-package" "common-macro"))
-   (:file "common-seq"
+   (:file "common-list"
 	  :depends-on ("common-macro"))
+   (:file "common-vec"
+	  :depends-on ("common-macro" "common-lambda"))
    (:file "common-string"
           :depends-on ("common-macro" "common-type" "common-misc"
                                       "common-lambda"
@@ -81,7 +83,7 @@
 
    (:file "common-lambda"
           :depends-on ("common-macro" ;; DEFCONSTANT*
-                       "common-seq" ;; NPUSHL
+                       "common-list" ;; NPUSHL
                        "common-condition" ;; SIMPLE-STYLE-WARNING
                        ))
    ))
