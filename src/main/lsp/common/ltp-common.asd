@@ -69,7 +69,7 @@
    (:file "common-opt"
           ;; FIXME see remarks in common-packge.lisp
 	  :depends-on ("common-package" "common-macro"))
-   (:file "common-list"
+   (:file "common-list" ;; NB was common-seq.lisp
 	  :depends-on ("common-macro"))
    (:file "common-vec"
 	  :depends-on ("common-macro" "common-lambda"))
