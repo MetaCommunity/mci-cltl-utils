@@ -1,4 +1,4 @@
-;; opt-utils.lisp - onto compiler optimizations
+;; common-opt.lisp - onto compiler optimizations
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
@@ -14,6 +14,7 @@
 (in-package #:ltp/common)
 
 (defmacro with-optimization ((&rest policy) &body body)
+  ;; used in WITH-TAIL-RECURSION defn
   `(locally (declare (optimize ,@policy))
      ,@body))
 
@@ -24,6 +25,7 @@
 ;;  http://ecls.sourceforge.net/new-manual/ch02.html#ansi.declarations.optimize
 
 (defmacro with-tail-recursion (&body body)
+  ;; used in SPLIT-STRING defn
   `(with-optimization (#-allegro (debug 2)
 				 #+allegro (debug 1)
 				 (speed 3) (safety 2))

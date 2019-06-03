@@ -45,9 +45,9 @@
    #:simple-style-warning
    #:simple-program-error
    #:format-condition
-   #:entity-condition
+   #:entity-condition ;; NB is not a cell-error
    #:entity-condition-name
-   #:entity-not-found
+   #:entity-not-found ;; NB see also container-condition
    #:redefinition-condition
    #:redefinition-condition-previous-object
    #:redefinition-condition-new-object
@@ -57,50 +57,40 @@
    #:compute-output-stream
    #:compute-input-stream
 
-   #:setf-function-designator
+   #:setf-function-designator ;; NB typing & knowledge representation for Common Lisp programs
    #:lambda-function-designator
    #:function-designator
    #:compute-function
-   #:with-safe-frefs
+   #:with-safe-frefs ;; NB Usability @ ASDF extensions
    #:function-name
 
+   ;; FIXME Consider moving the following three forms into the LTP common-mop system
    #:call-next-method*
    #:slot-value*
    #:when-slot-init
 
    #:stream-designator
-   #:format-control
+   #:format-control ;; NB CAUTION [...]
 
    #:defconstant*
-   #:compilation-condition
-   #:compilation-condition-function-name
-   #:compilation-condition-lambda-form
-   #:warnings-during-compile
-   #:errors-during-compile
-   #:compile*
-   #:symbol-status
 
-   #:print-name
-   #:print-label
-   #:object-print-name
-   #:object-print-label
-   #:pretty-printable-object
-   #:format-label
-   #:print-hash-table
-   #:associative-object
-   #:object-name
-
-   #:with-optimization
-   #:with-tail-recursion
+   #:with-optimization ;; FIXME see also WITH-COMPILATION-UNIT (SBCL, ...)
+   #:with-tail-recursion ;; FIXME KRS/KB/TBD (proto used in SPLIT-STRING)
 
    #:compilation-condition
    #:compilation-warning
    #:simple-compilation-warning
    #:compilation-error
    #:simple-compilation-error
-   #:compile** ;; FIXME - need unified COMPILE*/COMPILE** condition semantics
+
+   #:symbol-status
+
+   #:defun*
+   ;; #:labels*
 
    #:push-last
+   #:nappend
+   #:npushl
    #:simplify-vector
    #:do-vector
    #:simplify-string
@@ -112,6 +102,18 @@
    #:split-string-1
    #:split-string
 
+   ;; FIXME "Sort out" the following, with regards to differing proto forms
+   #:compilation-condition
+   #:compilation-condition-function-name
+   #:compilation-condition-lambda-form
+   #:warnings-during-compile
+   #:errors-during-compile
+   #:compile*
+   #:compile** ;; FIXME - need unified COMPILE*/COMPILE** condition semantics
+
+
+   ;; FIXME: Move the following to another system - ltp-parse e.g
+   ;; Note the fairly XML-oriented nature of the terms, here
    #:character-code
    #:code-in-range
    #:code=
@@ -119,5 +121,16 @@
    #:code-name-char-p #:char-name-char-p
    #:read-name-string
    #:read-characters
+
+   ;; FIXME: Move the following to another system - ltp-pprint e.g
+   #:print-name
+   #:print-label
+   #:object-print-name
+   #:object-print-label
+   #:pretty-printable-object
+   #:format-label
+   #:print-hash-table
+   #:associative-object
+   #:object-name
    ))
 

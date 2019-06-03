@@ -42,9 +42,8 @@
 
 (defmacro defun* (name lambda &rest forms &environment env)
   ;; TD: LABELS* - refer to remarks, below. "Test here"
-  (macrolet ((pushl (v where)
-                   `(setq ,where (nconc ,where (list ,v)))))
-    (labels ((parse-docs (forms)
+  ;; - via PARSE-NAMED-LAMBDA - refer to function signature, below
+  (labels ((parse-docs (forms)
                (let ((frst (car forms)))
                  (cond
                    ((stringp frst)
@@ -101,7 +100,7 @@
                            ;; parameter name. In usage, the CDR of this
                            ;; should ultimately be ignored - as for the
                            ;; &allow-other-keys context
-                           (pushl (cons expr nil) vars))
+                           (npushl (cons expr nil) vars))
                          (setq context expr))
                         ;; NB: All symbol type expressions not denoted
                         ;; in +DEFUN-LAMBDA-KWD+ should be parsed subsq.
@@ -109,9 +108,9 @@
                          ;; NB: already parsed the &KEY keyword
                          (let ((key (intern (symbol-name expr)
                                             kwdpkg)))
-                           (pushl (cons context (cons expr key))
+                           (npushl (cons context (cons expr key))
                                   vars)))
-                        (t (pushl (cons context expr) vars))))
+                        (t (npushl (cons context expr) vars))))
                      (cons
                       ;; assumptions: EXPR is a CONS - thus decribing an
                       ;; &optional or &key parameter. These specifiers
@@ -121,19 +120,19 @@
                         (case context
                           (&aux) ;; no-op
                           (&optional
-                           (pushl (cons context vexpr) vars))
+                           (npushl (cons context vexpr) vars))
                           (&key
                            (etypecase vexpr
                              (symbol
                               (let ((key (intern (symbol-name vexpr)
                                                  kwdpkg)))
-                                (pushl (cons context (cons vexpr key))
+                                (npushl (cons context (cons vexpr key))
                                        vars)))
                              (cons
                               ;; Specialized &key forms
                               (let ((key (car vexpr))
                                     (var (cadr vexpr)))
-                                (pushl (cons context (cons var key))
+                                (npushl (cons context (cons var key))
                                        vars)))))
                           ;; FIXME: This style warning introduces NAME
                           ;; and LAMBDA from the calling lexical
@@ -183,7 +182,7 @@
                           ;; record the type for each explicitly typed
                           ;; variable
                           (dolist (var (cddr expr))
-                            (pushl (cons var type) typed))))
+                            (npushl (cons var type) typed))))
                        ((eq kind 'values)
                         ;; Assumption: This EXPR denotes a CMUCL lambda
                         ;; VALUES declaration. This declaration may also
@@ -212,21 +211,21 @@
                        ((eq kind 'ftype)
                         ;; NB a manner of a subset of TYPE decls
                         ;; Not per se used here (No-Op)
-                        #+NIL (pushl expr ftyped)
+                        #+NIL (npushl expr ftyped)
                         )
                        ((find kind +declare-notype+ :test #'eq)
                         ;; No-Op
                         #+NIL
-                        (pushl expr cldecl))
+                        (npushl expr cldecl))
                        ((find-class kind nil env)
-                        #+NIL (pushl expr classed)
+                        #+NIL (npushl expr classed)
                         #-NIL
                         (dolist (var (cdr expr))
-                          (pushl (cons var kind) typed)
+                          (npushl (cons var kind) typed)
                           ))
                        (t ;; No-Op
                         #+NIL
-                        (pushl expr other)))))
+                        (npushl expr other)))))
                  ;; NB: OTHER may contain non-class type-name and
                  ;; implementation-specific declarations
                  ;;
@@ -255,7 +254,10 @@
                ;;
                ;; When adapted for LABELS* the FTYPE declaration must be
                ;; handled for a declaration within the calling lexical
-               ;; environment, a non-null lexical environment.
+               ;; environment, a non-null lexical environment -- vis a vis:
+               ;;  PARSE-NAMED-LAMBDA (NAME LAMBDA FORMS KIND ENV) => FTYPE, DOCS, FORMS
+               ;;
+               ;; NB: PARSE-NAMED-LAMBDA INLINE
 
                ;; NB To retain portability, this will implement some
                ;; assumptions about type specifiers in the DECLARE list
@@ -290,11 +292,11 @@
                      (case ctxt
                        (&aux) ;; no-op
                        (&allow-other-keys
-                        (pushl ctxt param-spec))
+                        (npushl ctxt param-spec))
                        (t
                        (unless (eq ctxt context)
                          (setq context ctxt)
-                         (pushl ctxt param-spec))
+                         (npushl ctxt param-spec))
                        (let* ((varname (etypecase varinfo
                                          (cons (car varinfo))
                                          (symbol varinfo)))
@@ -313,9 +315,9 @@
                             (let ((kwd (cdr varinfo)))
                               ;; Note the remark about "Specialized &key
                               ;; forms" in PARSE-LAMBDA-PARAMS local defun
-                              (pushl (list kwd type) param-spec)))
+                              (npushl (list kwd type) param-spec)))
                            (t
-                            (pushl type param-spec))))
+                            (npushl type param-spec))))
                        )))) ;; DOLIST
                  ;; Provide a default value for VDECL
                  (unless vdecl
@@ -343,7 +345,7 @@
              ,@(when docs (list docs))
              ,@(when decls (list `(declare ,@decls)))
              ,@forms)
-           )))))
+           ))))
 
 
 #+NIL

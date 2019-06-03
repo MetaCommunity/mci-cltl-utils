@@ -53,3 +53,17 @@
 
 ;; (unsigned-size-of (expt 2 8))
 ;; => 8
+
+
+(deftype array-dim ()
+  ;; FIXME_DOCS See also `array-length'
+  ;; FIXME_DOCS Application Example - see DO-VECTOR
+  '(integer 0 (#.array-dimension-limit)))
+
+(deftype array-length ()
+  ;; FIXME_DOCS See also `array-dim'
+  ;; FIXME_DOCS Application Example - see DO-VECTOR
+    '(integer 0 #.array-dimension-limit))
+
+;; FIXME_DOCS Publication Model TBD
+;; FIXME_DOCS Integration with site-local knowledgebases TBD

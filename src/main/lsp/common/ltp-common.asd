@@ -40,7 +40,10 @@
 (defsystem #:ltp-common
   :description
   "Generic utilities for programming with Common Lisp"
-  :version "1.0"
+  :version "2.0"
+
+  ;; FIXME update for MCi (deprecation) => [TL] LTP (adoption)
+
 ;;  :homepage "https://github.com/MetaCommunity/mci-cltl-utils"
 ;;  :license "https://github.com/MetaCommunity/mci-cltl-utils/blob/master/LICENSE"
   :components
@@ -61,16 +64,24 @@
           :depends-on ("common-stream" "common-macro" "common-condition"
                                        "common-lambda"))
    (:file "common-print"
+          ;; FIXME see remarks in common-packge.lisp
 	  :depends-on ("common-misc" "common-fn" "common-lambda"))
    (:file "common-opt"
+          ;; FIXME see remarks in common-packge.lisp
 	  :depends-on ("common-package" "common-macro"))
    (:file "common-seq"
-	  :depends-on ("common-opt" "common-lambda" "common-macro"))
+	  :depends-on ("common-macro"))
+   (:file "common-string"
+          :depends-on ("common-macro" "common-type" "common-misc"
+                                      "common-lambda"
+                                      "common-opt" ;; WITH-TAIL-RECURSION [TBD]
+                                      ))
    (:file "common-reader"
 	  :depends-on ("common-type" "common-stream"))
 
    (:file "common-lambda"
           :depends-on ("common-macro" ;; DEFCONSTANT*
+                       "common-seq" ;; NPUSHL
                        "common-condition" ;; SIMPLE-STYLE-WARNING
                        ))
    ))
