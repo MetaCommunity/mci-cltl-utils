@@ -11,7 +11,9 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:cl-user)
+
+(in-package #:ltp/common)
+
 
 (defpackage #:ltp/common/mop
   (:nicknames #:ltp.common.mop)
@@ -75,10 +77,12 @@
 ;; except for those shadowed by this package.
 
 (let* ((p-dst (find-package '#:ltp/common/mop))
-       (p-org (find-package '#:c2mop))
+       (p-org (find-package '#:closer-mop))
        (s (package-shadowing-symbols p-org))
        (x (make-array 0 :fill-pointer 0 :adjustable t)))
-  ;; NB: DO-EXTERNAL-SYMBOLS might seem somewhat misleading (??)
+  ;; NB: This does not use LTP/COMMON:PACKAGE-EXPORTS-SYMBOLS
+  ;;     as the iterator needs to perform some internal checking on each
+  ;;     symbol - FIXME update PACKAGE-EXPORTS-SYMBOLS to support such
   (do-external-symbols (xs p-org)
     (unless (or (find (the symbol xs) (the cons s)
                       :test #'eq)
