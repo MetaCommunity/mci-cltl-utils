@@ -79,7 +79,7 @@
 #+nil
 (eval-when ()
 
-(defclass singleton-1 ()
+(defclass singleton-1 (singleton)
   ((sl-a)
    (sl-b))
   (:metaclass singleton))
