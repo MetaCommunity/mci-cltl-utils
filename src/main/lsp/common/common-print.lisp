@@ -67,7 +67,7 @@
 (defgeneric (setf object-print-label) (new-value object))
 ;; FIXME DOCS [ACCESSOR] w/ #'OBJECT-PRINT-NAME, #'OBJECT-PRINT-LABEL
 
-#|
+#| Remarks - API Documentation
 
  The functions PRINT-NAME an PRINT-LABEL, and the functions
  OBJECT-PRINT-NAME and OBJECT-PRINT-LABEL, may be applied
@@ -81,11 +81,28 @@
  may dispatch to slot-value accessors methods specialized onto the
  PRETTY-PRINTABLE-OBJECT, unless the accessor methods are overridden.
 
- Typically, an object's print-label would represents a succinct
- identity of the object, whereas an object's print-name would
- represent a less succinct identity.
+ Typically:
 
- Examples
+ - An object's print-name (was: print-label) would represent a
+   succinct identity of the object.
+
+ - An object's print-label (was:  print-name) would represent a less
+   succinct identity of the object
+
+
+ It may be assumed that an object's print-name is readable in the Lisp
+ environment. However, an object's print-name may not in itself be
+ meaningful without an establishing sense of lexical context.
+
+ It may be assumed that an object's print-label may not be readable in
+ the Lisp environment. However, an object's print-label may serve to
+ illustrate values indicating of the object's containing lexical
+ context.
+
+----
+
+
+ Examples (FIXME: Needs update, after name/label ambiguity in the API design)
 
   OBJECT-PRINT-NAME PACKAGE returns the name of the package
 
