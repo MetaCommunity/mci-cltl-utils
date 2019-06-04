@@ -72,11 +72,36 @@
 ;; NB: Static dispatching w/ CLtL2+MOP standard methods
 
 
+;; FIXME: Err for any singleton slot definition with
+;; :allocation :instance specified during metaobject
+;; initialization
+
 #+nil
 (eval-when ()
 
 (defclass singleton-1 ()
-  ()
+  ((sl-a)
+   (sl-b))
   (:metaclass singleton-class))
+
+(finalize-inheritance (find-class 'singleton-1))
+
+
+(class-slots (find-class 'singleton-1))
+
+(class-direct-slots (find-class 'singleton-1))
+
+
+
+(defclass singleton-2 (singleton-1)
+  ((sl-c))
+  (:metaclass singleton-class))
+
+(finalize-inheritance (find-class 'singleton-2))
+
+(class-slots (find-class 'singleton-2))
+
+(class-direct-slots (find-class 'singleton-2))
+
 
 )
