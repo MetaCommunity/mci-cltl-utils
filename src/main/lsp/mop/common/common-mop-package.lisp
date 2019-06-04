@@ -11,13 +11,13 @@
 ;;
 ;;------------------------------------------------------------------------------
 
+(in-package #:cl-user)
+
 (defpackage #:ltp/common/mop
   (:nicknames #:ltp.common.mop)
   (:use  #:ltp/common
-         #:c2mop
-         #+LTP_PROTOTYPES #:bordeaux-threads
-         #:cl
-         )
+         #:closer-mop
+         #:cl)
   #+(or SBCL CMU CCL ALLEGRO) ;; NB: PCL
   (:shadowing-import-from
    #+SBCL #:SB-MOP
@@ -86,10 +86,21 @@
 ;; Make C2MOP symbols avaialble from this package,
 ;; except for those shadowed by this package.
 
-(let* ((p (find-package '#:ltp/common/mop))
-       (s (package-shadowing-symbols p)))
-  ;; NB: No package lock held, during this operation
-  (do-external-symbols (xs '#:c2mop)
-    (unless (find (the symbol xs) (the list s)
-                  :test #'eq)
-      (export s p))))
+(let* ((p-dst (find-package '#:ltp/common/mop))
+       (p-org (find-package '#:c2mop))
+       (s (package-shadowing-symbols p-org))
+       (x (make-array 0 :fill-pointer 0 :adjustable t)))
+  ;; NB: DO-EXTERNAL-SYMBOLS might seem somewhat misleading (??)
+  (do-external-symbols (xs p-org)
+    (unless (or (find (the symbol xs) (the cons s)
+                      :test #'eq)
+                (find (symbol-name xs) (the cons s)
+                      :key #'symbol-name
+                      :test #'string=))
+      ;; ^ FIXME that clause DNW (??)
+      #+NIL
+      (import xs p)
+      (vector-push-extend xs x)
+      ))
+  (export (coerce x 'list) p-dst))
+
