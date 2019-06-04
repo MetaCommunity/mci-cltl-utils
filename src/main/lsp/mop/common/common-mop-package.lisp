@@ -82,11 +82,9 @@
   (declare (type cons s))
   (labels ((not-shadowed-p (xs)
              (declare (type symbol xs))
-             (not
-              (or (find xs s :test #'eq)
-                  (find (the simple-string (symbol-name xs)) s
+             (not (find (the simple-string (symbol-name xs)) s
                         :key #'symbol-name
-                        :test #'string=)))))
+                        :test #'string=))))
     (let ((export
            (package-exports-symbols-if p-org #'not-shadowed-p)))
       (declare (type cons export))
