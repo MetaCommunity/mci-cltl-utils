@@ -15,8 +15,7 @@
 (in-package #:ltp/common)
 
 
-(defun* symbol-status (s) ; FIXME move to (new) common-sym.lisp
-
+(defun* symbol-status (s)
   ;; Ed. NB: used in PRINT-NAME (SYMBOL STREAM)
   ;; and in PRINT-LABEL (SYMBOL STREAM)
   (declare (type symbol s)
