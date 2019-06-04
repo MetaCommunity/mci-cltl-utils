@@ -60,16 +60,27 @@
 	  :depends-on ("common-package"))
    (:file "common-stream"
           :depends-on ("common-package" "common-lambda"))
-   (:file "common-misc"
-          :depends-on ("common-stream" "common-macro" "common-condition"
-                                       "common-lambda"))
-   (:file "common-print"
-          ;; FIXME see remarks in common-packge.lisp
-	  :depends-on ("common-misc" "common-fn" "common-lambda"))
+
+   ;; FIXME: common-misc, common-opt =move=> ltp-common-compile (??)
    (:file "common-opt"
-          ;; FIXME see remarks in common-packge.lisp
-	  :depends-on ("common-package" "common-macro"))
-   (:file "common-list" ;; NB was common-seq.lisp
+          ;; FIXME see remarks in common-package.lisp
+	  :depends-on ("common-package"))
+   (:file "common-misc"
+          :depends-on ("common-macro"
+                       "common-stream"
+                       "common-fn" ;; FUNCTION-DESIGNATOR
+                       "common-condition"
+                       "common-lambda"
+                       "common-opt" ;; WITH-OPTIMIZATION
+                       ))
+
+   (:file "common-print"
+          ;; FIXME see remarks in common-package.lisp
+	  :depends-on ("common-misc" "common-fn" "common-lambda"))
+
+
+   (:file "common-list"
+          ;; NB was common-seq.lisp, common-vec.lisp, common-string.lisp
 	  :depends-on ("common-macro"))
    (:file "common-vec"
 	  :depends-on ("common-macro" "common-lambda"))

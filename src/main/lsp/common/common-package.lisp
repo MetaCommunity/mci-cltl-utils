@@ -25,7 +25,8 @@
 
 (defpackage #:ltp/common
   (:nicknames #:ltp.common)
-  (:use #:asdf #:cl)
+  (:use #+NIL  #:asdf
+        #:cl)
 
   (:export
    #:format*
@@ -45,6 +46,7 @@
    #:simple-style-warning
    #:simple-program-error
    #:format-condition
+   ;; - FIXME: Move the following into supplemental system definitions
    #:entity-condition ;; NB is not a cell-error
    #:entity-condition-name
    #:entity-not-found ;; NB see also container-condition
@@ -70,20 +72,17 @@
    #:when-slot-init
 
    #:stream-designator
-   #:format-control ;; NB CAUTION [...]
+   #:format-control
 
    #:defconstant*
 
    #:with-optimization ;; FIXME see also WITH-COMPILATION-UNIT (SBCL, ...)
-   #:with-tail-recursion ;; FIXME KRS/KB/TBD (proto used in SPLIT-STRING)
-
-   #:compilation-condition
-   #:compilation-warning
-   #:simple-compilation-warning
-   #:compilation-error
-   #:simple-compilation-error
+   #:with-tail-recursion ;; [...]
 
    #:symbol-status
+
+   #:package-designator
+   #:package-exports-symbols
 
    #:defun*
    ;; #:labels*
@@ -102,14 +101,16 @@
    #:split-string-1
    #:split-string
 
-   ;; FIXME "Sort out" the following, with regards to differing proto forms
-   #:compilation-condition
-   #:compilation-condition-function-name
-   #:compilation-condition-lambda-form
-   #:warnings-during-compile
-   #:errors-during-compile
+   #:compile-condition
+   #:compile-warning
+   #:compilation-error
+   #:function-compile-condition
+   #:fun-compile-condition-function-name
+   #:fun-compile-condition-lambda-form
+   #:warnings-during-function-compile
+   #:errors-during-function-compile
    #:compile*
-   #:compile** ;; FIXME - need unified COMPILE*/COMPILE** condition semantics
+   #:compile**
 
 
    ;; FIXME: Move the following to another system - ltp-parse e.g
@@ -132,5 +133,6 @@
    #:print-hash-table
    #:associative-object
    #:object-name
+
    ))
 
