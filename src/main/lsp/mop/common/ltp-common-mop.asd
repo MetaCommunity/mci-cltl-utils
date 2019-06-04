@@ -37,6 +37,7 @@
           :depends-on ("common-mop-package"))
 
    #+LTP_PROTOTYPES
-   (:file "aclass" ;; FIXME: move this code to the LTP 'sandbox' space
+   (:file "aclass"
+          ;; source file moved to ../aclass/
           :depends-on ("mop-utils"))
    ))
