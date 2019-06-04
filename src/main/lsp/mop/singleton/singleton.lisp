@@ -30,18 +30,33 @@
 
 (defclass singleton-slot-definition (standard-slot-definition)
   ;; TBD: SLOT-DEFINITION (??)
-  ())
+  ()
+  (:default-initargs
+   :allocation :class))
 
 
 (defclass singleton-direct-slot-definition
     (singleton-slot-definition standard-direct-slot-definition)
+  ;; NB: These will extend the standard MOP classes
+  ;; though the allocation meta-slot will be by-in-large
+  ;; unused here - assumed to be, in effect, always :CLASS
   ())
 
+
+(defmethod direct-slot-definition-class ((class singleton-class)
+                                         &rest initargs)
+  (find-class 'singleton-direct-slot-definition))
 
 
 (defclass singleton-effective-slot-definition
     (singleton-slot-definition standard-effective-slot-definition)
   ())
+
+
+(defmethod effective-slot-definition-class ((class singleton-class)
+                                            &rest initargs)
+  (find-class 'singleton-effective-slot-definition))
+
 
 ;; MOP Interop ...
 
@@ -50,3 +65,5 @@
 ;;   the Lisp Environment
 ;;
 ;; - Use for internal representation of ABIs
+
+;; NB: Static dispatching w/ CLtL2+MOP standard methods
