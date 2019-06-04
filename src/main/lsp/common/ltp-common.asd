@@ -61,9 +61,7 @@
    (:file "common-stream"
           :depends-on ("common-package" "common-lambda"))
 
-   ;; FIXME: common-misc, common-opt =move=> ltp-common-compile (??)
    (:file "common-opt"
-          ;; FIXME see remarks in common-package.lisp
 	  :depends-on ("common-package"))
    (:file "common-misc"
           :depends-on ("common-macro"
@@ -79,7 +77,6 @@
                        ))
 
    (:file "common-print"
-          ;; FIXME see remarks in common-package.lisp
 	  :depends-on ("common-misc"
                        "common-fn"
                        "common-lambda"
