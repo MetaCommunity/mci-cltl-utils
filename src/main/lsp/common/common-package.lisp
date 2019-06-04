@@ -11,22 +11,13 @@
 ;;
 ;;------------------------------------------------------------------------------
 ;;
-;; DESCRIPTION
-;;
-;; Conventional `defpackage'
-;;
-;; SEE ALSO
-;;
-;; [ANSI CL]
-;;
 
 (in-package #:cl-user)
 
 
 (defpackage #:ltp/common
   (:nicknames #:ltp.common)
-  (:use #+NIL  #:asdf
-        #:cl)
+  (:use #:cl)
 
   (:export
    #:format*
