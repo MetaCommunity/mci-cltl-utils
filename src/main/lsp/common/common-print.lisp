@@ -50,7 +50,8 @@
 ;; -- util forms
 
 
-(defun* symbol-status (s)
+(defun* symbol-status (s) ; FIXME move to (new) common-sym.lisp
+
   ;; Ed. NB: used in PRINT-NAME (SYMBOL STREAM)
   ;; and in PRINT-LABEL (SYMBOL STREAM)
   (declare (type symbol s)
