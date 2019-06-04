@@ -78,8 +78,10 @@
 
  For an object of a type that is a subclass of PRETTY-PRINTABLE-OBJECT,
  the functions OBJECT-PRINT-NAME and OBJECT-PRINT-LABEL, respectively,
- may dispatch to slot-value accessors methods specialized onto the
- PRETTY-PRINTABLE-OBJECT, unless the accessor methods are overridden.
+ may dispatch to slot-value accessor methods specialized onto
+ PRETTY-PRINTABLE-OBJECT, unless the respective methods are overridden
+ for any extending class.
+
 
  Typically:
 
