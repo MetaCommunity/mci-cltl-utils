@@ -78,13 +78,6 @@ method, then that next method will be evaluated before the
 format-control and format-arguments for the CONDITION are applied for
 output to the stream. WA TERPRI call will be evaluted after the next
 method has returned, and before the direct format procedure in this method"
-    ;; FIXME_DOCS describe, illustrate the rationale for the method
-    ;; dispatching behavior denoted in the docstring - e.g albeit
-    ;; trivially, "It's not a frame stack," vis a vis serial backtrace
-    ;; output
-    (when (next-method-p)
-      (call-next-method)
-      (terpri stream))
     (apply #'format (the stream stream)
            (simple-condition-format-control condition)
            (simple-condition-format-arguments condition)))
@@ -93,12 +86,13 @@ method has returned, and before the direct format procedure in this method"
            "Ensure FINISH-OUTPUT is called onto STREAM"
            (finish-output stream)))
 
-#+NIL ;; Test for print function
+#+NIL ;; Test for format-condition TBD
 (error 'simple-condition :format-control "Random event ~S at ~S"
        :format-arguments (list (gensym "e-")
                                (get-universal-time)))
 
-;; -
+
+;; - FIXME: Move the following into supplemental system definitions
 
 (define-condition entity-condition ()
   ;; FIXME_DOCS note that this is not `cell-error'
