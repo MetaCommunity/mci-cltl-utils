@@ -131,7 +131,7 @@
    #:pretty-printable-object
    #:format-label
    #:print-hash-table
-   #:associative-object
+   ;; #:associative-object ;; moved to ../mop/aclass/
    #:object-name
 
    ))
