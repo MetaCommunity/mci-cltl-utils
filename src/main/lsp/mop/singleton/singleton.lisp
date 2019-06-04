@@ -24,11 +24,11 @@
 
 
 
-(defclass singleton-class (standard-class)
+(defclass singleton (standard-class)
   ())
 
 
-(validate-class singleton-class)
+(validate-class singleton)
 
 
 (defclass singleton-slot-definition (standard-slot-definition)
@@ -46,7 +46,7 @@
   ())
 
 
-(defmethod direct-slot-definition-class ((class singleton-class)
+(defmethod direct-slot-definition-class ((class singleton)
                                          &rest initargs)
   (find-class 'singleton-direct-slot-definition))
 
@@ -56,7 +56,7 @@
   ())
 
 
-(defmethod effective-slot-definition-class ((class singleton-class)
+(defmethod effective-slot-definition-class ((class singleton)
                                             &rest initargs)
   (find-class 'singleton-effective-slot-definition))
 
@@ -82,7 +82,7 @@
 (defclass singleton-1 ()
   ((sl-a)
    (sl-b))
-  (:metaclass singleton-class))
+  (:metaclass singleton))
 
 (finalize-inheritance (find-class 'singleton-1))
 
@@ -95,7 +95,7 @@
 
 (defclass singleton-2 (singleton-1)
   ((sl-c))
-  (:metaclass singleton-class))
+  (:metaclass singleton))
 
 (finalize-inheritance (find-class 'singleton-2))
 
