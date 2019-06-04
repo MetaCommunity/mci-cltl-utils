@@ -105,8 +105,10 @@
    #:compile**
 
 
-   ;; FIXME: Move the following to another system - ltp-parse e.g
-   ;; Note the fairly XML-oriented nature of the terms, here
+   ;; FIXME: Move the following to another system - ltp-common-parse e.g
+   ;; Note the fairly XML-oriented nature of the terms, here.
+   ;;
+   ;; reuse in ltp-common-index
    #:character-code
    #:code-in-range
    #:code=
@@ -115,7 +117,7 @@
    #:read-name-string
    #:read-characters
 
-   ;; FIXME: Move the following to another system - ltp-pprint e.g
+   ;; FIXME: Move the following to another system - ltp-common-pprint e.g
    #:print-name
    #:print-label
    #:object-print-name
@@ -124,7 +126,7 @@
    #:format-label
    #:print-hash-table
    ;; #:associative-object ;; moved to ../mop/aclass/
-   #:object-name
+   ;; #:object-name
 
    ))
 

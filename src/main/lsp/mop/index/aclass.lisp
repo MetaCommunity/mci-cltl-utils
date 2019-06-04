@@ -46,12 +46,28 @@
 ;; known to be of type SYMBOL (FIXME: Cheap decision)
 
 (defmethod print-name ((object associative-object) (stream stream))
+  ;; FIXME Consider dispatching on *PRINT-ESCAPE* for PRINT-NAME and/or
+  ;; PRINT-LABEL methods
+  ;;
+  ;; Note that implementations of RESTART-BIND and RESTART-CASE forms
+  ;; may also disptch on *PRINT-ESCAPE*
+  ;;
+  ;; Note also that implementations onto DEFINE-CONDITION may dispatch
+  ;; on *PRINT-ESCAPE* as concerning implementations of CONDITION
+  ;; :REPORT functions
   (princ (object-name object) stream))
 
 (defmethod print-label ((object associative-object) (stream stream))
   ;; NB: Applications inheriting ASSOCIATIVE-OBJECT should specialize
   ;; at least this method
   (princ (object-name object) stream))
+
+
+;; Redundant onto OBJECT-PRINT-NAME, OBJECT-PRINT-LABEL accessors
+#+NIL
+(defgeneric object-name (object))
+#+NIL
+(defgeneric (setf object-name) (new-value object))
 
 )
 

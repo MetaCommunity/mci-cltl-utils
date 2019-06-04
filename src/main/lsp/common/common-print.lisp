@@ -50,9 +50,11 @@
 ;;
 ;; Note the class PRETTY-PRINTABLE-OBJECT
 ;;
+
+
 (defgeneric (setf object-print-name) (new-value object))
 (defgeneric (setf object-print-label) (new-value object))
-
+;; FIXME DOCS [ACCESSOR] w/ #'OBJECT-PRINT-NAME, #'OBJECT-PRINT-LABEL
 
 #|
 
@@ -114,6 +116,10 @@
  conventional stream-io proedures, in CLIM presentation methods, and
  in other CLIM stream output procedures.
 
+
+----
+
+FORMAT-LABEL ....
 
 |#
 
@@ -209,6 +215,8 @@
 
 
 (defgeneric object-print-name (object)  ;; FIXME: rename to OBJECT-PRINT-NAME
+  ;; FIXME DOCS [ACCESSOR]
+
   ;; FIXME: #I18N
 
   ;; FIXME: Generic function FTYPE declarations
@@ -243,6 +251,8 @@ See also: `object-print-label'")
 ;; = ":TEST"
 
 (defgeneric object-print-label (object) ;; FIXME: rename to OBJECT-PRINT-LABEL
+  ;; FIXME DOCS [ACCESSOR]
+
   ;; FIXME: This updates some qualities of the dobelle-app source tree
 
   ;; FIXME: Generic function FTYPE declarations
@@ -299,7 +309,7 @@ See also: `object-print-name'")
     :type simple-string
     :accessor object-print-name))
    (:documentation
-    "Mixin class for OBJECT-PRINT-LABEL, OBJECT-PRINT-NAME functions.
+    "Protocol class for OBJECT-PRINT-LABEL, OBJECT-PRINT-NAME accessors
 
 See also:
 * `format-label'
@@ -361,9 +371,3 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
     (print-hash-table asdf/system-registry:*registered-systems*))
   )
 
-
-(defgeneric object-name (object))
-(defgeneric (setf object-name) (new-value object))
-;; ^ NB: Previously defined as corresponding to ASSOCIATIVE-OBJECT
-;;
-;; See also ../mop/aclass/
