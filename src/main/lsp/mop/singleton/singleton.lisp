@@ -28,6 +28,9 @@
   ())
 
 
+(validate-class singleton-class)
+
+
 (defclass singleton-slot-definition (standard-slot-definition)
   ;; TBD: SLOT-DEFINITION (??)
   ()
@@ -67,3 +70,13 @@
 ;; - Use for internal representation of ABIs
 
 ;; NB: Static dispatching w/ CLtL2+MOP standard methods
+
+
+#+nil
+(eval-when ()
+
+(defclass singleton-1 ()
+  ()
+  (:metaclass singleton-class))
+
+)
