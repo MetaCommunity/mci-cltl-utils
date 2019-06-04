@@ -22,24 +22,30 @@
   '(cons (eql lambda) (cons list t)))
 
 (deftype function-designator ()
+  ;; NB: Using TYPEP as an argument parser/assert for CONS subtypes
   '(or symbol function
     setf-function-designator
     lambda-function-designator))
 
-(defun compute-function (form)
-  "Evaluate FORM as a function designator, returning the function designated by FORM.
+(defun* compute-function (form)
+"Evaluate FORM as a function designator, returning the function
+designated by FORM.
 
 Valid Syntax of FORM:
-* <SYMBOL>, denoting a function name
-* (SETF <SYMBOL>), denoting a funtional SETF name
+* <SYMBOL> denoting a function name
+* (SETF <SYMBOL>) denoting a funtional SETF name
 * (LAMBDA () <BODY>) as a list, denoting an anonymous function
-* FUNCTION, denoting itself"
+* <FUNCTION> denoting itself
+
+If FORM is a LAMBDA form, this function will return the functional
+representation of FORM.
+
+See also: COMPILE*, COMPILE**"
   (declare (type function-designator form)
            (values function &optional))
   (etypecase form
     (symbol (values (fdefinition form)))
-    (function
-     (values form))
+    (function (values form))
     (cons
      (let ((type (car form)))
        (ecase type
@@ -48,14 +54,22 @@ Valid Syntax of FORM:
          (lambda
           (values (coerce form 'function))))))))
 
-;; Instance tests:
+;;;; Instance Tests
+;;
 ;; (compute-function 'print)
 ;; (compute-function (quote (lambda () (list 1 2 3))))
-;; (compute-function '(setf gethash)) ;; implementation-dependent
+;; (compute-function '(setf gethash))
 ;; (compute-function #'function)
-;; Instance "Fail Tests"
+;;
+;; (compute-function (quote (lambda () (funcall (make-symbol "%fail")))))
+;; (compute-function `(lambda ,(values)))
+;;
+;;;; Instance "Fail Tests"
+;;
 ;; (compute-function (gentemp))
 ;; (compute-function (list 'setf (gentemp)))
+;; (compute-function (list 'unknown 1 2 3))
+;; (compute-function (quote (lambda syntax-error)))
 
 
 (defmacro with-safe-frefs (specs &body body)
@@ -64,7 +78,8 @@ Valid Syntax of FORM:
   ;;; forward reference to a function, without trying to intern a symbol
   ;;; in a package as yet undefined.
 
-  "Evaluate BODY in a lexiccal environment in which each element of SPECS denotes a function
+  "Evaluate BODY in a lexiccal environment in which each element of SPECS
+denotes a function.
 
 Syntax:
 >    WITH-SAFE-FREFS ({SPECIFIER}*) {DECLARATION} {FORM}*
@@ -73,16 +88,18 @@ Syntax:
 
 >    DECLARATION, FORM: Like as in [CLHS]
 
-A _safe function reference_ denotes a function name with optional pacakge specifier, as well as a symbol to which the function denoted by the function name is to be bound when the FORMS are evaluated.
+A _safe function reference_ denotes a set of a function name, with an
+optional pacakge specifier, and a symbol to which the function denoted by
+the function name is to be bound when the FORMS are evaluated.
 
 Example:
 
     (with-safe-frefs
         ((l #:list #:cl)
-         (c #:compute-function))
-      (funcall l c 2))
-    => "
-  ;; NOTE : "Not applicable" for (SETF FOO) function names
+         (c #:identity))
+      (funcall c (funcall l 2)))
+    => (2)"
+  ;; FIXME N/A for (SETF FOO) function names
   (let ((%s (gentemp "%s-"))
 	(%foundp (gentemp "%foundp-")))
     (flet ((s-name (s)
@@ -137,7 +154,7 @@ Example:
   (funcall l (funcall c 'expt) 2))
 ))
 
-(defun function-name (fn)
+(defun* function-name (fn)
   (declare (type function-designator fn)
            (values function-designator))
   (multiple-value-bind (lambda closure-p name)
