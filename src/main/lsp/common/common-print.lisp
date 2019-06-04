@@ -398,28 +398,6 @@ If AT-P is non-nil, PRINC to STREAM: the value of OBJECT-PRINT-LABEL applied ont
 
 (defgeneric object-name (object))
 (defgeneric (setf object-name) (new-value object))
-
-(defclass associative-object ()
-  ;; FIXME - used in AFFTA, may be of some limited use in any "elsewhere"
-  ;;
-  ;; see also: ../mop/aclass.lisp
-  ;;
-  ;; FIXME - clarify the design of this. see also #<system:ltp-mop-utils:aclass.lisp>
-  ((name
-    :accessor object-name
-    :type symbol
-    ;; ED. NB: Note that this proposes a slot with type SYMBOL as an "Index Key" slot
-    :initarg :name))
-  (:documentation "Prototype"))
-
-;; Ed. NB: These generalized methods were defined to use PRINC, in lieu
-;; of making nested calls to PRINT-NAME or PRINT-LABEL for an object-name
-;; known to be of type SYMBOL (FIXME: Cheap decision)
-
-(defmethod print-name ((object associative-object) (stream stream))
-  (princ (object-name object) stream))
-
-(defmethod print-label ((object associative-object) (stream stream))
-  ;; NB: Applications inheriting ASSOCIATIVE-OBJECT should specialize
-  ;; at least this method
-  (princ (object-name object) stream))
+;; ^ NB: Previously defined as corresponding to ASSOCIATIVE-OBJECT
+;;
+;; See also ../mop/aclass/

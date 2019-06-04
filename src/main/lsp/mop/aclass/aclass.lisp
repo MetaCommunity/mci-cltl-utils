@@ -13,16 +13,47 @@
 
 (in-package #:ltp/common/mop)
 
+;; Previously defined in ../common/
 
 ;; Ed. NB: This source code was designed in a manner complimentary to
 ;; a definition of "Indexed Test" classes for the AFFTA system.
 ;;
 ;; This also corresponds to the definition of the ASSOCIATIVE-OBJECT
-;; class, presently defined (FIXME) in ../utils/print-utils.lisp
+;; class, presently defined (FIXME) in ../../common/common-print.lisp
 ;;
 ;; The class SIMPLE-ASSOCIATIVE-INDEX itself is used in the definition
 ;; of AFFTA:TEST-SUITE
 
+(eval-when ()
+
+;; prototype defs from ../../common/common-print.lisp
+
+(defclass associative-object ()
+  ;; FIXME - used in AFFTA, may be of some limited use in any "elsewhere"
+  ;;
+  ;; see also: ../mop/aclass/aclass.lisp
+  ;;
+  ;; FIXME - clarify the design of this. see also #<system:ltp-mop-utils:aclass.lisp>
+  ((name
+    :accessor object-name
+    :type symbol
+    ;; ED. NB: Note that this proposes a slot with type SYMBOL as an "Index Key" slot
+    :initarg :name))
+  (:documentation "Prototype"))
+
+;; Ed. NB: These generalized methods were defined to use PRINC, in lieu
+;; of making nested calls to PRINT-NAME or PRINT-LABEL for an object-name
+;; known to be of type SYMBOL (FIXME: Cheap decision)
+
+(defmethod print-name ((object associative-object) (stream stream))
+  (princ (object-name object) stream))
+
+(defmethod print-label ((object associative-object) (stream stream))
+  ;; NB: Applications inheriting ASSOCIATIVE-OBJECT should specialize
+  ;; at least this method
+  (princ (object-name object) stream))
+
+)
 
 ;;; % Associative Index
 
