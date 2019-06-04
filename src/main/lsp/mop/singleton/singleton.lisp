@@ -24,7 +24,7 @@
 
 
 
-(defclass singleton-class (standard-object standard-class)
+(defclass singleton-class (standard-class)
   ())
 
 
