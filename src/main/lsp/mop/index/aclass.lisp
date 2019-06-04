@@ -15,14 +15,31 @@
 
 ;; Previously defined in ../common/
 
-;; Ed. NB: This source code was designed in a manner complimentary to
-;; a definition of "Indexed Test" classes for the AFFTA system.
+;; Remarks - API Design - Synopsis
+;;
+;; - This generalizes a concept of a contextually unique object name,
+;;   towards using such object name as a symbolic classifier. This is
+;;   for the purpose of defining a portable, generalized API for object
+;;   containers, container iterators, and operations onto contextual
+;;   object namespace/name definitions
+;;
+;; - cf LTP/COMMON:OBJECT-PRINT-NAME
+;;
+;; - In albeit a broad regard, an object index may be contrasted to a
+;;   formal data directory, data table system, or more generic data
+;;   records system.
+
+;; Remarks - API Design - Provenance
+;;
+;; This source code was designed in a manner complimentary to a
+;; definition of a set of "Indexed Test" classes for the AFFTA system.
 ;;
 ;; This also corresponds to the definition of the ASSOCIATIVE-OBJECT
-;; class, presently defined (FIXME) in ../../common/common-print.lisp
+;; class, previously in ../../common/common-print.lisp - whose source
+;; code is now maintained, below.
 ;;
-;; The class SIMPLE-ASSOCIATIVE-INDEX itself is used in the definition
-;; of AFFTA:TEST-SUITE
+;; The class SIMPLE-ASSOCIATIVE-INDEX itself has been used in the
+;; definition of AFFTA:TEST-SUITE, ....
 
 (eval-when ()
 

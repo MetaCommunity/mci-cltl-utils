@@ -15,8 +15,9 @@
 ;; here. Refer to subsequent commentary, this file
 
 
-;; FIXME_DESIGN - Reconsider the ad hoc design of this API. Considerations:
-;; - 'Object Label' as a short-form Object Identity string
+;; Remarks - API Design - Synopsis
+;;
+;; - 'Object Name' as a short-form Object Identity string (was: Object Label)
 ;;
 ;;    - principally designed for use with "The normal REPL printer" as
 ;;      in regards to the "Name" part of object identity printouts for
@@ -27,16 +28,26 @@
 ;;      managability to the same, principally for the Common Lisp
 ;;      systems developer (in FOSS environments)
 ;;
-;; - 'Object Name' as a long-form Object Identity string
+;;    - note a generic analogy onto CL:RESTART names, vis a vis
+;;      RESTART :REPORT functions
 ;;
-;;    - principally designed for use in "Pretty Printing" applications,
-;;      in console and desktop environments
+;; - 'Object Label' as a long-form Object Identity string (was: Object Name)
 ;;
-;; - "Pretty Printer" as a novel concept (Shoutout to the Multics developers)
+;;    - principally designed for use in "Pretty Printing" forms, in
+;;      console (LPC, LSRV) and desktop (LPC) environments. May be of some
+;;      limited use for system logging streams, in system service
+;;      applications (LSRV). TBD: Applicability for mobile Lisp
+;;      applications (LMBL)
 ;;
-;;    - principally towards utilizing the 'Object Name' of an object as  "When Pretty Printing".
+;; - Remarks - "Pretty Printer" as a novel concept in interactive systems
 ;;
-;;      - note the ANSI CL/CLtL2 API for Pretty Printing, namely concerning global variables designed for "The Pretty Printer"
+;;    - shoutouts to the original Multics developers & multicians.org
+;;
+;;    - principally towards utilizing the 'Object Label' of an object as
+;;      "When Pretty Printing".
+;;
+;;      - note the ANSI CL/CLtL2 API for Pretty Printing, namely
+;;       concerning global variables designed for "The Pretty Printer"
 ;;
 ;;    - furthermore towards "Pretty Printing" in graphical desktop environments.
 ;;
