@@ -47,41 +47,6 @@
 (in-package #:ltp/common)
 
 
-;; -- util forms
-
-
-(defun* symbol-status (s) ; FIXME move to (new) common-sym.lisp
-
-  ;; Ed. NB: used in PRINT-NAME (SYMBOL STREAM)
-  ;; and in PRINT-LABEL (SYMBOL STREAM)
-  (declare (type symbol s)
-	   (values symbol (or package null)))
-  (let ((pkg (symbol-package s)))
-    (cond
-      (pkg
-       (multiple-value-bind (s status)
-	   (find-symbol (symbol-name s)
-			pkg)
-	 (declare (ignore s))
-	 (values status pkg)))
-      (t (values nil nil)))))
-
-;; (symbol-status 's)
-;; => :INTERNAL, #<PACKAGE "LTP/COMMON">
-
-;; (symbol-status 'print)
-;; => :EXTERNAL, #<PACKAGE "COMMON-LISP">
-
-;; (symbol-status 'ltp/common::print)
-;; => :EXTERNAL, #<PACKAGE "COMMON-LISP">
-
-;; (symbol-status '#:foo)
-;; => NIL, NIL
-
-
-;; -- main forms
-
-;; NB: These generic functions might be typically used for slot value writer methods.
 ;;
 ;; Note the class PRETTY-PRINTABLE-OBJECT
 ;;

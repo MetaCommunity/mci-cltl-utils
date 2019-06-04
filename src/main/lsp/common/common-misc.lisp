@@ -243,20 +243,3 @@ In other instances, the compiled function is returned."
 ;;;
 ;; (compile* nil '(lambda () unbound-foo))
 
-
-
-
-(deftype package-designator ()
-  '(or symbol string package))
-;; FIXME move ot common-sym.lisp (new) / see also SYMBOL-STATUS
-(defun* package-exports-symbols (pkg)
-  (declare (type package-designator pkg)
-           (values list &optional))
-  (let ((buffer
-         (make-array 8 :fill-pointer 0)))
-    (declare (type (array t (*)) buffer))
-    (do-external-symbols (s pkg  (coerce buffer 'list))
-      (vector-push-extend s buffer))))
-
-;; Test form (ad hoc):
-;; (package-exports-symbols '#:c2mop)

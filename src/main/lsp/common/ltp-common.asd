@@ -74,9 +74,17 @@
                        "common-opt" ;; WITH-OPTIMIZATION
                        ))
 
+   (:file "common-sym"
+          :depends-on ("common-lambda"
+                       ))
+
    (:file "common-print"
           ;; FIXME see remarks in common-package.lisp
-	  :depends-on ("common-misc" "common-fn" "common-lambda"))
+	  :depends-on ("common-misc"
+                       "common-fn"
+                       "common-lambda"
+                       "common-sym" ;; SYMBOL-STATUS
+                       ))
 
 
    (:file "common-list"
