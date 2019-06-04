@@ -47,14 +47,38 @@
 (deftype package-designator ()
   '(or symbol string package))
 
-(defun* package-exports-symbols (pkg)
+
+(declaim (inline package-exports-symbols-if
+                 package-exports-symbols))
+
+
+(defun* package-exports-symbols-if (pkg filter)
   (declare (type package-designator pkg)
+           (type function-designator filter)
            (values list &optional))
   (let ((buffer
-         (make-array 8 :fill-pointer 0)))
-    (declare (type (array t (*)) buffer))
-    (do-external-symbols (s pkg  (coerce buffer 'list))
-      (vector-push-extend s buffer 8))))
+         (make-array 8 :fill-pointer 0))
+        (%filter (compute-function filter)))
+    (declare (type (array t (*)) buffer)
+             (type function %filter))
+    (do-external-symbols (s pkg (coerce buffer 'list))
+      (when (funcall filter s)
+        (vector-push-extend s buffer 8)))))
 
-;; Test form (ad hoc):
+
+(defun* package-exports-symbols (pkg &optional filter)
+  (declare (type package-designator pkg)
+           (type (or function-designator null) filter)
+           (values list &optional))
+  (cond
+    (filter
+     (package-exports-symbols-if pkg filter))
+    (t
+     (let ((buffer
+            (make-array 8 :fill-pointer 0)))
+       (declare (type (array t (*)) buffer))
+       (do-external-symbols (s pkg  (coerce buffer 'list))
+         (vector-push-extend s buffer 8))))))
+
+
 ;; (package-exports-symbols '#:c2mop)

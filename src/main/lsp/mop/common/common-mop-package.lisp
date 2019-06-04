@@ -78,21 +78,17 @@
 
 (let* ((p-dst (find-package '#:ltp/common/mop))
        (p-org (find-package '#:closer-mop))
-       (s (package-shadowing-symbols p-org))
-       (x (make-array 0 :fill-pointer 0 :adjustable t)))
-  ;; NB: This does not use LTP/COMMON:PACKAGE-EXPORTS-SYMBOLS
-  ;;     as the iterator needs to perform some internal checking on each
-  ;;     symbol - FIXME update PACKAGE-EXPORTS-SYMBOLS to support such
-  (do-external-symbols (xs p-org)
-    (unless (or (find (the symbol xs) (the cons s)
-                      :test #'eq)
-                (find (symbol-name xs) (the cons s)
-                      :key #'symbol-name
-                      :test #'string=))
-      ;; ^ FIXME that clause DNW (??)
-      #+NIL
-      (import xs p)
-      (vector-push-extend xs x)
-      ))
-  (export (coerce x 'list) p-dst))
-
+       (s (package-shadowing-symbols p-org)))
+  (declare (type cons s))
+  (labels ((not-shadowed-p (xs)
+             (declare (type symbol xs))
+             (not
+              (or (find xs s :test #'eq)
+                  (find (the simple-string (symbol-name xs)) s
+                        :key #'symbol-name
+                        :test #'string=)))))
+    (let ((export
+           (package-exports-symbols-if p-org #'not-shadowed-p)))
+      (declare (type cons export))
+      (export export p-dst)
+      (values export))))

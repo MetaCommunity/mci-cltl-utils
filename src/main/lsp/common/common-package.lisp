@@ -74,6 +74,7 @@
 
    #:package-designator
    #:package-exports-symbols
+   #:package-exports-symbols-if
 
    #:defun*
    ;; #:labels*
