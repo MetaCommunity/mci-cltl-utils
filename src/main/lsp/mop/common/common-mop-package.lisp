@@ -46,11 +46,6 @@
    #:validate-class
    )
 
-  ;; TBD: Does the return value for the following form differ per
-  ;; implementation? [A Review of C2MOP]
-  ;;
-  ;;   (package-shadowing-symbols (find-package '#:c2mop))
-
   #+LTP_PROTOTYPES
   (:export
    #:associative-index
