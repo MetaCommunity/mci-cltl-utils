@@ -31,26 +31,14 @@
    #:standard-class
    )
   #+(or SBCL CMU CCL ALLEGRO)
-  ;; NB: C2MOP shadows MOP implementations.
-  ;;
-  ;;     Possible issue: When shadowing a MOP implementaion, an
-  ;;     application may also effectively be shadowing any compiler
-  ;;     optimizaitons, such as may be defined in a manner specific to
-  ;;     the individual MOP implementation.
-  ;;
-  ;;
-  ;;     In CMUCL, SBCL, CCl, and Allegro Lisp implementations, this
-  ;;     system will endeavor to un-shadow the underyling MOP
-  ;;     implementation.
-  ;;
+  ;; un-shadow symbols shadowed by C2MOP
   (:export
-   #:validate-superclass ;; PCL
+   #:validate-superclass ;; NB PCL
    #:standard-generic-function
    #:defmethod
    #:defgeneric
    #:standard-class
    )
-
 
   (:export
    #:validate-class
