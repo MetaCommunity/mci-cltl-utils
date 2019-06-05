@@ -61,7 +61,7 @@
     (declare (type (array t (*)) buffer)
              (type function %filter))
     (do-external-symbols (s pkg (coerce buffer 'list))
-      (when (funcall filter s)
+      (when (funcall %filter s)
         (vector-push-extend s buffer 8)))))
 
 
