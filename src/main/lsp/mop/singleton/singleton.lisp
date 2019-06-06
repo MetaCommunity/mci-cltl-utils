@@ -18,7 +18,11 @@
   (:nicknames #:ltp.common.mop.singleton)
   (:use #:ltp/common/mop
         #:ltp/common
-        #:cl))
+        #:cl)
+  (:export
+   #:singleton
+   #:defsingleton
+   ))
 
 (in-package #:ltp/common/mop/singleton)
 
@@ -31,6 +35,34 @@
 
 (validate-class singleton)
 
+
+(defmacro defsingleton (name (&rest superclasses)
+                                slots
+                        &rest params)
+  (labels ((compute-metaclass (params)
+             (let ((meta-n (position :metaclass
+                                     (the list params)
+                                     :test #'eq
+                                     :key #'car)))
+               (cond
+                 (meta-n
+                  (let* ((meta-prop
+                          (nth meta-n params))
+                         (params-adj
+                          (remove meta-prop params
+                                  :test #'wq)))
+                    (values meta-prop params-adj)))
+                 (t
+                  (values (list :metaclass 'singleton)
+                          params))))))
+    (let ((%superclasses (append superclasses
+                                 (list 'singleton))))
+      (multiple-value-bind (%metaclass %params)
+          (compute-metaclass params)
+        `(defclass ,name ,%superclasses
+           ,slots
+           ,%metaclass
+           ,@%params)))))
 
 ;; FIXME: Automatically finalize SINGLETON after initialization.
 ;;
@@ -120,10 +152,21 @@
 #+nil
 (eval-when ()
 
-(defclass singleton-1 (singleton)
-  ((sl-a)
-   (sl-b))
-  (:metaclass singleton))
+(defsingleton singleton-1 ()
+  ((sl-1)
+   (sl-b)))
+
+(let ((c (find-class 'singleton-1)))
+  (finalize-inheritance c)
+  (multiple-value-bind (st-1 st-2)
+      (subtypep c 'singleton)
+    (multiple-value-bind (mt-1 mt-2)
+        (subtypep (class-of c) 'singleton)
+      (values st-1 st-2
+              mt-1 mt-2))))
+
+;; => T, T, T, T
+
 
 (finalize-inheritance (find-class 'singleton-1))
 
@@ -134,9 +177,8 @@
 
 
 
-(defclass singleton-2 (singleton-1)
-  ((sl-c))
-  (:metaclass singleton))
+(defsingleton singleton-2 (singleton-1)
+  ((sl-c)))
 
 (finalize-inheritance (find-class 'singleton-2))
 
