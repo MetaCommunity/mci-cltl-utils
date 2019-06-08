@@ -33,11 +33,10 @@
                )
   :components
   ((:file "common-mop-package") ;; c2mop integration
+
    (:file "mop-utils" ;; validate-[super]class (convenience macro)
           :depends-on ("common-mop-package"))
 
-   #+LTP_PROTOTYPES
-   (:file "aclass"
-          ;; source file moved to ../aclass/
-          :depends-on ("mop-utils"))
+   (:file "finalize"
+          :depends-on ("common-mop-package"))
    ))

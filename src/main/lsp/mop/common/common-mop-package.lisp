@@ -40,6 +40,23 @@
    #:defmethod
    #:defgeneric
    #:standard-class
+
+   ;; - class finalization support
+   ;; NB: used in the SINGLETON definition
+   #:class-finalization-condition
+   #:class-finalization-condition-class
+
+   #:class-finalization-error
+   #:simple-class-finalization-error
+
+   #:class-finalization-warning
+
+   #:class-finalization-style-warning
+   #:simple-class-finalization-style-warning
+
+   #:finalize-reachable
+   #:finalize-reachable-subclass
+   #:finalize-reachable-superclass
    )
 
   (:export

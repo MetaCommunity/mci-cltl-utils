@@ -26,6 +26,11 @@
 
 (in-package #:ltp/common/mop/singleton)
 
+;; NB: File depends on:
+;; #:ltp-common-mop [system]
+;; finalize.lisp [source file]
+;; - must be evaluated after previous DEFPACKAGE, at present
+
 
 ;; T.D: (MAKE-INSTANCE SINGLETON) SEMANTICS
 ;; => IMPLICIT SUBCLASSING (w/ uninterned class name)
@@ -144,103 +149,86 @@
            ,%metaclass
            ,@%params)))))
 
-;; FIXME: Automatically finalize SINGLETON after initialization w/ DEFSINGLETON
+;; FIXME: SINGLETON Finalization
 ;;
-;; ... iff not any superclass of SINGLETON is a forward-referenced class
+;; This sytem may automatically finalize SINGLETON after
+;; initialization or -- as with change-class from a
+;; FORWARD-REFERENCED-CLASS -- after reinitialization, iff not any
+;; superclass of the SINGLETON is a forward-referenced class
 
-;; TBD: DEFMETHOD in a manner as to err (CERROR) when redefining a
-;; method defined in "Some other system" - Assuming that the definition
-;; source for each method may be available, at runtime, in any implementation-
-;; specific manner. (One might endeavor to review the existing SLIME
-;; SWANK soruce code, inasmuch, towards developing a portable
-;; API singularly for static analysis of Common Lisp programs. Such an
-;; API could then be exteded, towards the behavior of calling CERROR
-;; when redefining a method defined in "Some other system". This also
-;; assumes the definition of a concept of "System," at some granularity
-;; broader than the individual source file -- vis a vis ASDF, or the
-;; original CLOCC MK:DEFSYSYSTEM.
+;; ... to an effect: Ensure that each SINGLETON is finalized, once every
+;; superclass of the SINGLETON is finalized.
 ;;
-;; Conesquent to such an extension, one might define an :AFTER method onto
-;; FINALIZE-INHERITANCE (FORWARD-REFERENCED-CLASS) such that may be used
-;; to dispatch to FINALIZE-INHERITANCE onto any ... (Refer to following src)
 
+
+(defmethod finalize-reachable ((class singleton))
+  (catch 'finalize-singleton
+    (macrolet ((hcall (form)
+                 `(handler-bind ((class-finalization-warning
+                                  (lambda (c)
+                                    (warn c)
+                                    (throw 'finalize-singleton (values)))))
+                    ,form)))
+      (dolist (supc (class-direct-superclasses class))
+        (hcall (finalize-reachable-superclass supc class)))
+      (multiple-value-prog1
+          (hcall (call-next-method))
+        (dolist (subc (class-direct-subclasses class))
+          (finalize-reachable-subclass subc class))))))
+
+
+(defmethod shared-initialize :after ((instance singleton)
+                                     slots &rest initargs
+                                     &key &allow-other-keys)
+  (declare (ignore slots initargs))
+  (finalize-reachable instance))
+
+
+;; Tests for Singleton Finalization - e.g
 (eval-when ()
-  (defclass frob-previous ()
-    ())
+  (macrolet ((mk (class pfx &rest dsup)
+               `(make-instance
+                 (quote ,class)
+                 :name (quote ,(gentemp
+                                (concatenate 'simple-string
+                                             (symbol-name pfx)
+                                             #.(symbol-name '#:_nr))))
+                 ,@(when dsup
+                     (list :direct-superclasses
+                           (cons 'list dsup))))))
 
-  (defclass frob-fwd ()
-    ()
-    (:metaclass forward-referenced-class))
+    (defparameter *s1* (mk singleton s-1))
 
-  (validate-class frob-fwd)
-
-  (defclass frob-now (frob-fwd frob-previous)
-    ())
-
-  (class-direct-subclasses (find-class 'frob-fwd))
-
-)
-;; ...
-;;
-;; This would serve to permit a call to FINALIZE-CLASS for each
-;; direct subclass of a forward referenced class -- to an effect: Ensure
-;; that each SINGLETON is finalied, once every superclass of the
-;; SINGLETON is finalized. This could be implemented portably, with a
-;; method
-;;   FINALIZE-SUBCLASS ((SUB STANDARD-CLASS) (SUPER FORWARD-REFERENCED-CLASS??))
-;;
-;; The convention of erring if the DEFMETHOD :AFTER form onto
-;; FINALIZE-INHERITANCE would overwrite any method defined in any other
-;; system would be implemented as a convenience for purposes of Common
-;; Lisp systems integration -- somehwat optional to the actual
-;; operations of this application protocol or reified application
-;; pattern.
-;;
-;; Note that the latter may be defined in a manner such as to allow --
-;; within a CONTINUE restart -- defining a method that would call both the
-;; "Original Method" onto :AFTER and the "New Method" onto :AFTER in any
-;; specified order.
-
-;; NB Limited FINALIZE-SUBCLASS
-;; - FINALIZE-SUBCLASS during FINALIZE-INHERITANCE SINGLETON
-;; - Does not require any immediate DEFMETHOD-ENCAPSULATE-OTHER-METHOD behaviors
-
-#|
-
- NB: Towards signaling an error (with CERROR and a CONTINUE restart defined
- specifically for this) as when a method definition overrides a method
- defined in some other system:
-
- - Ensure that the CONTINUE restart will dispatch to a procedure
-   defining a method that will call both the "Existing Method
-   Definition" and the "New Method Definition"
-   - In this instance, dispatching to the "New method definition" after
-     the "Existing method  definition.
-
- - Also define a restart (OVERRIDE) such that will override the existing
-   method definition,
-
- - and a restart (IGNORE) such that will ignore the new method
-   definition,
-
- - and a restart (CONTINUE-OTHER) such that will perform a similar
-   procedure  as the CONTINUE restart. In this instance, the method
-   resulting after the CONTINUE-OTHER restart -- instead -- would call
-   the "New method definition" before the "Existing method
-   definition".
-
-  - With either the CONTINUE or CONTINUE-OTHER restart main
-    function, ensure that the resulting "Dispatching method definition"
-    will be defined in a "Null System". Ideally, this would serve to
-    permit a distinction between the system defining  the "Existing
-    method" and the system defining the "New method", within any
-    subsequent systems analysis tasks.
-
-NB: This assumes an availability of source location information,
-at a granularity of system definitions in Common Lisp programs.
+    (values
+     (class-finalized-p *s1*)
+     ;; => T
 
 
-|#
+     (prog2 (defparameter *s2* (mk forward-referenced-class s-2 *s1*))
+         (class-finalized-p *s2*))
+     ;; => NIL
+
+     (prog2 (defparameter *s3* (mk singleton s-3 *s2* *s1*))
+         (class-finalized-p *s3*))
+     ;; => NIL
+
+     ;; NB: This CHANGE-CLASS call may not be portable for applications,
+     ;; per [AMOP]. In the PCL MOP implementation, it can be evaluated
+     ;; when *S2* is a forward-referenced-class
+     (prog2 (change-class *s2* (find-class 'singleton)
+                          :name (class-name *s2*)
+                          :direct-superclasses (class-direct-superclasses *s2*))
+         (class-finalized-p *s2*))
+     ;; => T
+
+     (class-finalized-p *s3*)
+     ;; => T
+
+     ))
+    ;; => T, NIL, NIL, T, T
+
+  )
+
 
 ;; -- Singleton Slot Definitions
 
@@ -265,6 +253,7 @@ at a granularity of system definitions in Common Lisp programs.
 
 (defmethod direct-slot-definition-class ((class singleton)
                                          &rest initargs)
+(declare (ignore class initargs))
   (find-class 'singleton-direct-slot-definition))
 
 
@@ -275,10 +264,10 @@ at a granularity of system definitions in Common Lisp programs.
 
 (defmethod effective-slot-definition-class ((class singleton)
                                             &rest initargs)
+  (declare (ignore class initargs))
   (find-class 'singleton-effective-slot-definition))
 
 
-;; MOP Interop ...
 
 ;; --
 
@@ -330,7 +319,7 @@ at a granularity of system definitions in Common Lisp programs.
    (sl-b)))
 
 (let ((c (find-class 'singleton-1)))
-  (finalize-inheritance c)
+  ;;   (finalize-inheritance c)
   (multiple-value-bind (st-1 st-2)
       (subtypep c 'singleton)
     (multiple-value-bind (mt-1 mt-2)
@@ -341,7 +330,7 @@ at a granularity of system definitions in Common Lisp programs.
 ;; => T, T, T, T
 
 
-(finalize-inheritance (find-class 'singleton-1))
+;; (finalize-inheritance (find-class 'singleton-1))
 
 
 (class-slots (find-class 'singleton-1))
@@ -353,7 +342,7 @@ at a granularity of system definitions in Common Lisp programs.
 (defsingleton singleton-2 (singleton-1)
   ((sl-c)))
 
-(finalize-inheritance (find-class 'singleton-2))
+;; (finalize-inheritance (find-class 'singleton-2))
 
 (class-slots (find-class 'singleton-2))
 
