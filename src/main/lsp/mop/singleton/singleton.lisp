@@ -131,7 +131,7 @@
                           (nth meta-n params))
                          (params-adj
                           (remove meta-prop params
-                                  :test #'wq)))
+                                  :test #'eq)))
                     (values meta-prop params-adj)))
                  (t
                   (values (list :metaclass 'singleton)
