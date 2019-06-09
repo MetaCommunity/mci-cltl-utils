@@ -25,11 +25,10 @@
 (defsystem #:ltp-common-mop
   ;; :description ""
   :version "1.0"
-  ;;  :homepage "https://github.com/MetaCommunity/mci-cltl-utils"
-  ;;  :license "https://github.com/MetaCommunity/mci-cltl-utils/blob/master/LICENSE"
+  ;;  :homepage TBD
+  :license "spdx:EPL-1.0"
   :depends-on (#:ltp-common
                #:closer-mop
-               #+LTP_PROTOTYPES #:bordeaux-threads
                )
   :components
   ((:file "common-mop-package") ;; c2mop integration

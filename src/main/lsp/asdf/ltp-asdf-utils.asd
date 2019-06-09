@@ -6,7 +6,7 @@
 ;; This program and the accompanying materials are made available under the
 ;; terms of the Eclipse Public License v1.0 which accompanies this distribution
 ;; and is available at http://www.eclipse.org/legal/epl-v10.html
-;; 
+;;
 ;; Contributors: Sean Champ - Initial Implementation
 ;;
 ;;------------------------------------------------------------------------------
@@ -24,10 +24,10 @@
 (defsystem #:ltp-asdf-utils
   ;; :description ""
   :version "1.0"
-  :homepage "https://github.com/MetaCommunity/mci-cltl-utils"
-  :license "https://github.com/MetaCommunity/mci-cltl-utils/blob/master/LICENSE"
+  ;; :homepage TBD
+  :license "spdx:EPL-1.0"
   :depends-on (#:ltp-utils)
-  :components 
+  :components
   ((:file "ltp-asdf-utils-package")
    (:file "ext-utils"
           :depends-on  ("ltp-asdf-utils-package"))
