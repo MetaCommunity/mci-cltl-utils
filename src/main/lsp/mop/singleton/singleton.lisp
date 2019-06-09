@@ -14,8 +14,8 @@
 
 (in-package #:cl-user)
 
-(defpackage #:ltp/common/mop/singleton
-  (:nicknames #:ltp.common.mop.singleton)
+(defpackage #:ltp/common/singleton
+  (:nicknames #:ltp.common.singleton)
   (:use #:ltp/common/mop
         #:ltp/common
         #:cl)
@@ -24,7 +24,7 @@
    #:defsingleton
    ))
 
-(in-package #:ltp/common/mop/singleton)
+(in-package #:ltp/common/singleton)
 
 ;; NB: File depends on:
 ;; #:ltp-common-mop [system]
@@ -184,7 +184,8 @@
   (finalize-reachable instance))
 
 
-;; Tests for Singleton Finalization - e.g
+; Tests for Singleton Finalization - e.g
+#+NIL
 (eval-when ()
   (macrolet ((mk (class pfx &rest dsup)
                `(make-instance
