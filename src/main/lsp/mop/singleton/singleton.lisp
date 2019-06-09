@@ -14,6 +14,8 @@
 
 (in-package #:cl-user)
 
+;; Ed. NB: See also Garnet [KR]
+
 (defpackage #:ltp/common/singleton
   (:nicknames #:ltp.common.singleton)
   (:use #:ltp/common/mop
@@ -32,12 +34,6 @@
 ;; - must be evaluated after previous DEFPACKAGE, at present
 
 
-;; T.D: (MAKE-INSTANCE SINGLETON) SEMANTICS
-;; => IMPLICIT SUBCLASSING (w/ uninterned class name)
-;;    ... and, in a sense, lexically scoped clases.
-;;
-;; ... thus continuing the analogy of this API, after Garnet [KR] (KR Schemas)
-;;
 ;; NB/TD SINGLETON => MODEL [OUTLINE]
 ;; - MODEL @ LTP-SYS
 ;;   - MODEL @ LLVM
