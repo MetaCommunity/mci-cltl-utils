@@ -153,7 +153,7 @@
                 enum-members))
 (declaim (ftype (function (sequence t) (values sequence &optional))
                 (setf enum-members)))
-;; ^ FIXME limit FTYPE decls onto defined methods, once declared
+;; ^ FIXME limit FTYPE arg-type decls onto defined methods, once declared
 
 (eval-when () ;; TD: Instance tests - DYNAMIC-ENUM Initialization, Accessors
   (defparameter *enum*
@@ -252,10 +252,23 @@
 
   ;; Notes
   ;;
-  ;; - Params: Refer to direct slot definitions of the classes
-  ;;   ENUM and DYNAMIC-ENUM. Excepting the slot definition for the
-  ;;   %MEMBERS slot, those class direct slots' other initialization
-  ;;   aruments may be provided via the PARAMS section of this macro.
+  ;; - Params: Syntax
+  ;;
+  ;;   - Refer to direct slot definitions of the classes
+  ;;     ENUM and DYNAMIC-ENUM. Excepting the slot definition for the
+  ;;     %MEMBERS slot, those class direct slots' other initialization
+  ;;     aruments may be provided via the PARAMS section of this macro.
+  ;;
+  ;;  - Furthermore - NB: DEFINE-SINGLETON-ENUM somewhat like DEFSTRUCT
+  ;;     (:CONC-SUFFIX &optional <NAME>)
+  ;;     (:RESISTER-CONC-NAME &optional <NAME>)
+  ;;     (:FIND-CONC-NAME &optional <NAME>)
+  ;;     (:REMOVE-CONC-NAME &optional <NAME>)
+  ;;
+  ;;     NB: It would be an error to specify a (:CONC-SUFFIX) with null
+  ;;     <NAME> and -- in the same DEFINE-SINGLETON-ENUM -- null <NAME>
+  ;;    for any one or more of the :RESISTER-CONC-NAME, :FIND-CONC-NAME
+  ;;    and :REMOVE-CONC-NAME options in PARAMS
 
   (labels ((get-one-param (%name %params)
              (declare (type symbol name) (type list params))
@@ -268,77 +281,110 @@
                               t
                               (remove p %params :test #'eq))))
                  (t (values nil nil params)))))
+           (ensure-symbol-name (name)
+             (etypecase name
+               (string name)
+               (symbol (symbol-name name)))))
+    (multiple-value-bind (conc-suffix conc-sfx-p params)
+        (get-one-param :conc-suffix params)
+      (declare (ignore conc-sfx-p))
 
-           (mk-default-name (prefix typ)
-             ;; FIXME: Consider providing some manner of a formatter
-             ;; parameter for customizing the syntax of SINGLETON ENUM
-             ;; accessor function names.
-             (intern (concatenate 'simple-string
-                                  (symbol-name prefix)
-                                  "-"
-                                  (symbol-name typ)))))
+      (let* ((conc-rest (cdr conc-suffix))
+             (%conc-suffix
+              (cond
+                ((and conc-suffix conc-rest)
+                 (destructuring-bind (suffix &rest n-a) conc-rest
+                   (when n-a
+                     (simple-program-error
+                      "~<Extraneous information ~
+in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
+                   (when suffix
+                     (ensure-symbol-name suffix))))
+                (conc-suffix
+                 ;; i.e (:CONC-SUFFIX)
+                 ;; => do not define any default enum accessors
+                 ;; NB: Ssame effect as (:CONC-SUFFIX NIL)
+                 (values nil))
+                (t (setq conc-suffix (concatenate 'simple-string
+                                                "-" (symbol-name name)))))))
+        (labels ((mk-default-name (prefix)
+                   (cond
+                     (%conc-suffix
+                      (intern (concatenate 'simple-string
+                                           (symbol-name prefix)
+                                           %conc-suffix)))
+                     (t (intern (symbol-name prefix))))))
 
-    (multiple-value-bind (reg-form regp params)
-        (get-one-param :register-function params)
+          (multiple-value-bind (reg-form regp params)
+              (get-one-param :register-function params)
 
-      (unless regp
-        (setq reg-form (mk-default-name '#:register name)))
+            (unless regp
+              (setq reg-form (mk-default-name '#:register)))
 
-      (cond
-        ((and regp (listp reg-form) (listp (cadr reg-form))))
-        ;; ^ no-op - interpret value as an implicit defun form
-        ((and regp (null reg-form)))
-        ;; ^ no-op - do not define or store a :register-function
-        (reg-form
-         ;; ^ function name
+            (cond
+              ((and regp (listp reg-form) (listp (cadr reg-form))))
+              ;; ^ no-op - interpret value as an implicit defun form
+              ((and regp (null reg-form)))
+              ;; ^ no-op - do not define or store a :register-function
+              (reg-form
+               ;; ^ function name
 
-         ;; create implicit defun (??) [TBD] (NB At least, store ref to
-         ;; fn - may be forward-referenced) (??)
+               ;; create implicit defun (??) [TBD] (NB At least, store ref to
+               ;; fn - may be forward-referenced) (??)
 
-         ;; FIXME - consider evaluating (COMPUTE-DEFAULT-REGISTRATION-LAMBDA...)
-         ;; in the compiler environment -- assuming that the class denoted by
-         ;; NAME will have been finalized by the time that that form is
-         ;; evaluated
-
-         #+TD
-         (let ((reg-lambda (compute-default-registration-lambda ...)))
-           (setq reg-form `(,name ,@(cdr reg-lamba))))))
-
-
-      (multiple-value-bind (find-form findp params)
-          (get-one-param :find-function params)
-        (unless findp
-          (setq find-form (mk-default-name '#:find name)))
-
-        ;; (compute-default-find-lambda ...)
-
-        (multiple-value-bind (remove-form remp params)
-            (get-one-param :remove-function params)
-          (unless remp
-            (setq remove-form (mk-default-name '#:remove name)))
-
-          ;; (compute-default-remove-lambda ...)
-
-
-          ;; TBD: for each SPEC in DECLS: Process SPEC via method
-          ;; dispatch (??) Note, hoewver, that this would serve to
-          ;; require that at least one class would be defined for that
-          ;; specialization, before this macro is evaluated in the
-          ;; compiler environment. This, at least, would serve to allow
-          ;; for an extensible protocol for handlign the CDR of each
-          ;; SPEC in a syntax specific to the individual enumerated type
-
-          `(eval-when (:compile-toplevel :load-toplevel :execute)
-             (defabstract ,name (,@supertypes)
-               (,@slots)
-               ,@params)
-
-             ;; ... defsingleton for each SPEC in DECLS ...
-
-             ;; ... decls (FTYPE) and defuns for each enum access
-             ;; function (register, find, remove)
-
-             ;; return the defined class
-             )))))))
+               #+TD ;; TBD: DEFUN in the macroexpansion ?
+               (let ((reg-lambda (compute-default-registration-lambda ...)))
+                 (setq reg-form `(,name ,@(cdr reg-lamba))))))
 
 
+            (multiple-value-bind (find-form findp params)
+                (get-one-param :find-function params)
+              (unless findp
+                (setq find-form (mk-default-name '#:find)))
+
+              ;; (compute-default-find-lambda ...)
+
+              (multiple-value-bind (remove-form remp params)
+                  (get-one-param :remove-function params)
+                (unless remp
+                  ;; FIXME: This REMOVE name with null CONC-SUFFIX
+                  ;; -- i.e in params (:CONC-SUFFIX) -- would typically
+                  ;; override CL:REMOVE. This may typically represent
+                  ;; an unwanted side effect of the evaluation.
+                  ;;
+                  ;; Using a prefix #:DELETE would not improve the
+                  ;; matter,
+                  ;;
+                  ;; As unlikely as (:CONC-SUFFIX) in PARAMS may be, it
+                  ;; should be more carefully addressed - in the
+                  ;; interest of portable systems programming.
+                  ;;
+                  ;; Consider adding to the PARAMS syntax:
+                  ;; (:RESISTER-CONC-NAME &optional <NAME>)
+                  ;; (:FIND-CONC-NAME &optional <NAME>)
+                  ;; (:REMOVE-CONC-NAME &optional <NAME>)
+                  (setq remove-form (mk-default-name '#:remove)))
+
+                ;; (compute-default-remove-lambda ...)
+
+
+                ;; TBD: for each SPEC in DECLS: Process SPEC via method
+                ;; dispatch (??) Note, hoewver, that this would serve to
+                ;; require that at least one class would be defined for that
+                ;; specialization, before this macro is evaluated in the
+                ;; compiler environment. This, at least, would serve to allow
+                ;; for an extensible protocol for handlign the CDR of each
+                ;; SPEC in a syntax specific to the individual enumerated type
+
+                `(eval-when (:compile-toplevel :load-toplevel :execute)
+                   (defabstract ,name (,@supertypes)
+                     (,@slots)
+                     ,@params)
+
+                   ;; ... defsingleton for each SPEC in DECLS ...
+
+                   ;; ... decls (FTYPE) and defuns for each enum access
+                   ;; function (register, find, remove)
+
+                   ;; return the defined class
+                   ))))))))))
