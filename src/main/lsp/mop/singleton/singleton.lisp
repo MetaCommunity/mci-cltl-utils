@@ -138,6 +138,12 @@
                           params))))))
     (let ((%superclasses (append superclasses
                                  (list 'singleton))))
+      ;; ^ FIXME: In effect, injecting SINGLETON into the tail of the
+      ;; list of direct superclasses - here, as for evaluation in a
+      ;; DEFCLASS form - this will not be sufficient for all classes
+      ;; as may extend SINGLETON. In a future revision, this concern may
+      ;; be addressed with a manner of initialization argument mangling
+      ;; onto SHARED-INITIALIZE (SINGLETON T)
       (multiple-value-bind (%metaclass %params)
           (compute-metaclass params)
         `(defclass ,name ,%superclasses
