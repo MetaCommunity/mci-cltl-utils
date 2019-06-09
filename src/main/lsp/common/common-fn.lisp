@@ -156,11 +156,15 @@ Example:
 
 (defun* function-name (fn)
   (declare (type function-designator fn)
-           (values function-designator))
+           (values function-designator &optional))
   (multiple-value-bind (lambda closure-p name)
            (function-lambda-expression (compute-function fn))
     (declare (ignore lambda closure-p))
-    (values name)))
+    (cond
+      ((and (consp name)
+            (eq (car name) 'lambda))
+       (values nil))
+      (t (values name)))))
 
 ;; (function-name #'(setf gethash))
 ;; => (SETF GETHASH)
@@ -169,4 +173,4 @@ Example:
 ;; => PRINT
 
 ;; (function-name (lambda () (+ 1 1 )))
-;; => (LAMBDA ())
+;; => NIL
