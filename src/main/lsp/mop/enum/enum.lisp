@@ -2,7 +2,7 @@
 (in-package #:ltp/common)
 
 (defpackage #:ltp/common/mop/enum
-  (:use #:ltp/common/mop/singleton
+  (:use #:ltp/common/singleton
         #:ltp/common/mop
         #:ltp/common
         #:cl))
@@ -129,8 +129,9 @@
 
 (defgeneric enum-members (enum)
   (:method ((enum dynamic-enum))
-    (coerce (the (array t (*)) (%enum-members enum))
-            'list)))
+    (when (slot-boundp enum '%members)
+      (coerce (the (array t (*)) (%enum-members enum))
+              'list))))
 
 (defgeneric (setf enum-members) (new-value enum)
   (:method ((new-value list) (enum dynamic-enum))
@@ -225,8 +226,9 @@
       (next-method))))
 
 (defmethod enum-members ((enum static-enum))
-  (coerce (the simple-vector (%enum-members enum))
-          'list))
+  (when (slot-boundp enum '%members)
+    (coerce (the simple-vector (%enum-members enum))
+            'list)))
 
 ;; TD: Instance tests - STATIC-ENUM Initialization, Accessors
 
@@ -270,55 +272,65 @@
   ;;    for any one or more of the :RESISTER-CONC-NAME, :FIND-CONC-NAME
   ;;    and :REMOVE-CONC-NAME options in PARAMS
 
-  (labels ((get-one-param (%name %params)
-             (declare (type symbol name) (type list params))
-             (let ((n (position %name %params
-                                :key #'car
-                                :test #'eq)))
-               (cond
-                 (n (let ((p (nth n params)))
-                      (values (cdr p)
-                              t
-                              (remove p %params :test #'eq))))
-                 (t (values nil nil params)))))
-           (ensure-symbol-name (name)
-             (etypecase name
-               (string name)
-               (symbol (symbol-name name)))))
-    (multiple-value-bind (conc-suffix conc-sfx-p params)
-        (get-one-param :conc-suffix params)
-      (declare (ignore conc-sfx-p))
+  ;; NB: This macro will destructively modify a copy of PARAMS
+  (let ((%params (copy-list params))
+        conc-suffix
+        reg-prefix
+        reg-name
+        find-prefix
+        find-name
+        remove-prefix
+        remove-name
+        ;; subclasses
+        )
+    (macrolet ((pop-param (name)
+                  `(let ((n (position (quote ,name) %params
+                                      :key #'car
+                                      :test #'eq)))
+                     (cond
+                       (n (let ((p (nth n params)))
+                            (setq params
+                              (delete p %params :test #'eq))
+                            (values p)))
+                       (t (values nil))))))
+      ;; replace nested MV GET-ONE-PARAM calls with POP-PARAM
 
-      (let* ((conc-rest (cdr conc-suffix))
-             (%conc-suffix
-              (cond
-                ((and conc-suffix conc-rest)
-                 (destructuring-bind (suffix &rest n-a) conc-rest
-                   (when n-a
-                     (simple-program-error
-                      "~<Extraneous information ~
+      (labels ((ensure-symbol-name (name)
+                 (etypecase name
+                   (string name)
+                   (symbol (symbol-name name)))))
+        (setq conc-suffix (pop-param conc-suffix))
+
+        (let* ((conc-rest (cdr conc-suffix))
+               (%conc-suffix
+                (cond
+                  ((and conc-suffix conc-rest)
+                   (destructuring-bind (suffix &rest n-a) conc-rest
+                     (when n-a
+                       (simple-program-error
+                        "~<Extraneous information ~
 in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
-                   (when suffix
-                     (ensure-symbol-name suffix))))
-                (conc-suffix
-                 ;; i.e (:CONC-SUFFIX)
-                 ;; => do not define any default enum accessors
-                 ;; NB: Ssame effect as (:CONC-SUFFIX NIL)
-                 (values nil))
-                (t (setq conc-suffix (concatenate 'simple-string
-                                                "-" (symbol-name name)))))))
-        (labels ((mk-default-name (prefix)
-                   (cond
-                     (%conc-suffix
-                      (intern (concatenate 'simple-string
-                                           (symbol-name prefix)
-                                           %conc-suffix)))
-                     (t (intern (symbol-name prefix))))))
 
-          (multiple-value-bind (reg-form regp params)
-              (get-one-param :register-function params)
+                     (when suffix
+                       (ensure-symbol-name suffix))))
+                  (conc-suffix
+                   ;; i.e (:CONC-SUFFIX)
+                   ;; => do not define any default enum accessors
+                   ;; NB: Ssame effect as (:CONC-SUFFIX NIL)
+                   (values nil))
+                  (t (setq conc-suffix (concatenate 'simple-string
+                                                    "-" (symbol-name name)))))))
+          (labels ((mk-default-name (prefix)
+                     (cond
+                       (%conc-suffix
+                        (intern (concatenate 'simple-string
+                                             (symbol-name prefix)
+                                             %conc-suffix)))
+                       (t (intern (symbol-name prefix))))))
 
-            (unless regp
+            (setq reg-form (pop-suffix register-function))
+
+            (unless reg-form
               (setq reg-form (mk-default-name '#:register)))
 
             (cond
@@ -336,55 +348,119 @@ in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
                (let ((reg-lambda (compute-default-registration-lambda ...)))
                  (setq reg-form `(,name ,@(cdr reg-lamba))))))
 
-
-            (multiple-value-bind (find-form findp params)
-                (get-one-param :find-function params)
-              (unless findp
-                (setq find-form (mk-default-name '#:find)))
-
-              ;; (compute-default-find-lambda ...)
-
-              (multiple-value-bind (remove-form remp params)
-                  (get-one-param :remove-function params)
-                (unless remp
-                  ;; FIXME: This REMOVE name with null CONC-SUFFIX
-                  ;; -- i.e in params (:CONC-SUFFIX) -- would typically
-                  ;; override CL:REMOVE. This may typically represent
-                  ;; an unwanted side effect of the evaluation.
-                  ;;
-                  ;; Using a prefix #:DELETE would not improve the
-                  ;; matter,
-                  ;;
-                  ;; As unlikely as (:CONC-SUFFIX) in PARAMS may be, it
-                  ;; should be more carefully addressed - in the
-                  ;; interest of portable systems programming.
-                  ;;
-                  ;; Consider adding to the PARAMS syntax:
-                  ;; (:RESISTER-CONC-NAME &optional <NAME>)
-                  ;; (:FIND-CONC-NAME &optional <NAME>)
-                  ;; (:REMOVE-CONC-NAME &optional <NAME>)
-                  (setq remove-form (mk-default-name '#:remove)))
-
-                ;; (compute-default-remove-lambda ...)
+            (setq find-form
+                  (pop-param :find-function))
+            (unless find-form
+              (setq find-form (mk-default-name '#:find)))
 
 
-                ;; TBD: for each SPEC in DECLS: Process SPEC via method
-                ;; dispatch (??) Note, hoewver, that this would serve to
-                ;; require that at least one class would be defined for that
-                ;; specialization, before this macro is evaluated in the
-                ;; compiler environment. This, at least, would serve to allow
-                ;; for an extensible protocol for handlign the CDR of each
-                ;; SPEC in a syntax specific to the individual enumerated type
+            (setq remove-form
+                  (pop-param :remove-function))
 
-                `(eval-when (:compile-toplevel :load-toplevel :execute)
-                   (defabstract ,name (,@supertypes)
-                     (,@slots)
-                     ,@params)
+            (unless remove-form
+              ;; FIXME: This REMOVE name with null CONC-SUFFIX
+              ;; -- i.e in params (:CONC-SUFFIX) -- would typically
+              ;; override CL:REMOVE. This may typically represent
+              ;; an unwanted side effect of the evaluation.
+              ;;
+              ;; Using a prefix #:DELETE would not improve the
+              ;; matter,
+              ;;
+              ;; As unlikely as (:CONC-SUFFIX) in PARAMS may be, it
+              ;; should be more carefully addressed - in the
+              ;; interest of portable systems programming.
+              ;;
+              ;; Consider adding to the PARAMS syntax:
+              ;; (:RESISTER-CONC-NAME &optional <NAME>)
+              ;; (:FIND-CONC-NAME &optional <NAME>)
+              ;; (:REMOVE-CONC-NAME &optional <NAME>)
+              (setq remove-form (mk-default-name '#:remove)))
 
-                   ;; ... defsingleton for each SPEC in DECLS ...
+            ;; (compute-default-remove-lambda ...)
 
-                   ;; ... decls (FTYPE) and defuns for each enum access
-                   ;; function (register, find, remove)
 
-                   ;; return the defined class
-                   ))))))))))
+            ;; TBD: for each SPEC in DECLS: Process SPEC via method
+            ;; dispatch (??) Note, hoewver, that this would serve to
+            ;; require that at least one class would be defined for that
+            ;; specialization, before this macro is evaluated in the
+            ;; compiler environment. This, at least, would serve to allow
+            ;; for an extensible protocol for handlign the CDR of each
+            ;; SPEC in a syntax specific to the individual enumerated type
+
+            `(eval-when (:compile-toplevel :load-toplevel :execute)
+               (defabstract ,name (,@supertypes)
+                 (,@slots)
+                 ,@params)
+
+               ;; ... defsingleton for each SPEC in DECLS ...
+
+               ;; ... decls (FTYPE) and defuns for each enum access
+               ;; function (register, find, remove)
+
+               ;; return the defined class
+               ))))))))
+
+
+;; #+NIL
+(eval-when () ;; Basic prototyping/Proof of concept
+
+  (deftype name ()
+    'symbol)
+
+  (defclass tenum-member ()
+    ;; NB IMPL: DEFSINGLETON ( & ENUM KEY INITARG)
+    ((name
+      :initarg :name
+      :type name
+      :reader tenum-member-name)))
+
+  (deftype if-exists-symbol ()
+    '(member :override :error :ignore))
+
+  (deftype not-found-symbol ()
+    '(member :error :ignore))
+
+  (defsingleton trivial-enum (dynamic-enum)
+    ()
+    (:member-class . tenum-member)
+    (:member-key-slot . name))
+  ;; FIXME: How is it not finalized?
+
+  #+NIL
+  (slot-value (find-class 'trivial-enum)
+              'member-class)
+  ;; ^ is correctly bound.
+
+  ;; (enum-members (find-class 'trivial-enum))
+  ;;  => NIL ;; supported now, subsequent of the DEFSINGLETON update
+
+  ;; FIXME: Do not err when the %MEMBERS slot is unbound, in the
+  ;; following
+
+  (defun find-tem (name &optional (not-found :error))
+    (let ((buf (%enum-members (find-class 'trivial-enum))))
+      (cond
+        (t (values nil nil)))))
+
+  (defun register-tem-1 (obj &optional (if-exists :error))
+    (let ((buf '#:...))
+    ;; TBD Shared IF-EXISTS semantics w/ REGISTER-TEM
+      ))
+
+  (defun register-tem (key &optional (if-exists :error))
+    ;; TBD IF-EXISTS semantics - :OVERRIDE :ERROR IGNORE
+    (let ((obj '#:...))
+      (register-tem-1 obj)))
+
+
+  (defun remove-tem-1 (obj &optional (not-found :error))
+    ;; TBD Shared NOT-FOUND semantics w/ REMOVE-TEM
+    (let ((buf '#:...))
+      ))
+
+  (defun remove-tem (name &optional (not-found :error))
+    ;; TBD NOT-FOUND semantics - ::ERROR IGNORE
+    (let ((buf '#:...))
+      ))
+
+)
