@@ -651,7 +651,7 @@
                                   :test #'eq)))
                     (values (cadr name-prop) params-adj)))
                  (t
-                  ;: NB: Calling INTERN in the macroexpansion @ default name
+                                        ;: NB: Calling INTERN in the macroexpansion @ default name
                   (values (intern (concatenate 'simple-string
                                                (symbol-name name)
                                                #.(symbol-name '#:-prototype)))
@@ -660,7 +660,7 @@
     (multiple-value-bind (%proto-name %params)
         (compute-prototype-class-name params)
 
-      (with-symbols (%singleton) ;; FIXME review for unused symbols
+      (with-symbols ()
 
         (multiple-value-bind (%user-metaclass %params)
             (compute-user-metaclass %params) ;; NB: May be unused here
@@ -668,15 +668,6 @@
           ;; NB: Using an implcit PROTOTYPE-METACLASS is-a SINGLETON here.
 
           `(progn
-
-             #+NIL
-             ;; NB being handled with a trivial direct-superclasses hack, below
-             (let ((,%singleton (load-time-value (find-class 'singleton)
-                                                 t)))
-               (unless (some (lambda (c)
-                               (find-class-in-precedence ,%singleton c nil))
-                             ,%supers)
-                 (setf ,%supers (nconc ,%supers (list ,%singleton)))))
 
              ;; NB: This macro, in effect, prevents any usage of forward
              ;; referenced classes in the SUPERCLASSES list
@@ -699,21 +690,21 @@
                (:metaclass prototype-class))
 
              (defclass ,name
-                  ;; NOTES - SINGLETON AS DIRECT SUPERCLASS (A HACK)
-                  ;; does not break, but does not result in an
-                  ;; appropriate class precedence list (w/ PCL)
-                  #+NIL (,@superclasses)
-                  ;; breaks when defining subclasses, does not break at first
-                  #+NIL (singleton ,@superclasses)
-                  ;; does not break, and may result in an appropriate class
-                  ;; precedence list in the class
-                  ;;
-                  ;; FIXME -  MIGHT BREAK under some superclasses having
-                  ;; SINGLETON as a superclass (More test cases req'd)
-                  (,@superclasses singleton)
-                ,slots
-                (:metaclass ,%proto-name)
-                ,@%params)))))))
+                 ;; NOTES - SINGLETON AS DIRECT SUPERCLASS (A HACK)
+                 ;; does not break, but does not result in an
+                 ;; appropriate class precedence list (w/ PCL)
+                 #+NIL (,@superclasses)
+               ;; breaks when defining subclasses, does not break at first
+               #+NIL (singleton ,@superclasses)
+               ;; does not break, and may result in an appropriate class
+               ;; precedence list in the class
+               ;;
+               ;; FIXME -  MIGHT BREAK under some superclasses having
+               ;; SINGLETON as a superclass (More test cases req'd)
+               (,@superclasses singleton)
+               ,slots
+               (:metaclass ,%proto-name)
+               ,@%params)))))))
 
 
 ;; FIXME: Test DEFSINGLETON* with forward-referenced direct superclasses
