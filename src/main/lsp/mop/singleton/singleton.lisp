@@ -252,6 +252,19 @@
      ))
     ;; => T, NIL, NIL, T, T
 
+
+  (defsingleton s-x-1 ()
+    ())
+
+  (defsingleton s-x-2 (s-x-1)
+    ())
+
+  (typep (find-class 's-x-2) 's-x-1)
+  ;; => NIL ; which is - in short - why this was updated with DEFSINGLETON*
+  ;;
+  ;; NB: A broader synposis about the DEFSINGLETON* update is provided,
+  ;; in commentary available in the macro definition's source form, below.
+
   )
 
 
@@ -553,6 +566,7 @@
   (:metaclass singleton))
 
 
+#+NIL
 (defmacro getf* (place property &optional default)
   ;; FIXME - move definition to ltp-common
   (with-symbols (dflt obj)
@@ -604,69 +618,64 @@
   )
 
 
+(defclass prototype-class (singleton)
+  ()
+  (:metaclass singleton))
+
+#+NIL
+(defsingleton prototype-class (singleton)
+  ())
+;; ^ FIXME/QA: This breaks.
+;; - SINGLETON is directly specified, here, as a direct superclass. The
+;;   macroexpansion subsequently adds a duplicate SINGLETON to the
+;;   direct superclass list. (Trivial class precedence hack for DEFCLASS
+;;   eval in arbitrary compiler environments)
 
 
 (defmacro defsingleton* (name (&rest superclasses)
                                 slots
                          &rest params)
-  ;; FIXME - due to the convention of always creating a new, compiler-
-  ;;         unregistered prototype-class, as approched in this updated
-  ;;         defsingleton macro -- in its present revision -- this macro
-  ;;         cannot be evaluated twice for the same class.
 
   ;; NB: As one purpose that this new DEFSINGLETON* serves, juxtaposed
-  ;;     to the original DEFSINGLETON definition: This macro definition
-  ;;     serves to ensure -- at least insofar as to a perspective of
-  ;;     instance/superclass and metaclass relations in CLOS -- that the
-  ;;     resulting SINGLETON instance will be (FIXME: Shouild be) at
-  ;;     least a subtype (in such a regard) to every class specified in
-  ;;     SUPERCLASSES.
+  ;;     to the original DEFSINGLETON definition: The resulting
+  ;;     SINGLETON instance, as defined with this updated macro, will
+  ;;     represent a subtype to every class specified in SUPERCLASSES.
   ;;
-  ;;     ----
-  ;;     FIXME: As this presently uses ENSURE-CLASS to create a
-  ;;     metaclass -- in a phrase, a PROTYPE-CLASS for the resulting
-  ;;     SINGLETON -- such that, in that effect, may not be registered
-  ;;     to the implementation type system in such a way as might be
-  ;;     approached via DEFCLASS ... this system may presently lend
-  ;;     to some spurious results, in testing forms.
-  ;;     ----
-  ;;     Subsequently, this should be updated to use DEFCLASS to define
-  ;;     the PROTOTYPE-CLASS as a class named either according to a
-  ;;     default naming convention local to this macro definigion, or
-  ;;     defined with a user-specified :PROTYPE-METACLASS name. This
-  ;;     macro definition may also be updated to include any
-  ;;     user-specified :METACLASS in the class precedence list of the
-  ;;     resulting PROTOTYPE-CLASS -- to an effect, the resulting CLASS
-  ;;     will at least be TYPEP onto the user-specified METACLASS, even
-  ;;     if the resulting CLASS will not be an instance of that
-  ;;     METACLASS itself.
-  ;;     ----
+  ;;     --
   ;;     NB: This documentation, in effect, uses the term PROTOTYPE-CLASS in
   ;;     lieu of METACLASS as it denotes -- in the former -- a class
   ;;     defined during evaluation of DEFSINGLETON*, however serving
   ;;     in a role of a conventional CLOS metaclass.
   ;;     ---
   ;;
-  ;;     Considering limitations extended of MOP implementations, it
+  ;;     Considering limitations as extended of MOP implementations, it
   ;;     may be impossible to produce a portable definition of a class
-  ;;     such that will be TYPEP of its own class, anywhere beyond
+  ;;     such that will be TYPEP of its own class -- anywhere beyond
   ;;     STANDARD-CLASS.
   ;;
-  ;;     After refactoring some of a subtype semantics onto a class'
-  ;;     metaclass -- i.e onto the class M of which the class C is
-  ;;     itself an instance -- it may be assumed that some additional
-  ;;     concerns can be addreessed with regards to typing for SINGLETON
-  ;;     instances. In that regard, this macro provides something of an
+  ;;     For any singleton class C2 that may be defined as a subclass of
+  ;;     a class C1 -- such as for any purpose of extending the
+  ;;     semantics of the class C1 onto the definition of C2 -- after
+  ;;     addressing some of the superclass semantics onto the metaclass
+  ;;     of C2 -- i.e onto the class M of which the class C is itself an
+  ;;     instance -- such that M will be a subtype of C2, as well as C1
+  ;;     being a subtype of C2 -- it may thus be ensured that the singleton
+  ;;     instance C2 is, at least, a subtype of those types specified in
+  ;;     the instance's direct superclasses list. This may serve to
+  ;;     alleviate some concerns with regards to typing for SINGLETON
+  ;;     instances, in applications.
+  ;;
+  ;;     In that regard, this macro definition provides something of an
   ;;     update to the original DEFSINGLETON macro definition.
   ;;
-  ;;     This updated DEFSINGLETON* may serve to address some concerns
-  ;;     with regards to SINGLETON instance typing, even if this cannot
-  ;;     portably emulate the "Metacircular" character of STANDARD-CLASS
-  ;;     -- there being, simply, no portable API provided for extending
-  ;;     of however that was addressed for STANDARD-CLASS, in each MOP
-  ;;     implementation, itself.
+  ;;
+  ;;     This, of course, is still not sufficient to portably emulate
+  ;;     the Metacircular character of STANDARD-CLASS -- there being,
+  ;;     simply, no portable API available for extending of any
+  ;;     meachanisms by which STANDARD-CLASS was defined in a manner as
+  ;;     to represent an instance of itself, in any implementation.
 
-  (labels ((compute-metaclass (params)
+  (labels ((compute-user-metaclass (params)
              (let ((meta-n (position :metaclass
                                      (the list params)
                                      :test #'eq
@@ -678,55 +687,46 @@
                          (params-adj
                           (remove meta-prop params
                                   :test #'eq)))
-                    (values (cadr meta-prop) params-adj)))
+                    #+NIL (values (cadr meta-prop) params-adj)
+                    (values (cdr meta-prop) params-adj)
+                    ))
                  (t
-                  (values 'singleton params))))))
-    (let ((%proto-name
-           ;; FIXME: Allow this to be specified in PARAMS (??)
-           ;; FIXME: Also provide the class, itself, as the value of
-           ;;        a :singleton-prototype initarg or
-           ;;        SINGLETON-PROTOTYPE access for the resulting
-           ;;        class named NAME - such that would serve to
-           ;;        differentiate the automatically created prototype
-           ;;        class from the list of user-specified direct
-           ;;        superclasses
-           (make-symbol (concatenate 'simple-string
-                                    (symbol-name name)
-                                    (symbol-name '#:-prototype)))))
-      (with-symbols (%proto %superclasses %supers
-                            %fwd %c %cdef %fwdc
-                            %singleton )
-        (multiple-value-bind (%metaclass %params)
-            (compute-metaclass params) ;; NB: May be unused here
+                  #+NIL (values 'singleton* params)
+                  (values nil params)))))
+           (compute-prototype-class-name (params)
+             (let ((name-n (position :prototype-class
+                                     (the list params)
+                                     :test #'eq
+                                     :key #'car)))
+               (cond
+                 (name-n
+                  (let* ((name-prop
+                          (nth name-n params))
+                         (params-adj
+                          (remove name-prop params
+                                  :test #'eq)))
+                    (values (cadr name-prop) params-adj)))
+                 (t
+                  ;: NB: Calling INTERN in the macroexpansion @ default name
+                  (values (intern (concatenate 'simple-string
+                                               (symbol-name name)
+                                               #.(symbol-name '#:-prototype)))
+                          params))))))
 
-          ;; NB: This mayx fail if any of the superclasses is a
-          ;; forward-referenced class - that can be worked around, locally.
+    (multiple-value-bind (%proto-name %params)
+        (compute-prototype-class-name params)
 
-          ;; NB: Using an implcit PROTOTYPE-METACLASS := SINGLETON here.
-          ;;     This may be updated, in a later revision.
-          `(let* ((,%fwd nil)
-                  (,%superclasses (quote ,superclasses))
-                  (,%supers
-                   (mapcar #'(lambda (,%c)
-                               (let ((,%cdef (find-class ,%c nil)))
-                                 (cond
-                                   (,%cdef (values ,%cdef))
-                                   (t
-                                    ;; FIXME: Consider using
-                                    ;; ENSURE-CLASS here
-                                    (let ((,%fwdc (make-instance
-                                                   'forward-referenced-class
-                                                   :name ,%c)))
-                                      (setf ,%fwd
-                                            (nconc ,%fwd (list ,%fwdc)))
-                                      (values ,%fwdc))))))
-                           ,%superclasses)))
+      (with-symbols (%singleton) ;; FIXME review for unused symbols
 
-             ;; T.D: Emit a style-warning about each class in %FWD
-             ;;
-             ;; TBD: Also define a rudimentary DEFTYPE ... CLASS
-             ;; within the compiler environment, for each class in %FWD
+        (multiple-value-bind (%user-metaclass %params)
+            (compute-user-metaclass %params) ;; NB: May be unused here
 
+          ;; NB: Using an implcit PROTOTYPE-METACLASS is-a SINGLETON here.
+
+          `(let* ()
+
+             #+NIL
+             ;; NB being handled with a trivial direct-superclasses hack, below
              (let ((,%singleton (load-time-value (find-class 'singleton)
                                                  t)))
                (unless (some (lambda (c)
@@ -734,40 +734,43 @@
                              ,%supers)
                  (setf ,%supers (nconc ,%supers (list ,%singleton)))))
 
-             (let ((,%proto (ensure-class (quote ,%proto-name)
-                                          :metaclass (quote ,%metaclass)
-                                          :direct-superclasses ,%supers)))
-               ;; NB: ^ This may not be sufficent as to be able to
-               ;; locate the class during evaluation of the following
-               ;;
-               ;; NB ^ As it creates an instance of a class metaobject
-               ;; via MAKE-INSTANCE (and not DEFCLASS) this _may not_
-               ;; serve to register the prototype-class (resulting from
-               ;; that evaluation) as a class completely "known" to the
-               ;; implementation type system
-               ;;
-               ;; So, FIXME: Use interned class names for prototype
-               ;; classes created via DEFSINGLETON*; use DEFCLASS to
-               ;; define such prototype classes
-               ;;
-               ;; Subsq FIXME: Determine some way to include any
-               ;; user-specified :METACLASS as a superclass of the
-               ;; resulting defsingleton* prototype-class - along with
-               ;; any user-specified superclasses for the resulting
-               ;; SINGLETON metaobject
-               (values
-                (defclass ,name ,(cons %proto-name superclasses)
-                  ,slots
-                  (:metaclass ,%proto-name)
-                  ,@%params)
-                ;; NB: The %PROTO class gets too easily lost here,
-                ;; beyond prototyping
-                ,%proto
-                ;; FIXME: Emit a signal or a style-warning for each
-                ;; foward referened class. Note that these prevent the
-                ;; resulting singleton class from being, as yet,
-                ;; finalized.
-                ,%fwd))))))))
+             ;; NB: This macro, in effect, prevents any usage of forward
+             ;; referenced classes in the SUPERCLASSES list
+
+             ;; AS SUCH, MACROLET might be useful within this
+             ;; macroexpansion - to ensure that an appropriate direct
+             ;; superclasses list can be computed, consistently,
+             ;; for each of the ,%PROTO-NAME and ,%NAME classes
+             ;;
+             ;; Note that as this already requires that none of the
+             ;; SUPERCLASSES will be a FORWARD-REFERENCED-CLASS,
+             ;; it can therefore be determined - reliably - whether any
+             ;; of a SINGLETON or PROTOTYPE-CLASS metaclass is denoted
+             ;; in the SUPERCLASSES list for - respectively - the ,NAME
+             ;; and ,%PROTO-NAME classes
+
+             (defclass ,%proto-name (,@%user-metaclass prototype-class
+                                                       ,@superclasses)
+               ()
+               (:metaclass prototype-class))
+
+             (defclass ,name
+                  ;; NOTES - SINGLETON AS DIRECT SUPERCLASS (A HACK)
+                  ;; does not break, but does not result in an
+                  ;; appropriate class precedence list (w/ PCL)
+                  #+NIL (,@superclasses)
+                  ;; breaks when defining subclasses, does not break at first
+                  #+NIL (singleton ,@superclasses)
+                  ;; does not break, and may result in an appropriate class
+                  ;; precedence list in the class
+                  ;;
+                  ;; FIXME -  MIGHT BREAK under some superclasses having
+                  ;; SINGLETON as a superclass (More test cases req'd)
+                  (,@superclasses singleton)
+                ,slots
+                (:metaclass ,%proto-name)
+                ,@%params)))))))
+
 
 ;; FIXME: Test DEFSINGLETON* with forward-referenced direct superclasses
 
@@ -780,7 +783,6 @@
 
 
   (defsingleton* frob-s-1 (frob-c)
-    ;; FIXME May err if evaluated twice - see above remarks
     ())
 
   (typep (find-class 'frob-s-1) 'frob-c)
@@ -794,13 +796,34 @@
 
   ;; So, THIS WORKS
 
-  ;; though it's indecorus as for the default prototype class naming a.t.m
-
   (subtypep (make-instance (find-class 'frob-s-1)) 'frob-c)
   ;; FIXME => NIL, T
-  ;; ^ dispatch in INITIALIE-INSTANCE such as to create an instance of
-  ;; the prototype clss of FROB-S-1 w/ FROB-S-1 as a superclass
+  ;; ^ T.D: Dispatch in INITIALIZE-INSTANCE SINGLETON ??
+  ;;   such as to create an instance of the prototype class of FROB-S-1
+  ;; w/ FROB-S-1 as a direct superclass (whether or not the resulting
+  ;; SINGLETON may be processed by the compiler, in any way equivalent
+  ;; to an explicit DEFCLASS form, or entirely recognized by the type
+  ;; system as - in fact - a class)
 
+  #+NIL ;; useless, it would seem
+  (shared-initialize (find-class 'frob-s-1) t
+                     :direct-superclasses (list (find-class 'frob-c)))
+
+  (class-direct-superclasses (find-class 'frob-s-1))
+
+  (class-precedence-list (find-class 'frob-s-1))
+
+  (class-precedence-list (class-of (find-class 'frob-s-1)))
+
+  (defsingleton* frob-s-1-1 (frob-s-1)
+    ())
+
+  (typep (find-class 'frob-s-1-1) 'frob-s-1)
+  ;; => T ! for the singleton superclass
+  ;; - suitable for some OO protocol definitions
+  ;; - nearly works around limitations imposed by the implementation,
+  ;;   in effect disallowing any class except STANDARD-CLASS to be an
+  ;;   instance of itself.
 )
 
 #+TBD
@@ -828,7 +851,7 @@
 ;; => T, T, T, T
 
 
-(class-slots (find-class 'singleton-1-1))q
+(class-slots (find-class 'singleton-1-1))
 
 (class-direct-slots (find-class 'singleton-1-1))
 
@@ -837,9 +860,9 @@
   ((sl-c)))
 
 
-(class-slots (find-class 'singleton-1-2))
+(class-slots (find-class 'singleton-2-2))
 
-(class-direct-slots (find-class 'singleton-1-2))
+(class-direct-slots (find-class 'singleton-2-2))
 
 (typep (find-class 'singleton-1-1) 'singleton-1-1)
 ;; => NIL ; which still is not good for this design
@@ -858,10 +881,10 @@
 
 
 (subtypep (make-instance 'singleton-1-1) 'singleton-1-1)
-;; => NIL, T ;; not OK
+;; => NIL, T ;; not OK (DNW NOW - FIXME)
 
 (subtypep (make-instance 'singleton-2-2) 'singleton-1-1)
-;; => NIL, T ;; not OK
+;; => NIL, T ;; not OK (DNW NOW - FIXME)
 
 
 ;; to make a suclass C2 of a class C1 both an instance and subtype of C1 ...
@@ -943,7 +966,7 @@
 ;; ...
 
   (defsingleton* x-b (x-a)
-    ;; FIXME: New DEFSINGLETON* DNW for any forward-referenced superclass
+    ;; NB: PCL will err here iff x-a is a forward referenced class
     ())
 
   (typep (make-instance 'x-b) 'x-b)
