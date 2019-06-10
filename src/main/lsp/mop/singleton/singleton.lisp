@@ -192,9 +192,9 @@
     ())
 
   (typep (find-class 's-x-2) 's-x-1)
-  ;; => NIL ; which is - in short - why this was updated with DEFSINGLETON*
+  ;; => NIL ; which is - in short - why this was updated with DEFSINGLETON
   ;;
-  ;; NB: A broader synposis about the DEFSINGLETON* update is provided,
+  ;; NB: A broader synposis about the DEFSINGLETON update is provided,
   ;; in commentary available in the macro definition's source form, below.
 
   )
@@ -282,10 +282,7 @@
 ;; implementations.
 
 
-;; NB: The following forms were in use, as to test the original
-;; DEFSINGLETON definition -- as has subsequently been removed from the
-;; source code, in lieu of an updated  DEFSINGLETON*, defined later in
-;; this source file.
+;; NB: DEFSINGLETON Update
 ;;
 ;; The origingial DEFSINGLETON macro definition was removed in changeset
 ;; d2d9c76740f684a18276207cc149a981e76619a3 - 9 June, 2019 19:01:08-0700
@@ -293,151 +290,10 @@
 ;; Subsequently, the updated DEFSINGLETON* has been renamed DEFSINGLETON,
 ;; in effect replacing the original macro definition.
 
-#+nil
-(eval-when ()
-
-(defsingleton singleton-1 ()
-  ((sl-1)
-   (sl-b)))
-
-(typep (find-class 'singleton-1) 'singleton)
-;; => T
-
-(subtypep (find-class 'singleton-1) 'singleton)
-;; => T, T
-
-;; alternately ...
-(let ((c (find-class 'singleton-1)))
-  (multiple-value-bind (st-1 st-2)
-      (subtypep c 'singleton)
-    (multiple-value-bind (mt-1 mt-2)
-        (subtypep (class-of c) 'singleton)
-      (values st-1 st-2
-              mt-1 mt-2))))
-
-;; => T, T, T, T
+;; NB: Refer to DEFSINGLETON test definitions at end of file
 
 
-(class-slots (find-class 'singleton-1))
-
-(class-direct-slots (find-class 'singleton-1))
-
-(defsingleton singleton-2 (singleton-1)
-  ((sl-c)))
-
-;; (finalize-inheritance (find-class 'singleton-2))
-
-(class-slots (find-class 'singleton-2))
-
-(class-direct-slots (find-class 'singleton-2))
-
-
-;; NB
-(typep (find-class 'singleton-2) 'singleton-1)
-;; => NIL
-;; ^ there it differs from the newer DEFSINGLETON*
-
-;; -- Towards defining a subclass of SINGLETON as an instance of its own class
-
-;; FIXME - DESIGN ISSUE
-
-(typep (find-class 'singleton-1) 'singleton-1)
-;; => NIL ; which is not good for this design
-;;
-;; NB: The singleton-subtype concern has been addressed - insofar as with
-;; regards to direct superclasses - in the present DEFSINGLETON*
-;; definition
-
-(typep (make-instance 'singleton-1) 'singleton-1)
-;; => T ; which is passable
-
---
-
-(defsingleton singleton-3-1 (singleton-1)
-  ())
-
-(typep (make-instance 'singleton-3-1) 'singleton-1)
-;; => T
-
-(typep (make-instance 'singleton-3-1) 'singleton-3-1)
-;; => T
-
-(typep (find-class 'singleton-3-1) 'singleton-1)
-;; => NIL ;; not good though
-
---
-
-(defparameter *c1*
-  (make-instance 'forward-referenced-class
-                 :name (gentemp "C1-")))
-
-(change-class *c1* (find-class 'singleton)
-              :direct-superclasses (list *c1* (find-class 'singleton)))
-;; ^ fails during SHARED-INITIALIZE :AFTER (SB-PCL::STD-CLASS T)
-;;   ... more specifically, in SB-PCL::UPDATE-CLASS
-;;       ... with a generic SIMPLE-ERROR
-
-;; ADD-DIRECT-SUBCLASS - needed for class-system mangement, but
-;; insufficent for updating the class itself
-
-(defparameter *c2*
-  (make-instance 'singleton
-                 :name (gentemp "C2-")))
-
-(add-direct-subclass (find-class 'singleton) *c2*)
-
-(class-direct-superclasses *c2*)
-;; ^ ADD-DIRECT-SUBCLASS may not affect the SUBCLASS itself
-
-;; ...
-
-#+TBD
-(setf (class-direct-superclasses *c2*)
-      ;; DNW - there is no standard SETF method corresponding to this
-      ;; reader function.
-      ;;
-      ;; PCL also does not define any setter for the metaclass slot that
-      ;; CLASS-DIRECT-SUBCLASSES accesses.
-      ;;
-      ;; Many of those metaclass slots may be defined, in effect,
-      ;; "Read-only." However, this does not in itself serve to prove as
-      ;; if those slots' values cannot be usefully modified -- if
-      ;; corresponding to an appropriate modification of class layout
-      ;; information, in an implementation-specific regard.
-      (cons *c2* (class-direct-superclasses *c2*)))
-
-;; No way to work around that pedagogic quirk in UPDATE-CLASS ?
-;;
-;; Even if the DIRECT-SUPERCLASSES list is destructively modified
-;; for the class, PCL might still cause it to fail during SHARED-INITIALIZE
-
-
-
-(defparameter *c3*
-  (make-instance 'singleton
-                 :direct-superclasses  (list (find-class 'singleton))
-                 :name (gentemp "C3-")))
-
-;; (typep *c3* 'singleton)
-
-;; (subtypep *c3* 'singleton)
-;;  => T, T
-
-;; -- [!!] --
-
-;; There may be a way to work around that pedagogic quirk in PCL,
-;; by using an anonymouns intermediary class representative of
-;; the user-specified superclass information - such that the
-;; user-named class will be a subclass and an instance of that
-;; class (but not a subclss of itself)
-;;
-;; Such as class may be denoted as the PROTOTYPE-CLASS of a SINGLETON
-;;
-;; This bit of indirection will require an update onto DEFSINGLETON
-
-
-)
-
+;; -- misc utils (prototypes)
 
 (defun* find-class-in-precedence (super class &optional (errorp t))
   ;; return the first class found, of which SUPER it is a direct superclass
@@ -493,24 +349,9 @@
   => no value returned
 )
 
-;; FIXME: use (FIND-CLASS-IN-PRECEDENCE 'singleton ...) in DEFSINGLETON*
 
 
-;; NB
-;; (typep (find-class 'standard-class) 'standard-class)
-;; => T
-
-(defclass singleton* (singleton)
-  ((%prototype-metaclass
-    ;; should be EQ to the class itself
-    ;; ... at least in any subclass
-    :initarg :%prototype-metaclass
-    :type class
-    ))
-  (:metaclass singleton))
-
-
-#+NIL
+#+NIL ;; NB: Used in some ealier prototypes, retained here temporarily
 (defmacro getf* (place property &optional default)
   ;; FIXME - move definition to ltp-common
   (with-symbols (dflt obj)
@@ -526,61 +367,49 @@
           (values ,obj t))))))
 
 
-#+NIL
-(defmethod allocate-instance ((class singleton*)
-                              &rest initargs)
-  ;; Prototype (Unused)
-  ;;
-  ;; NB: MAKE-INSTANCE <CLASS> considered contradictory, if it cannot be
-  ;; portably accompanied with any form to ensure that the compiler will
-  ;; recognize the instance as both a type and a class.
 
-  (let (initargs-updated)
-    (macrolet ((dispatch
-                   `(cond
-                      (initargs-updated
-                       (apply #'call-next-method class initargs))
-                      (t (call-next-method)))))
-      (multiple-value-bind (metaclass mc-p)
-          (getf* initargs :metaclass)
-        (declare (ignore metaclass))
-        (unless mc-p
-          (prog1 (setf (getf initargs :metaclass)
-                       (make-instance ... ;; NOPE
-                                      ))
-            (setq initargs-updated t))))
-    (dispatch))))
+(defgeneric prototype-implementation-class (class))
+(declaim (ftype (function (class)
+                          (values class-designator &optional))
+                prototype-implementation-class))
+
+(defgeneric (setf %prototype-implementation-class) (new-value class))
+(declaim (ftype (function (class-designator class)
+                          (values class-designator &optional))
+                (setf %prototype-implementation-class)))
 
 
-
-#+NIL
-(defmethod shared-initialize ((instance singleton*) slots
-                              &rest initargs
-                                &key (prototype-class nil pm-p)
-                                  &allow-other-keys)
-  ;; NB: The PROTOTYPE-CLASS should be the class of the INSTANCE itself
-  )
-
-
+;; NB: Considering that the class PROTOTYPE-CLASS is used in the
+;; evaluation of the updated DEFSINGLETON maro, it cannot be defined with
+;; DEFSINGLETON*.
+;;
+;; The class represents a SINGLETON type - equivalently, representing a
+;; SINGLETON metaclass. As it defines the class PROTOTYPE-CLASS,
+;; however, it  will not be defined with a PROTOTYPE metaclass of type
+;; PROTOTYPE-CLASS, such as how any class defined with DEFSINGLETON will be
+;; defined.
+;;
+;; As such, the class of PROTOTYPE-CLASS will not be capable of storing
+;; a refeernce to the class, PROTOTYPE-CLASS, itself. Although this
+;; could be addressed with some indirection, it might not be asumed to
+;; represent any serious concern for applications.
+;;
 (defclass prototype-class (singleton)
-  ()
+  ((implementation-class
+    :type class-designator
+    :initarg :implementation-class
+    :reader prototype-implementation-class
+    :writer (setf %prototype-implementation-class)))
   (:metaclass singleton))
 
-#+NIL
-(defsingleton prototype-class (singleton)
-  ())
-;; ^ FIXME/QA: This breaks.
-;; - SINGLETON is directly specified, here, as a direct superclass. The
-;;   macroexpansion subsequently adds a duplicate SINGLETON to the
-;;   direct superclass list. (Trivial class precedence hack for DEFCLASS
-;;   eval in arbitrary compiler environments)
 
+;; --
 
 (defmacro defsingleton (name (&rest superclasses)
                                 slots
                         &rest params)
 
-  ;; NB: As one purpose that this new DEFSINGLETON* serves, juxtaposed
+  ;; NB: As one purpose that this new DEFSINGLETON serves, juxtaposed
   ;;     to the original DEFSINGLETON definition: The resulting
   ;;     SINGLETON instance, as defined with this updated macro, will
   ;;     represent a subtype to every class specified in SUPERCLASSES.
@@ -588,7 +417,7 @@
   ;;     --
   ;;     NB: This documentation, in effect, uses the term PROTOTYPE-CLASS in
   ;;     lieu of METACLASS as it denotes -- in the former -- a class
-  ;;     defined during evaluation of DEFSINGLETON*, however serving
+  ;;     defined during evaluation of DEFSINGLETON, however serving
   ;;     in a role of a conventional CLOS metaclass.
   ;;     ---
   ;;
@@ -631,12 +460,10 @@
                          (params-adj
                           (remove meta-prop params
                                   :test #'eq)))
-                    #+NIL (values (cadr meta-prop) params-adj)
-                    (values (cdr meta-prop) params-adj)
-                    ))
+                    (values (cdr meta-prop) params-adj)))
                  (t
-                  #+NIL (values 'singleton* params)
                   (values nil params)))))
+
            (compute-prototype-class-name (params)
              (let ((name-n (position :prototype-class
                                      (the list params)
@@ -651,7 +478,7 @@
                                   :test #'eq)))
                     (values (cadr name-prop) params-adj)))
                  (t
-                                        ;: NB: Calling INTERN in the macroexpansion @ default name
+                  ;; NB: Calling INTERN before the macroexpansion @ default name
                   (values (intern (concatenate 'simple-string
                                                (symbol-name name)
                                                #.(symbol-name '#:-prototype)))
@@ -662,12 +489,14 @@
 
       (with-symbols ()
 
-        (multiple-value-bind (%user-metaclass %params)
-            (compute-user-metaclass %params) ;; NB: May be unused here
+        (multiple-value-bind (user-metaclass %params)
+            (compute-user-metaclass %params)
 
           ;; NB: Using an implcit PROTOTYPE-METACLASS is-a SINGLETON here.
 
           `(progn
+
+             ;; FIXME: How much here may need to be wrapped in EVAL-WHEN?
 
              ;; NB: This macro, in effect, prevents any usage of forward
              ;; referenced classes in the SUPERCLASSES list
@@ -684,32 +513,33 @@
              ;; in the SUPERCLASSES list for - respectively - the ,NAME
              ;; and ,%PROTO-NAME classes
 
-             (defclass ,%proto-name (,@%user-metaclass prototype-class
-                                                       ,@superclasses)
+
+             (defclass ,%proto-name (,@user-metaclass prototype-class
+                                                      ,@superclasses)
                ()
+               (:implementation-class . ,name)
                (:metaclass prototype-class))
 
-             (defclass ,name
-                 ;; NOTES - SINGLETON AS DIRECT SUPERCLASS (A HACK)
-                 ;; does not break, but does not result in an
-                 ;; appropriate class precedence list (w/ PCL)
-                 #+NIL (,@superclasses)
-               ;; breaks when defining subclasses, does not break at first
-               #+NIL (singleton ,@superclasses)
-               ;; does not break, and may result in an appropriate class
-               ;; precedence list in the class
-               ;;
-               ;; FIXME -  MIGHT BREAK under some superclasses having
-               ;; SINGLETON as a superclass (More test cases req'd)
-               (,@superclasses singleton)
-               ,slots
-               (:metaclass ,%proto-name)
-               ,@%params)))))))
+             (prog1 (defclass ,name (,@superclasses #+NIL singleton)
+                      ;; NB: see INITILAIZE-INSTANCE below
+                      ,slots
+                      (:metaclass ,%proto-name)
+                      ,@%params)
+               ;; NB/DOCUMENTATION (and PCL) - NOTE THE FOLLOWING
+               (shared-initialize (find-class (quote ,name))
+                                  (list +direct-superclasses-slot+))
+               (setf (%prototype-implementation-class
+                      (find-class (quote ,%proto-name)))
+                     (find-class (quote ,name)))
+
+               )))))))
 
 
-;; FIXME: Test DEFSINGLETON* with forward-referenced direct superclasses
+;; --
 
-;; FIXME: Test DEFSINGLETON* with a SINGLETON superclass of a direct superclass
+;; FIXME: Test DEFSINGLETON with forward-referenced direct superclasses
+
+;; FIXME: Test DEFSINGLETON with a SINGLETON superclass of a direct superclass
 
 (eval-when ()
 
@@ -717,8 +547,11 @@
     ())
 
 
-  (defsingleton* frob-s-1 (frob-c)
+  (defsingleton frob-s-1 (frob-c)
     ())
+
+  (class-direct-superclasses (find-class 'frob-s-1))
+  ;; =>( #.(... SINGLETON) #.(... FROB-C))
 
   (typep (find-class 'frob-s-1) 'frob-c)
   ;; => T
@@ -750,7 +583,7 @@
 
   (class-precedence-list (class-of (find-class 'frob-s-1)))
 
-  (defsingleton* frob-s-1-1 (frob-s-1)
+  (defsingleton frob-s-1-1 (frob-s-1)
     ())
 
   (typep (find-class 'frob-s-1-1) 'frob-s-1)
@@ -764,9 +597,12 @@
 #+TBD
 (eval-when ()
 
-(defsingleton* singleton-1-1 ()
+(defsingleton singleton-1-1 ()
   ((sl-1)
    (sl-b)))
+
+(class-direct-superclasses (find-class 'singleton-1-1))
+;; NB: ^ should always include SINGLETON
 
 (typep (find-class 'singleton-1-1) 'singleton)
 ;; => T
@@ -791,7 +627,7 @@
 (class-direct-slots (find-class 'singleton-1-1))
 
 
-(defsingleton* singleton-2-2 (singleton-1-1)
+(defsingleton singleton-2-2 (singleton-1-1)
   ((sl-c)))
 
 
@@ -816,58 +652,189 @@
 
 
 (subtypep (make-instance 'singleton-1-1) 'singleton-1-1)
-;; => NIL, T ;; not OK (DNW NOW - FIXME)
+;; => NIL, T ;; not OK
 
 (subtypep (make-instance 'singleton-2-2) 'singleton-1-1)
-;; => NIL, T ;; not OK (DNW NOW - FIXME)
+;; => NIL, T ;; not OK
+
+(typep (make-instance 'singleton-2-2) 'singleton-1-1)
+;; => T
+;; "It's a start!" ....
 
 
-;; to make a suclass C2 of a class C1 both an instance and subtype of C1 ...
+;; NB: To produce a suclass C2 of a class C1, such that C2 is both an
+;; instance typep C1 and a subtype of C1 ...
 ;;
-;; define MAKE-INSTANCE => CREATE-SUBTYPE
-
-;; NB: However approached - whether by prepending a singleton S to the
-;; list of direct superclasses specified originally to MAKE-INSTANCE, or
-;; if otherwise - this change will also affect the outcomes of the
-;; original DEFSINGLETON (no prototype-class) macro definition.
-
-
+;; one may define MAKE-INSTANCE => CREATE-SUBTYPE
+;; via ALLOCATE-INSTANCE
+;;
+;; This, albeit, may seem to pose some difficulty for typing in the
+;; implementation compiler (??() whether or not that may be singularly
+;; dependent on any one manner of approach.
 
 )
 
-;; #+TESTING
-(eval-when ()
-(defmethod shared-initialize ((instance singleton) slots
-                              &rest initargs &key
-                                               direct-superclasses
-                                               &allow-other-keys)
+
+;; --------------------------------------------------
+
+;; NB: PCL does not define a slot with a :direct-superclasses initarg
+;;     but some other MOP implementations may
+
+(macrolet ((find-for (name accessor whence base-class)
+             `(block search
+                (dolist (c (reverse (class-precedence-list
+                                     (find-class (quote ,base-class)))))
+                  (dolist (sl (,whence c))
+                    (when (find (quote ,name)
+                                (the list (,accessor sl))
+                                :test #'eq)
+                      (return-from search (slot-definition-name sl))))))))
+  (defconstant* +direct-superclasses-slot+
+      (or (find-for :direct-superclasses
+                    slot-definition-initargs
+                    class-slots
+                    standard-class)
+          (find-for class-direct-superclasses
+                    slot-definition-readers
+                    class-direct-slots
+                    standard-class)
+          (error "Cannot find direct superclasses slot for ~
+standard-class, in this implementation"))))
+
+
+
+(defmethod change-class :after ((instance forward-referenced-class)
+                                (new prototype-class)
+                                &rest initargs &key &allow-other-keys)
+  (let* ((implc (and (slot-boundp instance 'implementation-class)
+                     (prototype-implementation-class new)))
+         (implc-inst (when implc
+                       (compute-class implc nil))))
+    (cond
+      (implc-inst
+       ;; FIXME: OTHERWISE need to defer evaluation !
+       #+nil
+       (warn "Dispatch from CHANGE-CLASS ~S ~S to initialize ~S"
+             instance new implc-inst)
+
+       ;; NB: in PCL this may be the only way that the
+       ;; direct-supeclasses slot winds up initialized from
+       ;; CHANGE-CLASS (??) (FIXME: Evaluate how that's been implemented)
+       (shared-initialize implc-inst (list +direct-superclasses-slot+)))
+      (t (warn "~<Unable to initilize unreachable ~
+implementation class ~S for ~S~>~< during CHANGE-CLASS ~s ~s~>"
+               implc new
+               instance new)))))
+
+
+(defmethod shared-initialize :after ((instance singleton) slots
+                                     &rest initargs &key &allow-other-keys)
+  (when (or (eq slots t)
+            (and (consp slots)
+                 (find +direct-superclasses-slot+ (the cons slots)
+                       :test #'eq)))
+    (let ((tgt-class (find-class 'singleton))
+          (unused-class (find-class 'standard-object))
+          (dsup (slot-value instance +direct-superclasses-slot+)))
+      (declare (dynamic-extent tgt-class unused-class))
+
+      (setq dsup
+            (delete unused-class dsup :test #'eq))
+
+      (unless (some (lambda (c)
+                      (find-class-in-precedence tgt-class c nil))
+                    dsup)
+        (setq dsup (cons tgt-class dsup)))
+
+      #+NIL
+      (warn "Frob in SHARED-INITIALIZE for ~S - DSUP ~S" instance dsup)
+
+      (setf (slot-value instance +direct-superclasses-slot+)
+            dsup))))
+
+
+;; --------------------------------------------------
+
+(defmethod initialize-instance ((instance singleton)
+                                &rest initargs &key
+                                                 direct-superclasses
+                                                 &allow-other-keys)
   ;; ensure that any call to MAKE-INSTANCE of a SINGLETON will produce
-  ;; an object that is a subtype of the original SINGLETON [FIXME DNW]
-  (let (initargs-updated)
+  ;; an object that is a subtype of the original SINGLETON
+  ;;
+  ;; [FIXME DNW IN SOME POST-HOC APPLICATIONS - NEEDS FURTHER TESTING]
+
+  ;; NB: This may be "Early enough" to catch where PCL is initially
+  ;; setting the direct-superclasses list for a class definition.
+  ;;
+  ;; Note that PCL may be (perhaps cheaply) setting the STANDARD-OBJECT
+  ;; class into the list of DIRECT-SUPRECLASSES whenever the
+  ;; direct-superclasses list is NIL in the initial DEFCLASS form.
+  ;;
+  ;; Theoretically. that can be removed during ENSURE-TGT-SUPERCLASS below.
+  ;; [FIXME / QA]
+
+  (let ((tgt-class (find-class 'singleton))
+        (unused-class (find-class 'standard-object))
+        initargs-updated)
+    (declare (dynamic-extent tgt-class unused-class))
     (macrolet ((dispatch ()
                  `(cond
                     (initargs-updated
-                     (apply #'call-next-method instance slots initargs))
-                    (t (call-next-metod)))))
-      (labels ((ensure-superclass (c)
+                     #+NIL
+                     (warn "~<Updated Dispatch for ~S in INITIALIZE-INSTANCE ~>~
+~< - DIRECT-SUPERCLASSES modified: ~S~>" instance direct-superclasses)
+                     (apply #'call-next-method instance initargs))
+                    (t (call-next-method)))))
+      (labels ((ensure-tgt-superclass ()
                  (cond
                    (direct-superclasses
                     (unless (some (lambda (c)
-                                    (find-class-in-precedence instance c nil))
+                                    (find-class-in-precedence tgt-class c nil))
                                   direct-superclasses)
                       (prog1 (setf (getf initargs :direct-superclasses)
-                                   (cons instance direct-superclasses))
+                                   (cons tgt-class
+                                         (remove unused-class
+                                                 direct-superclasses
+                                                 :test #'eq)))
                         (setq initargs-updated t))))
                    (t (prog1 (setf (getf initargs :direct-superclasses)
-                                   (cons instance direct-superclasses))
+                                   (cons tgt-class
+                                         (remove unused-class
+                                                 direct-superclasses
+                                                 :test #'eq)))
                         (setq initargs-updated t))))))
-        (ensure-superclass instance)
+        ;; NB: This does not ever check the value of SLOTS.
+        ;;;
+        ;; Such a check would have to be performed in a completely
+        ;; implementation-specific regard, in order to detect what the
+        ;; assumed DIRECT-SUPERCLASES slot would be named, for any
+        ;; instance in which SLOTS would be TYPEP CONS.
+        ;;
+        ;; This could also, then, dispatch in a portable way singularly
+        ;; for the case of (EQ SLOTS T)
+        ;;
+        ;; In lieu of that, this will modify SLOTS in many
+        ;; instances. The modification might subsequently be ignored by
+        ;; the next method.
+        ;;
+        ;; This method, as such, might be left undefined in the top level of
+        ;; the containing source file.
+        (setq direct-superclasses (ensure-tgt-superclass))
+
+        ;; NB: Not useful if the updated value is being ignored
+        ;;     by the implementation
+
         (dispatch)))))
 
-)
+
+
+;; )
 
 (eval-when ()
-  (defsingleton* x-a ()
+  ;; FIXME: Not very rigorous tests onto the updated SHARED-INITIALIZE
+
+  (defsingleton x-a () ;; FIXME SINGLETON no longer appearing in the X-A CPL
     ())
 
   (typep (make-instance 'x-a) 'x-a)
@@ -877,10 +844,11 @@
   ;; FIXME while => NIL, T
 
   ;; NB/ORTHOGONAL - CLOS and MOP
-  (values (find-class nil nil)
-          (let* ((nm (gentemp "singleton-"))
-                 (c (make-instance 'x-a :name nm)))
-            (find-class nm nil)))
+  (list* (find-class nil nil)
+         (let* ((nm (gentemp "Singleton-"))
+                (c (make-instance 'standard-class :name nm)))
+           (list (find-class nm nil)
+                 c)))
   ;; => NIL, NIL
   ;;
   ;; THUS: While MAKE-INSTANCE of a STANDARD-CLASS does result in an
@@ -898,9 +866,15 @@
   ;; implementation.
 
 
+  (find-class-in-precedence 'singleton 'x-a nil)
+  ;; => #.(find-class 'X-A)
+
+  (class-precedence-list (find-class 'x-a))
+
+
 ;; ...
 
-  (defsingleton* x-b (x-a)
+  (defsingleton x-b (x-a)
     ;; NB: PCL will err here iff x-a is a forward referenced class
     ())
 
@@ -925,8 +899,9 @@
   (typep (make-instance 'x-c) 'x-c)
   ;; => T ;; consistent onto CLOS
 
-
   (class-direct-superclasses (find-class 'x-c))
+
+  (class-direct-superclasses (class-of (find-class 'x-c)))
 
   ;; -
 
@@ -937,7 +912,7 @@
 
   (subtypep (make-instance 'x-d) 'x-c)
   ;; FIXME while => NIL, T
-  ;; same behavior as with new DEFSINGLETON* [FIXME there too]
+  ;; same behavior as with new DEFSINGLETON [FIXME there too]
 
 
   (class-direct-superclasses (find-class 'x-d))
@@ -946,11 +921,51 @@
   ;; => T, T ;; consistent onto CLOS
 
 
+
+;; -- tests onto forward referenced classes
+
+(defclass proto-frob-pf~2 (proto-frob-pf~1)
+  ;; NB: The class proto-frob-pf~2 will be unused in this test.
+  ;;
+  ;;     The defclass form is evaluated once, as a trivial way to create
+  ;;     a forward-referenced class
+  ())
+
+;; (class-name (class-of (find-class 'proto-frob-pf~1)))
+;; => FORWARD-REFERENCED-CLASS
+;; or else do not reevaluate these test forms ...
+
+;; Now where can any portable application initialize proto-frob-pf~1
+;; completely, during the following?
+
+(defsingleton proto-frob-pf~1 (x-a)
+  ())
+
+(class-direct-superclasses (find-class 'proto-frob-pf~1))
+;; ^ FIXME - needs to include SINGLETON (via ... ??)
+;;
+
+(class-direct-superclasses (class-of (find-class 'proto-frob-pf~1)))
+
+
+;; -- test w/ slot definitions
+
+(defsingleton misc-singleton ()
+  ((sl-a
+    :type t
+    :initarg :sl-a
+    :accessor misc-singleton-a
+    )))
+
+;; NB: THIS NEEDS TO BE TESTED IN A COMPILER ENVIRONMENT (??)
+
+(class-direct-slots (find-class 'misc-singleton))
+(class-slots (find-class 'misc-singleton))
+
+
+
 )
 
 
 ;; --
 
-
-;; T.D: Also test this type/instance/subtype semantics for CHANGE-CLASS
-;; from a FORWARD-REFERENCED-CLASS to SINGLETON
