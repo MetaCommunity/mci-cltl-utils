@@ -286,7 +286,12 @@
 ;; DEFSINGLETON definition -- as has subsequently been removed from the
 ;; source code, in lieu of an updated  DEFSINGLETON*, defined later in
 ;; this source file.
-
+;;
+;; The origingial DEFSINGLETON macro definition was removed in changeset
+;; d2d9c76740f684a18276207cc149a981e76619a3 - 9 June, 2019 19:01:08-0700
+;;
+;; Subsequently, the updated DEFSINGLETON* has been renamed DEFSINGLETON,
+;; in effect replacing the original macro definition.
 
 #+nil
 (eval-when ()
@@ -571,9 +576,9 @@
 ;;   eval in arbitrary compiler environments)
 
 
-(defmacro defsingleton* (name (&rest superclasses)
+(defmacro defsingleton (name (&rest superclasses)
                                 slots
-                         &rest params)
+                        &rest params)
 
   ;; NB: As one purpose that this new DEFSINGLETON* serves, juxtaposed
   ;;     to the original DEFSINGLETON definition: The resulting
