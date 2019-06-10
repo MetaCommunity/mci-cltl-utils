@@ -117,74 +117,6 @@
 (validate-class singleton)
 
 
-(defmacro defsingleton (name (&rest superclasses)
-                                slots
-                        &rest params)
-  (labels ((compute-metaclass (params)
-             (let ((meta-n (position :metaclass
-                                     (the list params)
-                                     :test #'eq
-                                     :key #'car)))
-               (cond
-                 (meta-n
-                  (let* ((meta-prop
-                          (nth meta-n params))
-                         (params-adj
-                          (remove meta-prop params
-                                  :test #'eq)))
-                    (values meta-prop params-adj)))
-                 (t
-                  (values (list :metaclass 'singleton)
-                          params))))))
-    (let ((%superclasses (append superclasses
-                                 (list 'singleton))))
-      ;; ^ FIXME: In effect, injecting SINGLETON into the tail of the
-      ;; list of direct superclasses - here, as for evaluation in a
-      ;; DEFCLASS form - this will not be sufficient for all classes
-      ;; as may extend SINGLETON. In a future revision, this concern may
-      ;; be addressed with a manner of initialization argument mangling
-      ;; onto SHARED-INITIALIZE (SINGLETON T)
-      ;;
-      ;; NB: This should be considered again, in light of the
-      ;; PROTOTYPE-CLASS proposal, as described -- in something of a
-      ;; rough sketch reagard -- at the end of this source file.
-      ;;
-      ;; This macro may subsequently be updated to not use DEFCLASS at
-      ;; all.
-      ;;
-      ;; It should provide an analogous behvior to DEFCLASS, in every
-      ;; portable regard. Note e.g during SB-PCL DEFCLASS
-      ;; - SB-KERNEL::%COMPILER-DEFCLASS in the compiler environment
-      ;;   - Can this be approximated with a compile-time DEFTYPE ?
-      ;; - SB-PCL::LOAD-DEFCLASS in normal top-level evaluation
-      (multiple-value-bind (%metaclass %params)
-          ;; NB: This does not check to ensure that any specified
-          ;; metaclass is a subtype of SINGLETON
-          ;;
-          ;; NB: This metaclass support might be summarily removed, in
-          ;; lieu of a SINGLETON-PROTOTYPE semntics - if not supplanted
-          ;; with a :PROTOTYPE-METACLASS semantics
-          (compute-metaclass params)
-
-        ;; FIXME: Prepend the singleton prototype class to %SUPERCLASSES
-        ;; ... in effect, as this may have to abandon DEFCLASS
-        `(defclass ,name ,%superclasses
-           ,slots
-           ,%metaclass
-           ,@%params)))))
-
-;; FIXME: SINGLETON Finalization
-;;
-;; This sytem may automatically finalize SINGLETON after
-;; initialization or -- as with change-class from a
-;; FORWARD-REFERENCED-CLASS -- after reinitialization, iff not any
-;; superclass of the SINGLETON is a forward-referenced class
-
-;; ... to an effect: Ensure that each SINGLETON is finalized, once every
-;; superclass of the SINGLETON is finalized.
-;;
-
-
 (defmethod finalize-reachable ((class singleton))
   (catch 'finalize-singleton
     (macrolet ((hcall (form)
@@ -348,6 +280,13 @@
 ;; onto CLtL2+MOP standard generic functions and standard methods - at
 ;; least insofar as may be portably integrated with any number of PCL
 ;; implementations.
+
+
+;; NB: The following forms were in use, as to test the original
+;; DEFSINGLETON definition -- as has subsequently been removed from the
+;; source code, in lieu of an updated  DEFSINGLETON*, defined later in
+;; this source file.
+
 
 #+nil
 (eval-when ()
@@ -723,7 +662,7 @@
 
           ;; NB: Using an implcit PROTOTYPE-METACLASS is-a SINGLETON here.
 
-          `(let* ()
+          `(progn
 
              #+NIL
              ;; NB being handled with a trivial direct-superclasses hack, below
