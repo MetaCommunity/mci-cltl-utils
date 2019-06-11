@@ -12,6 +12,45 @@
 ;;------------------------------------------------------------------------------
 
 
+;; NOTE - a concern with regards to implicit class definitions and the
+;; implementation compiler environment.
+#+NIL
+(list* (find-class nil nil) ;; simple matter - no class named NIL
+       (let* ((nm (gentemp "Class-"))
+              (c (make-instance 'standard-class :name nm
+                                :direct-superclasses
+                                (list (find-class 'standard-class)))))
+         (list (find-class nm nil)
+               c)))
+;; => NIL, NIL, <CLASS>
+;;
+;; The class C is defined, but not located by FIND-CLASS
+;;
+;; The implementation may provide some forms in the evaluation of
+;; DEFCLASS, such that cannot be portably emulated in a program using
+;; only MAKE-INSTANCE.
+;;
+;; As such, some concerns for portable programs:
+;;
+;; - Any "User-created" classes not defined in such as a top-level
+;;   DEFCLASS form may not be recognized by the compiler as being
+;;   classes.
+;;
+;; - Such "User-created" classes may not be reachable by FIND-CLASS
+;;
+;; - Any such "User-created" class may -- in some effects -- appear to
+;;   shadow a system class, superficially, by that class reusing the
+;;   system class' class-name even while the class is not EQ to the
+;;   class returned by FIND-CLASS for that same class-name.
+;;
+;;
+;; This, in short, is why the macroexpansion for DEFSINGLETON will
+;; produce two top-level DEFCLASS calls.
+;;
+;; This concern, in another effect, may serve to limit some extensions
+;; of the SINGLETON framework.
+
+
 (in-package #:cl-user)
 
 ;; Ed. NB: See also Garnet [KR]
@@ -28,13 +67,8 @@
 
 (in-package #:ltp/common/singleton)
 
-;; NB: File depends on:
-;; #:ltp-common-mop [system]
-;; finalize.lisp [source file]
-;; - must be evaluated after previous DEFPACKAGE, at present
 
-
-;; NB/TD SINGLETON => MODEL [OUTLINE]
+;; NB/TD SINGLETON Extensions => MODEL [OUTLINE]
 ;; - MODEL @ LTP-SYS
 ;;   - MODEL @ LLVM
 ;;   - MODEL @ ASN.1
@@ -108,6 +142,7 @@
 ;;     = Model Development @ LTP DEVO INFRAST - SM
 ;;       - [...]
 
+
 ;; -- Singleton Class Definition
 
 (defclass singleton (standard-class)
@@ -160,33 +195,31 @@ standard-class, in this implementation"))))
 ;; --
 
 (defmethod shared-initialize :after ((instance singleton) slots
-                                     &rest initargs &key &allow-other-keys)
+                                      &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
+  ;; Ensure that the list of direct superclasses is initialized in a
+  ;; manner appropriate for an instance of the class SINGLETON
   (when (or (eq slots t)
             (and (consp slots)
                  (find +direct-superclasses-slot+ (the cons slots)
                        :test #'eq)))
+
     (let ((tgt-class (find-class 'singleton))
           (unused-class (find-class 'standard-object))
           (dsup (slot-value instance +direct-superclasses-slot+)))
       (declare (dynamic-extent tgt-class unused-class))
 
-      (setq dsup
-            (delete unused-class dsup :test #'eq))
+      (setq dsup (delete unused-class dsup :test #'eq))
 
       (unless (some (lambda (c)
                       (find-class-in-precedence tgt-class c nil))
                     dsup)
         (setq dsup (cons tgt-class dsup)))
 
-      #+NIL
-      (warn "Frob in SHARED-INITIALIZE for ~S - DSUP ~S" instance dsup)
-
       (setf (slot-value instance +direct-superclasses-slot+)
-            dsup)
-
-      ;; NB
-      (finalize-reachable instance))))
+            dsup)))
+  ;; Also ensure that the instance is finalized, so far as immediately possible
+  (finalize-reachable instance))))
 
 
 ; Tests for Singleton Finalization - e.g
