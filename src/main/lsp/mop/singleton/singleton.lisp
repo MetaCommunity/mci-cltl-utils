@@ -497,6 +497,22 @@ standard-class, in this implementation"))))
   ;;     meachanisms by which STANDARD-CLASS was defined in a manner as
   ;;     to represent an instance of itself, in any implementation.
 
+  ;; FIXME: Document the :PROTOTYPE-CLASS parameter to DEFSINGLETON.
+  ;;
+  ;;        Note that the parameter serves to allow the calling
+  ;;        environment to specify a class name for the resulting
+  ;;        prototype class. In all instances of DEFSINGLETON, a class
+  ;;        will be defined -- using DEFCLASS -- with that class name. A
+  ;;        default value is computed, if none is specified.
+  ;;
+  ;; FIXME: Document the handling of the :METACLASS parameter, together
+  ;;        with the direct superclass list provided to DEFSINGLETON, as
+  ;;        related to the definition of the prototype metaclass.
+  ;;
+  ;;        In effect, the class defined by DEFSINGLETON will not be an
+  ;;        instance of the class specified in the :METACLASS parameter,
+  ;;        but will be an instance of a subtype of that class.
+
   (labels ((compute-user-metaclass (params)
              (let ((meta-n (position :metaclass
                                      (the list params)
@@ -550,12 +566,13 @@ standard-class, in this implementation"))))
 
              (defclass ,%proto-name (,@user-metaclass prototype-class
                                                       ,@superclasses)
+               ;; NB: See also, the FIXME remark in the definition of
+               ;; the INITIALIZE-INSTANCE method in this source file.
                ()
                (:implementation-class . ,name)
                (:metaclass prototype-class))
 
              (prog1 (defclass ,name (,@superclasses #+NIL singleton)
-                      ;; NB: see INITILAIZE-INSTANCE below
                       ,slots
                       (:metaclass ,%proto-name)
                       ,@%params)
@@ -571,8 +588,9 @@ standard-class, in this implementation"))))
 
 ;; --
 
-;; FIXME: Test DEFSINGLETON with a SINGLETON superclass of a direct
-;; superclass not repreenting a SINGLETON
+;; FIXME: Test DEFSINGLETON with a superclass not being of a metatype
+;; SINGLETON, but such that a direct superclass of that class is of
+;; metatype SINGLETON
 
 (eval-when ()
 
@@ -595,18 +613,23 @@ standard-class, in this implementation"))))
   (typep (make-instance (find-class 'frob-s-1)) 'frob-c)
   ;; => T
 
-  ;; So, THIS WORKS
+  ;; OK ...
 
   (subtypep (make-instance (find-class 'frob-s-1)) 'frob-c)
   ;; FIXME => NIL, T
+  ;;
   ;; ^ T.D: Dispatch in INITIALIZE-INSTANCE SINGLETON ??
-  ;;   such as to create an instance of the prototype class of FROB-S-1
-  ;; w/ FROB-S-1 as a direct superclass (whether or not the resulting
-  ;; SINGLETON may be processed by the compiler, in any way equivalent
-  ;; to an explicit DEFCLASS form, or entirely recognized by the type
-  ;; system as - in fact - a class)
+  ;;
+  ;; ...such as to create a subclass of the prototype class, i.e metaclass,
+  ;; of FROB-S-1 w/ that prototype class as a direct superclass - whether
+  ;; or not the resulting prototype class may be processed by the
+  ;; compiler, in any way  equivalent to an explicit DEFCLASS form
+  ;;
+  ;; Note that a flag value may need to be provided such as to prevent that
+  ;; behavior during DEFSINGLETON - if the DEFSINGLETON prototype class
+  ;; definition will not be moved entirely into that prototol.
 
-  #+NIL ;; useless, it would seem
+  #+NIL ;; NB: the :DIRECT-SUPERCLASSES sequence may be ignored, "By now" ....
   (shared-initialize (find-class 'frob-s-1) t
                      :direct-superclasses (list (find-class 'frob-c)))
 
@@ -698,7 +721,7 @@ standard-class, in this implementation"))))
 ;; NB: To produce a suclass C2 of a class C1, such that C2 is both an
 ;; instance typep C1 and a subtype of C1 ...
 ;;
-;; one may define MAKE-INSTANCE => CREATE-SUBTYPE
+;; one may define MAKE-INSTANCE => CREATE-IMPLICIT-SUBCLASS
 ;; via ALLOCATE-INSTANCE
 ;;
 ;; This, albeit, may seem to pose some difficulty for typing in the
@@ -751,16 +774,38 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
                                 &rest initargs &key
                                                  direct-superclasses
                                                  &allow-other-keys)
-  ;; ensure that any call to MAKE-INSTANCE of a SINGLETON will produce
-  ;; an object that is a subtype of the original SINGLETON
 
-  ;; NB: In some call sequences -- such as when a singleton is
-  ;; created initially from DEFCLASS, rather than CHANGE-CLASS from a
+  ;; NB: This method serves to ensure that SINGLETON should appear in
+  ;; the class precedence list for INSTANCE. If none of the
+  ;; direct-superclasses is a subclass of SINGLETON, the class SINGLETON
+  ;; will be added to the head of the direct superclasses list.  This
+  ;; method also serve to ensure that any instance of the class
+  ;; STANDARD-OBJECT is removed from the initial direct superclasses
+  ;; list.
+
+  ;; NB: In some call sequences -- such as when a singleton is created
+  ;; initially from DEFCLASS, rather than CHANGE-CLASS from a
   ;; FORWARD-RERFERENCED-CLASS -- this may be "Early enough" to catch
   ;; where PCL is initially setting the direct-superclasses list for the
-  ;; class definition.
+  ;; class definition.  NB: See also CHANGE-CLASS, SHARED-INITIALIZE
+
+
+  ;; FIXME: Also ensure that any call to MAKE-INSTANCE of a SINGLETON
+  ;; will produce an object that is a subtype of the original
+  ;; SINGLETON. This may be approached, somewhat portably, with
+  ;; ALLOCATE-INSTANCE. Such a methodology  may serve to require
+  ;; that a new  class will be initialized within some calls to
+  ;; ALLOCATE-INSTANCE - rather than within a top-level DEFCLASS form,
+  ;; such that would be processed by the implementation compiler.
   ;;
-  ;; NB: See also CHANGE-CLASS, SHARED-INITIALIZE
+  ;; In such a methodology, there may be an effect produced such that
+  ;; the class of a SINGLETON created with MAKE-INSTANCE would a
+  ;; subclass of, but not equivalent to the class provided to
+  ;; MAKE-INSTANCE
+  ;;
+  ;; To an effect
+  ;;   (subtypep (make-instance the-singleton) the-singleton) => T, T
+  ;;
 
   (let ((tgt-class (find-class 'singleton))
         (unused-class (find-class 'standard-object))
@@ -792,26 +837,11 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
                                                  direct-superclasses
                                                  :test #'eq)))
                         (setq initargs-updated t))))))
-        ;; NB: This does not ever check the value of SLOTS.
-        ;;;
-        ;; Such a check would have to be performed in a completely
-        ;; implementation-specific regard, in order to detect what the
-        ;; assumed DIRECT-SUPERCLASES slot would be named, for any
-        ;; instance in which SLOTS would be TYPEP CONS.
-        ;;
-        ;; This could also, then, dispatch in a portable way singularly
-        ;; for the case of (EQ SLOTS T)
-        ;;
-        ;; In lieu of that, this will modify SLOTS in many
-        ;; instances. The modification might subsequently be ignored by
-        ;; the next method.
-        ;;
-        ;; This method, as such, might be left undefined in the top level of
-        ;; the containing source file.
+
         (setq direct-superclasses (ensure-tgt-superclass))
 
-        ;; NB: Not useful if the updated value is being ignored
-        ;;     by the implementation
+        ;; NB: Not useful, if the updated value is being ignored
+        ;;     by the implementation. See also SHARED-INITIALIZE
 
         (dispatch)))))
 
@@ -874,10 +904,14 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
   (subtypep (make-instance 'x-b) 'x-a)
   ;; FIXME while => NIL, T
 
+  (subtypep (class-of (make-instance 'x-b)) 'x-a)
+  ;; => T, T
+  ;; consistent onto CLOS
+  ;;
+  ;; approximately equivalent:
   (subtypep (find-class 'x-b) 'x-a)
   ;; => T, T
-  ;; should be same, with or without the added SHARED-INITIALIZE
-  ;; as it's consistent onto CLOS
+  ;; consistent onto CLOS
 
 
 ;; -- test the new SHARED-INITIALIZE method with the original DEFSINGLETON macro
