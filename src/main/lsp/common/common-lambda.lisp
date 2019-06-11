@@ -40,6 +40,10 @@
 
 ;; FIXME update the FTYPE routines for specialized &KEY args
 
+#-(or cmucl sbcl)
+(declaim (declaration values))
+
+
 (defmacro defun* (name lambda &rest forms &environment env)
   ;; TD: LABELS* - refer to remarks, below. "Test here"
   ;; - via PARSE-NAMED-LAMBDA - refer to function signature, below
