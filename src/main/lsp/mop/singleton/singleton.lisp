@@ -219,7 +219,7 @@ standard-class, in this implementation"))))
       (setf (slot-value instance +direct-superclasses-slot+)
             dsup)))
   ;; Also ensure that the instance is finalized, so far as immediately possible
-  (finalize-reachable instance))))
+  (finalize-reachable instance))
 
 
 ; Tests for Singleton Finalization - e.g
