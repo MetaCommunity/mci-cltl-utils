@@ -20,19 +20,20 @@
   (:use  #:ltp/common
          #:closer-mop
          #:cl)
-  #+(or SBCL CMU CCL ALLEGRO) ;; NB: PCL
+  #+(or SBCL CMU OpenMCL MCL ALLEGRO) ;; NB: PCL
   (:shadowing-import-from
    #+SBCL #:SB-MOP
    #+CMU #:PCL
-   #+(or MCL OPENMCL) #:CCL
+   #+(or OpenMCL MCL) #:CCL
    #+ALLEGRO #:MOP
    #:validate-superclass
    #:standard-generic-function
    #:defmethod
    #:defgeneric
    #:standard-class
+   #+(or OpenMCL MCL) #:standard-method
    )
-  #+(or SBCL CMU CCL ALLEGRO)
+  #+(or SBCL CMU OpenMCL MCL ALLEGRO)
   ;; un-shadow symbols shadowed by C2MOP
   (:export
    #:validate-superclass ;; NB PCL
@@ -40,6 +41,7 @@
    #:defmethod
    #:defgeneric
    #:standard-class
+   #+(or OpenMCL MCL) #:standard-method
 
    ;; - class finalization support
    ;; NB: used in the SINGLETON definition
@@ -62,25 +64,6 @@
   (:export
    #:validate-class
    )
-
-  #+LTP_PROTOTYPES
-  (:export
-   #:associative-index
-   #:associative-table-index
-   #:object-table-lock
-   #:object-table
-   #:simple-associative-index
-   #:object-table-key-function
-   #:compute-key
-   #:register-object
-   #:find-object
-   #:remove-object
-   #:map-objects
-   #:associative-class
-   #:simple-associative-class
-   #:object-key-slot
-   )
-
 
   )
 
