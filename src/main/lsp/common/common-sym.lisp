@@ -56,7 +56,8 @@
            (type function-designator filter)
            (values list &optional))
   (let ((buffer
-         (make-array 8 :fill-pointer 0))
+         (make-array 8 :fill-pointer 0
+                     :adjustable t))
         (%filter (compute-function filter)))
     (declare (type (array t (*)) buffer)
              (type function %filter))
