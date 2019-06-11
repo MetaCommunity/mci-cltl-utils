@@ -174,3 +174,17 @@ Example:
 
 ;; (function-name (lambda () (+ 1 1 )))
 ;; => NIL
+
+
+;; --
+
+;; FIXME - any portable "Local Inline" support - if tractably possible -
+;; may require a manner of application-level system integration, so as
+;; to enssure that all "Locally inline" functions will be available for
+;; inlining, when initially defined.
+;;
+;; In such a configuration, those "Locally inline" functions might be
+;; defined as "Inline in all calls," in some implementations - there
+;; obviating the characteristic of those being defined as "Locally"
+;; inline, in any context narrower than an entire application system.
+
