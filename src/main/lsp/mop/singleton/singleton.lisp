@@ -134,6 +134,31 @@
 
 
 
+;; --
+
+(macrolet ((find-for (name accessor whence base-class)
+             `(block search
+                (dolist (c (reverse (class-precedence-list
+                                     (find-class (quote ,base-class)))))
+                  (dolist (sl (,whence c))
+                    (when (find (quote ,name)
+                                (the list (,accessor sl))
+                                :test #'eq)
+                      (return-from search (slot-definition-name sl))))))))
+  (defconstant* +direct-superclasses-slot+
+      (or (find-for :direct-superclasses
+                    slot-definition-initargs
+                    class-slots
+                    standard-class)
+          (find-for class-direct-superclasses
+                    slot-definition-readers
+                    class-direct-slots
+                    standard-class)
+          (error "Cannot find direct superclasses slot for ~
+standard-class, in this implementation"))))
+
+;; --
+
 (defmethod shared-initialize :after ((instance singleton) slots
                                      &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
@@ -700,31 +725,6 @@
 
 
 ;; --------------------------------------------------
-
-;; NB: PCL does not define a slot with a :direct-superclasses initarg
-;;     but some other MOP implementations may
-
-(macrolet ((find-for (name accessor whence base-class)
-             `(block search
-                (dolist (c (reverse (class-precedence-list
-                                     (find-class (quote ,base-class)))))
-                  (dolist (sl (,whence c))
-                    (when (find (quote ,name)
-                                (the list (,accessor sl))
-                                :test #'eq)
-                      (return-from search (slot-definition-name sl))))))))
-  (defconstant* +direct-superclasses-slot+
-      (or (find-for :direct-superclasses
-                    slot-definition-initargs
-                    class-slots
-                    standard-class)
-          (find-for class-direct-superclasses
-                    slot-definition-readers
-                    class-direct-slots
-                    standard-class)
-          (error "Cannot find direct superclasses slot for ~
-standard-class, in this implementation"))))
-
 
 
 (defmethod change-class :after ((instance forward-referenced-class)
