@@ -715,18 +715,14 @@ standard-class, in this implementation"))))
 
 (typep (make-instance 'singleton-2-2) 'singleton-1-1)
 ;; => T
-;; "It's a start!" ....
+;; OK ! ... insofar as for direct superclasses.
 
 
 ;; NB: To produce a suclass C2 of a class C1, such that C2 is both an
 ;; instance typep C1 and a subtype of C1 ...
 ;;
-;; one may define MAKE-INSTANCE => CREATE-IMPLICIT-SUBCLASS
+;; ... one may define MAKE-INSTANCE => CREATE-IMPLICIT-SUBCLASS
 ;; via ALLOCATE-INSTANCE
-;;
-;; This, albeit, may seem to pose some difficulty for typing in the
-;; implementation compiler (??() whether or not that may be singularly
-;; dependent on any one manner of approach.
 
 )
 
