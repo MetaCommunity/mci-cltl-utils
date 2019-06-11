@@ -72,7 +72,7 @@
 ;; --
 
 
-(defclass dynamic-enum (enum)
+(defclass dynamic-enum (enum #+TD storage-object)
   ;; Assumption: Static ENUM definitions may be initialized once, then
   ;; would be read-only
   ;;
@@ -198,7 +198,7 @@
 
 ;; --
 
-(defclass static-enum (enum)
+(defclass static-enum (enum #+TD storage-object)
   ((%members
     :type simple-vector
     ;; :access :read-only ;; TD
@@ -402,65 +402,306 @@ in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
 
 
 ;; #+NIL
-(eval-when () ;; Basic prototyping/Proof of concept
+;; (eval-when () ;;  enum-proto.lisp - Basic prototyping/Proof of concept
+
+  ;; -- Implementation Notes
+  ;;
+  ;; NB: As something of a quirk for a purpose of simplifying the
+  ;; implementation, the following prototype uses a SINGLETON semantics
+  ;; for enum container storage.
+  ;;
+  ;; That may be as to denote: The enum storage object -- typically
+  ;; denoted, in the prototype below, as 'whence' -- the storaage object
+  ;; is represented by a singleton class. Although the singleton class
+  ;; protocol is, at this time, still in a state of revision -- namely,
+  ;; in that the exact MAKE-INSTANCE semantics have yet to be completely
+  ;; defined for SINGLETON classes -- this, at persent, will serve to
+  ;; allow for only one storage per class.
+  ;;
+  ;; In further development of this protocol -- towards a manner of an
+  ;; extensible, template-oriented, prototype -- the WHENCE object, as
+  ;; well as any number of accessor functions and types specified below,
+  ;; should be -- in effect -- parameterized, within the corresponding
+  ;; template.
+  ;;
+  ;;
+  ;; In a manner principally independent of the protocol extension onto
+  ;; SINGLETON, this protocol may serve to permit for method definitions
+  ;; and dispatching onto the enum storage class itself, e.g TRIVIAL-ENUM.
+  ;;
+  ;; Regardless, this local object storage and access protocol is
+  ;; implemented with principally non-polymorphic functions.
+  ;;
+  ;; -- Design Notes
+  ;;
+  ;; In a subsequent revision, a semantics may be defined for specifying
+  ;; how any subtypes of an ENUM implementation are to regard any
+  ;; objects as may be, in effect, iherited onto any one or more ENUM
+  ;; supertypes and corresponding implementation objects. Towards an
+  ;; application of such an extension, one might note - in particular -
+  ;; the peculiarities of object import semantics in MOF and UML, such
+  ;; as may be summarized approximately: Prototype on import.
+  ;;
+  ;;
+  ;; The SINGLETON extension onto ENUM has been defined in a manner such
+  ;; as to ensure that the ENUM type and ENUM storage objects -- for any
+  ;; single ENUM type -- are represented, in each, by the same object.
+  ;;
+  ;; The protocol, as illustrated below, utilizes an intermediate ENUM
+  ;; member type, such that an ENUM type is -- in effect -- closed onto.
 
   (deftype name ()
     'symbol)
 
   (defclass tenum-member ()
-    ;; NB IMPL: DEFSINGLETON ( & ENUM KEY INITARG)
+    ;; Trivial Enum Member - or TEM
+
+    ;; NB IMPL - DEFSINGLETON  & ENUM KEY INITARG
     ((name
       :initarg :name
       :type name
       :reader tenum-member-name)))
 
+
+  (defun* make-tem (name)
+    (declare (type symbol name)
+             (values tenum-member &optional))
+    (values (make-instance 'tenum-member :name name)))
+
+
   (deftype if-exists-symbol ()
-    '(member :override :error :ignore))
+    '(member :override :error :ignore nil))
 
   (deftype not-found-symbol ()
-    '(member :error :ignore))
+    '(member :error :ignore nil))
 
-  (defsingleton trivial-enum (dynamic-enum)
+
+  ;; FIXME - With the present design of DEFSINGLETON, it may be - in
+  ;; effect - impossible to define an initialization method onto the
+  ;; singleton instance itself, without first defining the singleton's
+  ;; class as a forward-referenced class. Once the class is defined, any
+  ;; further initialization methods may be unused.
+
+  ;; FROB - NB affects all DYNAMIC-ENUM (FIXME)
+  (defmethod shared-initialize :after ((instance dynamic-enum) slots
+                                       &rest initargs &key &allow-other-keys)
+    (declare (ignore initargs))
+    (when (or (eq slots t)
+              (and (consp slots)
+                   (find '%members slots :test #'eq)))
+      (unless (slot-boundp instance '%members)
+        (setf (slot-value instance '%members)
+              (make-array 8 :fill-pointer 0
+                          :adjustable t)))))
+
+  ;; (shared-initialize (find-class 'trivial-enum) t)
+
+  (defsingleton trivial-enum (#+TBD storage-class dynamic-enum)
     ()
+    #+TD (:member-key-test . eq)
+    ;; FIXME/API Design - The following two slots, in effect, will limit
+    ;; the possible applications of this protocol to the domain of CLOS
+    ;; standard objects.
     (:member-class . tenum-member)
-    (:member-key-slot . name))
-  ;; FIXME: How is it not finalized?
+    (:member-key-slot . name)
+    #+TD (:conc-suffix . #:-tem)
+    )
+  ;; FIXME/QA: How is the class not finalized?
 
-  #+NIL
-  (slot-value (find-class 'trivial-enum)
-              'member-class)
-  ;; ^ is correctly bound.
+  ;; FIXME: Initialize %members slot for TRIVIAL-ENUM
+  ;; (cannot be done via shared-initialize, in this configuration)
+
+  ;; NB:
+  ;; (typep (find-class 'trivial-enum) 'dynamic-enum)
+  ;; => T
+
 
   ;; (enum-members (find-class 'trivial-enum))
   ;;  => NIL ;; supported now, subsequent of the DEFSINGLETON update
 
-  ;; FIXME: Do not err when the %MEMBERS slot is unbound, in the
-  ;; following
 
-  (defun find-tem (name &optional (not-found :error))
-    (let ((buf (%enum-members (find-class 'trivial-enum))))
+
+  (defun* position-of-tem (name &optional (not-found :error))
+    ;; NB: This function should operate onto a recursive read/write
+    ;; lock - such that may already be held for :write when this
+    ;; function is reached. If the lock is not already held for :write
+    ;; then it should be captured for :read within this function
+    (declare (type name name)
+             (type not-found-symbol not-found)
+             (values (or array-dim null) &optional))
+    (let* ((whence (find-class 'trivial-enum))
+           (buf (%enum-members whence))
+           (n (position name (the vector buf)
+                        :key #'tenum-member-name)))
+      (declare (dynamic-extent whence))
       (cond
+        (n (values n))
+        (not-found
+         (ecase not-found
+           (:error (error "No item found for name ~s in ~s"
+                          name whence))
+           ((:ignore nil) (values nil))))
+        (t (values nil)))))
+
+
+  (defun* find-tem (name &optional (not-found :error))
+    ;; NB: This function should operate onto a recursive read/write
+    ;; lock - such that may already be held for :write when this
+    ;; function is reached. If the lock is not already held for :write
+    ;; then it should be captured for :read within this function
+    (declare (type name name)
+             (type not-found-symbol not-found)
+             (values (or tenum-member null) boolean
+                     &optional))
+    (let* ((whence (find-class 'trivial-enum))
+           (buf (%enum-members whence))
+           (n (position-of-tem name not-found)))
+      (declare (dynamic-extent whence))
+      (cond
+        (n (values (aref (the vector buf) n)
+                   t))
+        (not-found
+         (ecase not-found
+           (:error (error "No item found for name ~s in ~s"
+                          name whence))
+           (:ignore (values nil nil))))
         (t (values nil nil)))))
 
-  (defun register-tem-1 (obj &optional (if-exists :error))
-    (let ((buf '#:...))
-    ;; TBD Shared IF-EXISTS semantics w/ REGISTER-TEM
-      ))
 
-  (defun register-tem (key &optional (if-exists :error))
-    ;; TBD IF-EXISTS semantics - :OVERRIDE :ERROR IGNORE
-    (let ((obj '#:...))
-      (register-tem-1 obj)))
+  (defun* register-tem-1 (obj &optional
+                              (if-exists :error))
+    ;; NB: This function should operate onto a recursive read/write
+    ;; lock, ensuring that the lock is held for :write throughout this
+    ;; and any local, dispatching function - including POSITION-OF-TEM
+    (declare (type tenum-member obj)
+             (if-exists-symbol if-exists)
+             (values (or tenum-member null) &optional))
+    (let* ((whence (find-class 'trivial-enum))
+           (buf (%enum-members whence)))
+      (declare (dynamic-extent whence))
+      (labels ((dispatch-reg-new ()
+                 ;; FIXME When Debug - Emit a signal here
+                 (vector-push-extend obj buf)
+                 (values obj))
+               (dispatch-override (n)
+                 ;; FIXME When Debug - Emit a signal here
+                 (setf (aref buf n) obj)
+                 (values obj))
+               (dispatch-ignore ()
+                 ;; FIXME When Debug - Emit a signal here
+                 (values nil)))
+        (let* ((name (tenum-member-name obj))
+               (n (position-of-tem name nil))
+               (mem (when n
+                      (aref buf n))))
+          (cond
+            ((and n (not (eq mem obj)))
+             (ecase if-exists
+               (:error
+                ;; NB: Could use CERROR
+                (error "~<Attempted to register duplicate item ~s~>
+~< for name ~s~>~< as registered for ~s~>~< in ~s~>"
+                       obj name mem whence))
+               (:override (dispatch-override n))
+               ((:ignore nil)
+                ;; no-op - other obj MEM already registered
+                (dispatch-ignore))))
+            (n (dispatch-ignore)) ;; no-op - OBJ already registered
+            (t (dispatch-reg-new)))))))
 
 
-  (defun remove-tem-1 (obj &optional (not-found :error))
-    ;; TBD Shared NOT-FOUND semantics w/ REMOVE-TEM
-    (let ((buf '#:...))
-      ))
+    (defun register-tem (name &optional (if-exists :error))
+      ;; NB: hold a recursive write lock for WHENCE
 
-  (defun remove-tem (name &optional (not-found :error))
-    ;; TBD NOT-FOUND semantics - ::ERROR IGNORE
-    (let ((buf '#:...))
-      ))
+      ;; (declare ...)
 
+      ;; NB IF-EXISTS semantics - :OVERRIDE :ERROR :IGNORE
+      (labels ((dispatch-reg ()
+                 (let ((obj (make-tem name)))
+                   (register-tem-1 obj :override))))
+        (let* ((whence (find-class 'trivial-enum))
+               (n (position-of-tem name nil)))
+          (declare (dynamic-extent whence))
+          (cond
+            (n
+             (ecase if-exists
+               (:error
+                (error "~<Attempted to register duplicate item~>
+~< for name ~s~>~< in ~s~>" name whence))
+               ((:ignore nil) (values nil))
+               (:override
+                (dispatch-reg))))
+            (t (dispatch-reg))))))
+
+
+
+    (defun remove-tem-1 (obj &optional (not-found :error) no-check)
+      ;; NB: hold a recursive write lock for WHENCE
+
+      ;; (declare ...)
+
+      ;; NB Shared NOT-FOUND semantics w/ REMOVE-TEM
+      (let* ((whence (find-class 'trivial-enum))
+             (buf (%enum-members whence)))
+        (declare (dynamic-extent whence))
+        (labels ((dispatch-remove ()
+                   (delete obj (the vector buf)
+                           :test #'eq)))
+          (cond
+            (no-check (dispatch-remove))
+            (t
+             (ecase not-found
+               (:error
+                (let ((%obj (find obj buf :test #'eq)))
+                  (cond
+                    (%obj (dispatch-remove))
+                    (t (error "No item ~S found in ~S" obj whence)))))
+               ((:ignore nil) (dispatch-remove))))))))
+
+
+    (defun remove-tem (name &optional (not-found :error))
+      ;; NB: hold a recursive write lock for WHENCE
+
+      ;; (declare ...)
+
+      ;; NB NOT-FOUND semantics - ::ERROR IGNORE NIL
+      (labels ((dispatch-remove (obj)
+                 (remove-tem-1 obj nil t)))
+        (multiple-value-bind (%obj foundp)
+            (find-tem name not-found)
+          (cond
+            (foundp (dispatch-remove %obj))
+            (t (values nil))))))
+
+    ;; T.D: enum-proto-test.lisp & AFFTA
+
+
+(eval-when ()
+    (defparameter *t1* (register-tem :tem-1))
+    (eq (tenum-member-name *t1*) :tem-1)
+    (eq (find-tem :tem-1) *t1*)
+
+    (defparameter *t2* (register-tem :tem-2))
+    (eq (find-tem :tem-2) *t2*)
+
+    (remove-tem :tem-2)
+    (remove-tem :tem-2 :ignore)
+
+    (eq (find-tem :tem-1) *t1*)
+
+    (defparameter *t3* (register-tem :tem-1))
+;; .. err
+
+    (eq (find-tem :tem-1) *t1*)
+;; => T
+
+    (defparameter *t3* (register-tem-1 (make-tem :tem-1)
+                                       :override))
+
+    (eq (find-tem :tem-1) *t3*)
+
+    (%enum-members (find-class 'trivial-enum))
 )
+
+
+;;    )
