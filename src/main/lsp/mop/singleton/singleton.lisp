@@ -545,23 +545,8 @@ standard-class, in this implementation"))))
 
           `(progn
 
-             ;; FIXME: How much here may need to be wrapped in EVAL-WHEN?
-
-             ;; NB: This macro, in effect, prevents any usage of forward
-             ;; referenced classes in the SUPERCLASSES list
-
-             ;; AS SUCH, MACROLET might be useful within this
-             ;; macroexpansion - to ensure that an appropriate direct
-             ;; superclasses list can be computed, consistently,
-             ;; for each of the ,%PROTO-NAME and ,%NAME classes
-             ;;
-             ;; Note that as this already requires that none of the
-             ;; SUPERCLASSES will be a FORWARD-REFERENCED-CLASS,
-             ;; it can therefore be determined - reliably - whether any
-             ;; of a SINGLETON or PROTOTYPE-CLASS metaclass is denoted
-             ;; in the SUPERCLASSES list for - respectively - the ,NAME
-             ;; and ,%PROTO-NAME classes
-
+             ;; NB: This implementation, in effect, prevents any usage
+             ;; of forward-referenced classes in the SUPERCLASSES list
 
              (defclass ,%proto-name (,@user-metaclass prototype-class
                                                       ,@superclasses)
@@ -586,9 +571,8 @@ standard-class, in this implementation"))))
 
 ;; --
 
-;; FIXME: Test DEFSINGLETON with forward-referenced direct superclasses
-
-;; FIXME: Test DEFSINGLETON with a SINGLETON superclass of a direct superclass
+;; FIXME: Test DEFSINGLETON with a SINGLETON superclass of a direct
+;; superclass not repreenting a SINGLETON
 
 (eval-when ()
 
@@ -737,17 +721,26 @@ standard-class, in this implementation"))))
                        (compute-class implc nil))))
     (cond
       (implc-inst
-       ;; FIXME: OTHERWISE need to defer evaluation !
+       ;; FIXME: If no IMPLC-INST -- i.e if the instance's
+       ;; implementation-class is not yet defined -- need to defer
+       ;; evaluation ! This may serve to require some extensions in the
+       ;; compiler environment.
+
        #+nil
        (warn "Dispatch from CHANGE-CLASS ~S ~S to initialize ~S"
              instance new implc-inst)
 
-       ;; NB: in PCL this may be the only way that the
+       ;; NB: in PCL this may be the only way to ensure that the
        ;; direct-supeclasses slot winds up initialized from
        ;; CHANGE-CLASS (??) (FIXME: Evaluate how that's been implemented)
        (shared-initialize implc-inst (list +direct-superclasses-slot+)))
+      ;; In lieu of deferred evaluation, emit a warning
+      ;;
+      ;; NB: In this scenario, the instance's implementation-class may
+      ;; be manually initialized from outside of CHANGE-CLASS, using a
+      ;; SHARED-INITIALIZE call similar to the previous.
       (t (warn "~<Unable to initilize unreachable ~
-implementation class ~S for ~S~>~< during CHANGE-CLASS ~s ~s~>"
+implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
                implc new
                instance new)))))
 
@@ -760,18 +753,14 @@ implementation class ~S for ~S~>~< during CHANGE-CLASS ~s ~s~>"
                                                  &allow-other-keys)
   ;; ensure that any call to MAKE-INSTANCE of a SINGLETON will produce
   ;; an object that is a subtype of the original SINGLETON
-  ;;
-  ;; [FIXME DNW IN SOME POST-HOC APPLICATIONS - NEEDS FURTHER TESTING]
 
-  ;; NB: This may be "Early enough" to catch where PCL is initially
-  ;; setting the direct-superclasses list for a class definition.
+  ;; NB: In some call sequences -- such as when a singleton is
+  ;; created initially from DEFCLASS, rather than CHANGE-CLASS from a
+  ;; FORWARD-RERFERENCED-CLASS -- this may be "Early enough" to catch
+  ;; where PCL is initially setting the direct-superclasses list for the
+  ;; class definition.
   ;;
-  ;; Note that PCL may be (perhaps cheaply) setting the STANDARD-OBJECT
-  ;; class into the list of DIRECT-SUPRECLASSES whenever the
-  ;; direct-superclasses list is NIL in the initial DEFCLASS form.
-  ;;
-  ;; Theoretically. that can be removed during ENSURE-TGT-SUPERCLASS below.
-  ;; [FIXME / QA]
+  ;; NB: See also CHANGE-CLASS, SHARED-INITIALIZE
 
   (let ((tgt-class (find-class 'singleton))
         (unused-class (find-class 'standard-object))
@@ -831,9 +820,8 @@ implementation class ~S for ~S~>~< during CHANGE-CLASS ~s ~s~>"
 ;; )
 
 (eval-when ()
-  ;; FIXME: Not very rigorous tests onto the updated SHARED-INITIALIZE
 
-  (defsingleton x-a () ;; FIXME SINGLETON no longer appearing in the X-A CPL
+  (defsingleton x-a ()
     ())
 
   (typep (make-instance 'x-a) 'x-a)
