@@ -219,6 +219,7 @@ standard-class, in this implementation"))))
       (setf (slot-value instance +direct-superclasses-slot+)
             dsup)))
   ;; Also ensure that the instance is finalized, so far as immediately possible
+  #-OpenMCL ;; FIXME - Something from this is looping, in CCL
   (finalize-reachable instance))
 
 
@@ -633,6 +634,9 @@ standard-class, in this implementation"))))
 
   (defsingleton frob-s-1 (frob-c)
     ())
+
+  (class-finalized-p (find-class 'frob-s-1))
+  ;; => T [SBCL]
 
   (class-direct-superclasses (find-class 'frob-s-1))
   ;; =>( #.(... SINGLETON) #.(... FROB-C))
