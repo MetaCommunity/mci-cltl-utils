@@ -133,11 +133,35 @@
           (finalize-reachable-subclass subc class))))))
 
 
-(defmethod shared-initialize :after ((instance singleton)
-                                     slots &rest initargs
-                                     &key &allow-other-keys)
-  (declare (ignore slots initargs))
-  (finalize-reachable instance))
+
+(defmethod shared-initialize :after ((instance singleton) slots
+                                     &rest initargs &key &allow-other-keys)
+  (declare (ignore initargs))
+  (when (or (eq slots t)
+            (and (consp slots)
+                 (find +direct-superclasses-slot+ (the cons slots)
+                       :test #'eq)))
+    (let ((tgt-class (find-class 'singleton))
+          (unused-class (find-class 'standard-object))
+          (dsup (slot-value instance +direct-superclasses-slot+)))
+      (declare (dynamic-extent tgt-class unused-class))
+
+      (setq dsup
+            (delete unused-class dsup :test #'eq))
+
+      (unless (some (lambda (c)
+                      (find-class-in-precedence tgt-class c nil))
+                    dsup)
+        (setq dsup (cons tgt-class dsup)))
+
+      #+NIL
+      (warn "Frob in SHARED-INITIALIZE for ~S - DSUP ~S" instance dsup)
+
+      (setf (slot-value instance +direct-superclasses-slot+)
+            dsup)
+
+      ;; NB
+      (finalize-reachable instance))))
 
 
 ; Tests for Singleton Finalization - e.g
@@ -706,6 +730,7 @@ standard-class, in this implementation"))))
 (defmethod change-class :after ((instance forward-referenced-class)
                                 (new prototype-class)
                                 &rest initargs &key &allow-other-keys)
+  (declare (ignore initargs))
   (let* ((implc (and (slot-boundp instance 'implementation-class)
                      (prototype-implementation-class new)))
          (implc-inst (when implc
@@ -725,32 +750,6 @@ standard-class, in this implementation"))))
 implementation class ~S for ~S~>~< during CHANGE-CLASS ~s ~s~>"
                implc new
                instance new)))))
-
-
-(defmethod shared-initialize :after ((instance singleton) slots
-                                     &rest initargs &key &allow-other-keys)
-  (when (or (eq slots t)
-            (and (consp slots)
-                 (find +direct-superclasses-slot+ (the cons slots)
-                       :test #'eq)))
-    (let ((tgt-class (find-class 'singleton))
-          (unused-class (find-class 'standard-object))
-          (dsup (slot-value instance +direct-superclasses-slot+)))
-      (declare (dynamic-extent tgt-class unused-class))
-
-      (setq dsup
-            (delete unused-class dsup :test #'eq))
-
-      (unless (some (lambda (c)
-                      (find-class-in-precedence tgt-class c nil))
-                    dsup)
-        (setq dsup (cons tgt-class dsup)))
-
-      #+NIL
-      (warn "Frob in SHARED-INITIALIZE for ~S - DSUP ~S" instance dsup)
-
-      (setf (slot-value instance +direct-superclasses-slot+)
-            dsup))))
 
 
 ;; --------------------------------------------------
