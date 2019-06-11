@@ -152,20 +152,47 @@
 (validate-class singleton)
 
 
-(defmethod finalize-reachable ((class singleton))
+(defmethod finalize-reachable ((class singleton) (seen-classes list))
   (catch 'finalize-singleton
-    (macrolet ((hcall (form)
+    (macrolet ((class-seen (c seen)
+                 `(find ,c ,seen :test #'eq))
+               (add-seen (c seen)
+                 `(setf ,seen (cons ,c ,seen)))
+               (hcall (form)
                  `(handler-bind ((class-finalization-warning
                                   (lambda (c)
                                     (warn c)
                                     (throw 'finalize-singleton (values)))))
-                    ,form)))
-      (dolist (supc (class-direct-superclasses class))
-        (hcall (finalize-reachable-superclass supc class)))
-      (multiple-value-prog1
-          (hcall (call-next-method))
-        (dolist (subc (class-direct-subclasses class))
-          (finalize-reachable-subclass subc class))))))
+                    ;; Try to catch any call to finalize a forward-referenced
+                    ;; class, such as to return immediately
+                    ,form))
+               (dispatch (c seen call)
+                 `(progn
+;;;                    #+DEBUG
+                    (warn "DISPATCH for ~S ~S - SEEN ~S : ~S"
+                          (quote ,c) ,c ,seen
+                          (quote ,call))
+                    (unless (class-seen ,c ,seen)
+                      (hcall (,call ,c ,seen))
+                      ;; try this secondly
+                      (add-seen ,c ,seen)))))
+      (unless (class-seen class seen-classes)
+
+        (dolist (supc (class-direct-superclasses class))
+          (unless (class-seen supc seen-classes)
+;;;            #+DEBUG
+            (warn "DISPATCH for SUPC ~S - SEEN ~S : ~S"
+                  supc seen-classes 'finalize-reachable)
+            (let ((seen-classes (cons class seen-classes)))
+              ;; Do not destructively modify seen-classes to include CLASS yet
+              (hcall (finalize-reachable class seen-classes)))
+            (add-seen supc seen-classes)))
+
+        (multiple-value-prog1
+            (dispatch class seen-classes call-next-method)
+
+          (dolist (subc (class-direct-subclasses class))
+            (dispatch subc seen-classes finalize-reachable)))))))
 
 
 
@@ -218,26 +245,32 @@ standard-class, in this implementation"))))
 
       (setf (slot-value instance +direct-superclasses-slot+)
             dsup)))
+
   ;; Also ensure that the instance is finalized, so far as immediately possible
-  #-OpenMCL ;; FIXME - Something from this is looping, in CCL
-  (finalize-reachable instance))
+
+  ;; FIXME: This in itself may still be causing some concerns, in CCL
+  #-OpenMCL
+  (finalize-reachable instance nil))
 
 
 ; Tests for Singleton Finalization - e.g
 #+NIL
 (eval-when ()
-  (macrolet ((mk (class pfx &rest dsup)
+  ;; NOTE ALSO the updated CHANGE-CLASS method, defined below
+
+  (macrolet ((mk (class pfx &rest direct-sup)
                `(make-instance
                  (quote ,class)
                  :name (quote ,(gentemp
                                 (concatenate 'simple-string
                                              (symbol-name pfx)
                                              #.(symbol-name '#:_nr))))
-                 ,@(when dsup
+                 ,@(when direct-sup
                      (list :direct-superclasses
-                           (cons 'list dsup))))))
+                           (cons 'list direct-sup))))))
 
     (defparameter *s1* (mk singleton s-1))
+
 
     (values
      (class-finalized-p *s1*)
@@ -247,10 +280,15 @@ standard-class, in this implementation"))))
      (prog2 (defparameter *s2* (mk forward-referenced-class s-2 *s1*))
          (class-finalized-p *s2*))
      ;; => NIL
+     ;; NB: {SBCL & PCL} does not denote a forward-referenced-class as finalized
+
+
+     ;; FIXME - the definition of *S3* is now breaking, in CCL, and
+     ;; breaks subsequent evaluation of this source file
 
      (prog2 (defparameter *s3* (mk singleton s-3 *s2* *s1*))
          (class-finalized-p *s3*))
-     ;; => NIL
+     ;; => NIL ;; class has a forward-referenced superclass, cannot be finalized
 
      ;; NB: This CHANGE-CLASS call may not be portable for applications,
      ;; per [AMOP]. In the PCL MOP implementation, it can be evaluated
@@ -260,13 +298,28 @@ standard-class, in this implementation"))))
                           :direct-superclasses (class-direct-superclasses *s2*))
          (class-finalized-p *s2*))
      ;; => T
+     ;; *S2* is no longer forward referenced and should be a finalized singleton
 
      (class-finalized-p *s3*)
      ;; => T
+     ;; *S3* should have been finalized when *S2* was finalized as a singleton
 
      ))
-    ;; => T, NIL, NIL, T, T
+  ;; => T, NIL, NIL, T, T [SBCL]
+  ;;
+  ;; FIXME (BREAKING) - CCL
+  ;;  => T, T, NIL, T, NIL [CCL]
+  ;;
+  ;; - NB: A FORWARD-REFERENCED-CLASS may be denoted as finalized in CCL (QUIRK)
+  ;;
+  ;; - Dispatch - previously - was not reaching *S3* for finalization w/ CCL
+  ;;
+  ;; - Now, dispatch is breaking when the class for *S3* is defined
+  ;;
+  ;;   - Perhaps CCL may not permit a foward-referenced superclass
+  ;;     of any standard-class (??)
 
+  ;; Misc ...
 
   (defsingleton s-x-1 ()
     ())
@@ -789,7 +842,9 @@ standard-class, in this implementation"))))
        ;; NB: in PCL this may be the only way to ensure that the
        ;; direct-supeclasses slot winds up initialized from
        ;; CHANGE-CLASS (??) (FIXME: Evaluate how that's been implemented)
-       (shared-initialize implc-inst (list +direct-superclasses-slot+)))
+       (shared-initialize implc-inst (list +direct-superclasses-slot+))
+       (finalize-reachable implc-inst nil)
+       (finalize-reachable instance (list implc-inst)))
       ;; In lieu of deferred evaluation, emit a warning
       ;;
       ;; NB: In this scenario, the instance's implementation-class may

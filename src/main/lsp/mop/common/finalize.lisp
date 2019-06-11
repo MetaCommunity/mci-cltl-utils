@@ -46,7 +46,7 @@
 ;;     FINALIZE-REACHABLE... will return one non-nil value
 
 
-(defgeneric finalize-reachable (instance)
+(defgeneric finalize-reachable (instance seen-classes)
   ;; NB: An additional method onto this generic function is defined in
   ;;     the SINGLETON system, such that will iterate across direct
   ;;     superclasses of the INSTANCE -- finalizing each direct
@@ -54,30 +54,33 @@
   ;;     no values from the method. That method will then finalize the
   ;;     INSTANCE itself, and will ensure that any rechable subclass of
   ;;     the INSTANCE is finalized.
-  (:method ((instance forward-referenced-class))
+  (:method ((instance forward-referenced-class) (seen-classes list))
+    (declare (ignore see-classes))
     (class-finalization-note
      "Cannot finalize foward-referenced class ~S"
      instance))
-  (:method ((instance standard-class))
-    (labels ((direct-super-fwd-p (c)
-               (dolist (%c (class-direct-superclasses c) nil)
-                 (when (typep %c 'forward-referenced-class)
-                   (return %c)))))
-      (let ((fwd (direct-super-fwd-p instance)))
-        (cond
-          (fwd
-           (class-finalization-note
-            "~<Cannot finalize class ~S~> ~
+  (:method ((instance standard-class) (seen-classes list))
+    (unless (find instance (the list seen-classes) :test #'eq)
+      (labels ((direct-super-fwd-p (c)
+                 (dolist (%c (class-direct-superclasses c) nil)
+                   (when (typep %c 'forward-referenced-class)
+                     (return %c)))))
+        (let ((fwd (direct-super-fwd-p instance)))
+          (cond
+            (fwd
+             ;; NB: It may not be clear as to whether this is ever reached
+             (class-finalization-note
+              "~<Cannot finalize class ~S~> ~
 ~< having forward-referenced direct superclass ~S~>" instance fwd))
-          (t (finalize-inheritance instance)
-             (values instance)))))))
+            (t (finalize-inheritance instance)
+               (values instance))))))))
 
-(declaim (ftype (function (standard-object)
+(declaim (ftype (function (standard-object list)
                           (values &optional standard-object))
                 finalize-reachable))
 
 
-
+#+NIL
 (defgeneric finalize-reachable-superclass (superclass class)
   ;; protocol support for FINALIZE-REACHABLE methods
   (:method ((superclass standard-class)
@@ -113,7 +116,7 @@
 ~< as superclass of ~s~>"
      superclass class)))
 
-
+#+NIL
 (defgeneric finalize-reachable-subclass (subclass class)
   ;; protocol support for FINALIZE-REACHABLE methods
   (:method ((subclass forward-referenced-class)
@@ -143,7 +146,7 @@
     (finalize-inheritance subclass)
     (values subclass)))
 
-
+#+NIL
 (declaim (ftype (function (class class)
                           (values &optional class))
                 finalize-reachable-subclass
