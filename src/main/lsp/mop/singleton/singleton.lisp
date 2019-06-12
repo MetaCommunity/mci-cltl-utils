@@ -12,8 +12,12 @@
 ;;------------------------------------------------------------------------------
 
 
+
 ;; NOTE - a concern with regards to implicit class definitions and the
 ;; implementation compiler environment.
+;;
+;; NB - see also: ENSURE-CLASS
+;;
 #+NIL
 (list* (find-class nil nil) ;; simple matter - no class named NIL
        (let* ((nm (gentemp "Class-"))
@@ -307,8 +311,8 @@ standard-class, in this implementation"))))
      ))
   ;; => T, NIL, NIL, T, T [SBCL]
   ;;
-  ;; FIXME (BREAKING) - CCL
-  ;;  => T, T, NIL, T, NIL [CCL]
+  ;; FIXME (BREAKING) - CCL 1.11 [BSD]
+  ;;  => T, T, NIL, (WAS T NOW NIL w/ v1.12-dev.5 Linux), NIL [CCL BSD]
   ;;
   ;; - NB: A FORWARD-REFERENCED-CLASS may be denoted as finalized in CCL (QUIRK)
   ;;
@@ -318,6 +322,14 @@ standard-class, in this implementation"))))
   ;;
   ;;   - Perhaps CCL may not permit a foward-referenced superclass
   ;;     of any standard-class (??)
+  ;;
+  ;; -- Further Tests - CCL 1.12-dev.54 Linux
+  ;;
+  (finalize-reachable *s3* nil)
+  (class-finalized-p *s3*)
+  ;; => T ;; after explicitly calling it
+  (class-finalized-p *s2*)
+  ;; => NIL ;; FIXME - should not be NIL. Is not NIL, in SBCL
 
   ;; Misc ...
 
@@ -1078,3 +1090,141 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
 
 ;; --
 
+(defgeneric class-prototype-metaclass (class)
+  (:method ((class singleton))
+    (find-class 'prototype-class))
+  #+NIL
+  (:method ((class standard-class))
+    ;; NB: STANDARD-CLASS would not support an :IMPLEMENTATION-CLASS
+    ;; initarg, as provided in some calls to ENSURE-PROTOTYPE-METACLASS
+    (find-class 'standard-class)))
+
+
+(defgeneric ensure-prototype-metaclass (proto use-metaclass for-class
+                                        direct-superclasses)
+  (:method ((proto prototype-class) (use-metaclass standard-class)
+            (for-class singleton)
+            (direct-superclasses list))
+    (declare (ignore use-metaclass for-class direct-superclasses))
+    ;; FIXME - DO NOT IGNORE PARAMS - VERIFY PROTO onto those parameters
+    (values proto))
+
+
+  (:method ((proto null) (use-metaclass standard-class)
+            (for-class singleton)
+            (direct-superclasses list))
+    (error "Erroneous prototype metaclass name for ~s: ~s" proto
+           for-class))
+
+
+  (:method ((proto symbol) (use-metaclass standard-class)
+            (for-class singleton)
+            (direct-superclasses list))
+
+    (or (find-class proto nil) ;; NB - CLASS REUSE
+
+        (let ((proto-metaclass (class-prototype-metaclass for-class))
+              (%direct-superclasses
+               ;; TBD - wrap the COMPUTE-CLASS call with something to
+               ;; signal a FORWARD-REFERENCED-SUPRECLASS error
+               ;; onto FOR-CLASS, for any forward-referenced class
+               ;; in direct-superclasses
+               (mapcar #'compute-class direct-superclasses)))
+          (ensure-class proto
+                        :metaclass  proto-metaclass
+                        :name proto
+                        :direct-superclasses (list* ;; proto-metaclass
+                                                    for-class
+                                                    ;; ^ Needed but
+                                                    ;; breaking it here
+                                                    use-metaclass
+
+                                                    %direct-superclasses)
+                        :implementation-class for-class)))))
+
+
+(defgeneric ensure-prototype-metaclass-name (for-metaclass class-name)
+  (:method ((for-metaclass singleton) (class-name symbol))
+    (intern
+     (concatenate 'simple-string (symbol-name class-name)
+                  "!" (symbol-name (class-name for-metaclass))
+                  #.(symbol-name (quote #:!prototype))))))
+
+
+(defclass singleton* (singleton)
+  ;; FIXME - only used for prototyping.
+  ;; After prototyping, remove this class and use SINGLETON for the
+  ;; method specialization, below
+  ()
+  (:metaclass singleton))
+
+(defclass singleton** (singleton*)
+  ;; FIXME - only used for prototyping.
+  ;; After prototyping, remove this class and use SINGLETON
+  ;; for the test specifications, below
+  ()
+  (:metaclass singleton*))
+
+
+
+(defmethod allocate-instance ((class singleton*) &rest initargs)
+  (labels ((mk-default-name (class)
+             (make-symbol
+              (concatenate 'simple-string
+                           #.(symbol-name (quote #:uninterned-))
+                           (symbol-name (class-name class))))))
+    (let* ((name (or (getf initargs :name (mk-default-name class))))
+           (proto-spec (getf initargs :prototype-class
+                             (ensure-prototype-metaclass-name class name)))
+           (metaclass (compute-class
+                       (getf initargs :metaclass
+                             (load-time-value (find-class 'singleton*)
+                                              t))))
+           (direct-supers (getf initargs :direct-superclasses))
+           (proto-metaclass
+             (ensure-prototype-metaclass proto-spec metaclass class
+                                         direct-supers)))
+      (setf (getf initargs :name) name) ;; always set (FIXME)
+
+      (warn "ALLOCATE-INSTANCE ~s as instance of ~s" class proto-metaclass)
+      #+NIL ;; unused
+      (setf (getf initargs :prototype-class)
+            proto-metaclass)
+
+      (apply #'allocate-instance proto-metaclass initargs))))
+
+
+(eval-when ()
+
+  (let ((s (find-class 'singleton**)))
+    (defparameter *the-s*
+      (make-instance s :name (gentemp "S")
+                     :prototype-class (gensym "S-PROTO-")
+                     ;; :direct-superclasses (list s) ;; BREAKS NOW & LATER [FIXME]
+                     ))
+    (values #+NIL (typep *the-s* s)
+            *the-s*))
+
+  ;; still DNW - FIXME
+  (subtypep *the-s* 'singleton**)
+
+  ;; DNW also - FIXME
+  (subtypep *the-s* 'singleton*)
+
+  ;; this only
+  (subtypep *the-s* 'singleton)
+
+
+  (typep *the-s* 'singleton)
+  ;; T
+
+  (typep *the-s* 'singleton*)
+  ;; T
+
+  (typep *the-s* 'singleton**)
+  ;; T ;; THIS NOW - OK ...
+
+
+  ;; FIXME
+
+)
