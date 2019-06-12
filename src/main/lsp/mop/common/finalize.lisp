@@ -55,99 +55,26 @@
   ;;     INSTANCE itself, and will ensure that any rechable subclass of
   ;;     the INSTANCE is finalized.
   (:method ((instance forward-referenced-class) (seen-classes list))
-    (declare (ignore see-classes))
+    (declare (ignore seen-classes))
     (class-finalization-note
      "Cannot finalize foward-referenced class ~S"
      instance))
   (:method ((instance standard-class) (seen-classes list))
-    (unless (find instance (the list seen-classes) :test #'eq)
-      (labels ((direct-super-fwd-p (c)
-                 (dolist (%c (class-direct-superclasses c) nil)
-                   (when (typep %c 'forward-referenced-class)
-                     (return %c)))))
-        (let ((fwd (direct-super-fwd-p instance)))
-          (cond
-            (fwd
-             ;; NB: It may not be clear as to whether this is ever reached
-             (class-finalization-note
-              "~<Cannot finalize class ~S~> ~
+    (labels ((direct-super-fwd-p (c)
+               (dolist (%c (class-direct-superclasses c) nil)
+                 (when (typep %c 'forward-referenced-class)
+                   (return %c)))))
+      (let ((fwd (direct-super-fwd-p instance)))
+        (cond
+          (fwd
+           (class-finalization-note
+            "~<Cannot finalize class ~S~> ~
 ~< having forward-referenced direct superclass ~S~>" instance fwd))
-            (t (finalize-inheritance instance)
-               (values instance))))))))
+          ((find instance (the list seen-classes) :test #'eq)
+           (values))
+          (t (finalize-inheritance instance)
+             (values instance)))))))
 
 (declaim (ftype (function (standard-object list)
-                          (values &optional standard-object))
+                          (values t)
                 finalize-reachable))
-
-
-#+NIL
-(defgeneric finalize-reachable-superclass (superclass class)
-  ;; protocol support for FINALIZE-REACHABLE methods
-  (:method ((superclass standard-class)
-            (class forward-referenced-class))
-    (declare (ignore class))
-    (finalize-inheritance superclass)
-    (values superclass))
-
-  (:method ((superclass standard-class)
-            (class standard-class))
-    (declare (ignore class))
-    (finalize-inheritance superclass)
-    (values superclass))
-
-  (:method ((superclass forward-referenced-class)
-            (class forward-referenced-class))
-    (class-finalization-note
-     "~<Cannot finalize forward-referenced-class ~s~>~
-~< as superclass of forward-referenced class ~s~>"
-     superclass class))
-
-  (:method ((superclass standard-class)
-            (class forward-referenced-class))
-    (class-finalization-note
-     "~<Cannot finalize standrd-class ~s~>~
-~< as superclass of forward-referenced class ~s~>"
-     superclass class))
-
-  (:method ((superclass forward-referenced-class)
-            (class standard-class))
-    (class-finalization-note
-     "~<Cannot finalize forward-referenced-class ~s~>~
-~< as superclass of ~s~>"
-     superclass class)))
-
-#+NIL
-(defgeneric finalize-reachable-subclass (subclass class)
-  ;; protocol support for FINALIZE-REACHABLE methods
-  (:method ((subclass forward-referenced-class)
-            (class standard-class))
-    (class-finalization-note
-     "~<Cannot finalize forward-referenced-class ~s~>~
-~< as subclass of ~s~>"
-     subclass class))
-
-  (:method ((subclass forward-referenced-class)
-            (class forward-referenced-class))
-    (class-finalization-note
-     "~<Cannot finalize forward-referenced-class ~s~>~
-~< as subclass of forward-referenced-class ~s~>"
-     subclass class))
-
-  (:method ((subclass standard-class)
-            (class forward-referenced-class))
-    (class-finalization-note
-     "~<Cannot finalize class ~s~>~
-~< as subclass of forward-referenced-class ~s~>"
-     subclass class))
-
-  (:method ((subclass standard-class)
-            (class standard-class))
-    (declare (ignore class))
-    (finalize-inheritance subclass)
-    (values subclass)))
-
-#+NIL
-(declaim (ftype (function (class class)
-                          (values &optional class))
-                finalize-reachable-subclass
-                finalize-reachable-superclass))
