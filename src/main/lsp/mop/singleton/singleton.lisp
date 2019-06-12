@@ -907,27 +907,28 @@ standard-class, in this implementation"))))
                                  slots))
 
                       ;; &REST
-                      ,@(mapcar #'(lambda (spec)
-                                    (destructuring-bind (param . pvalue) spec
-                                      (multiple-value-bind (to-quote eval)
-                                          (parse-defclass-parameter param pvalue)
-                                        (cons 'nconc
-                                              (nconc (mapcar #'(lambda (literal)
-                                                                 (list 'quote literal))
-                                                             to-quote)
-                                                     (map-plist
-                                                      #'(lambda (name form)
-                                                          (case name
-                                                            (:direct-default-initargs
-                                                             `(list
-                                                               ,name
-                                                               (list ,@(mapcar #'(lambda (f)
-                                                                                   (cons 'list f))
-                                                                               form))))
-                                                            (t (list name form))))
-                                                      eval)
-                                                     )))))
-                                %params))))
+                      ,@(or
+                         (mapcan #'(lambda (spec)
+                                     (destructuring-bind (param . pvalue) spec
+                                       (multiple-value-bind (to-quote eval)
+                                           (parse-defclass-parameter param pvalue)
+                                         (nconc (mapcar #'(lambda (literal)
+                                                            (list 'quote literal))
+                                                        to-quote)
+                                                (map-plist
+                                                 #'(lambda (name form)
+                                                     (case name
+                                                       (:direct-default-initargs
+                                                        `(list
+                                                          ,name
+                                                          (list ,@(mapcar #'(lambda (f)
+                                                                              (cons 'list f))
+                                                                          form))))
+                                                       (t (list name form))))
+                                                 eval)
+                                                ))))
+                                 %params)
+                         (list nil)))))
 
 
                ;; NB/DOCUMENTATION (and PCL) - NOTE THE FOLLOWING
