@@ -887,8 +887,8 @@ standard-class, in this implementation"))))
                                                       ,base-class (quote ,name)))
                       ,direct-meta ,base-class ,%superclasses))
                     (,the-class
-                     (apply
-                      #'ensure-class
+                     (#+NIL apply
+                            ensure-class
                       (quote ,name)
                       :direct-superclasses ,%superclasses
                       :metaclass ,proto-meta
@@ -907,28 +907,28 @@ standard-class, in this implementation"))))
                                  slots))
 
                       ;; &REST
-                      ,@(or
-                         (mapcan #'(lambda (spec)
+                         ,@(mapcan #'(lambda (spec)
                                      (destructuring-bind (param . pvalue) spec
                                        (multiple-value-bind (to-quote eval)
                                            (parse-defclass-parameter param pvalue)
                                          (nconc (mapcar #'(lambda (literal)
                                                             (list 'quote literal))
                                                         to-quote)
+                                                (apply #'nconc
                                                 (map-plist
                                                  #'(lambda (name form)
                                                      (case name
                                                        (:direct-default-initargs
-                                                        `(list
+                                                        `(#+NIL list
                                                           ,name
                                                           (list ,@(mapcar #'(lambda (f)
                                                                               (cons 'list f))
                                                                           form))))
                                                        (t (list name form))))
                                                  eval)
-                                                ))))
+                                                )))))
                                  %params)
-                         (list nil)))))
+                         )))
 
 
                ;; NB/DOCUMENTATION (and PCL) - NOTE THE FOLLOWING
