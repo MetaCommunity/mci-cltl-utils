@@ -76,5 +76,7 @@
              (values instance)))))))
 
 (declaim (ftype (function (standard-object list)
-                          (values t)
+                          (values t))
                 finalize-reachable))
+
+
