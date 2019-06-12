@@ -712,12 +712,12 @@ standard-class, in this implementation"))))
                 ((typep %class 'forward-referenced-class)
                  (error 'forward-referenced-superclass
                         :class class
-                        :unfalized-class %class))
+                        :unfinalized-class c))
                 (%class (values %class))
                 (t
                  (error 'undefined-superclass
                         :class class
-                        :undefined-class %class)))))
+                        :undefined-class c)))))
           supers))
 
 ;; (ensure-direct-superclasses '(string vector complex) 'nope)
@@ -917,10 +917,8 @@ standard-class, in this implementation"))))
                                                              to-quote)
                                                      (map-plist
                                                       #'(lambda (name form)
-                                                          ;; (error "FROB1 ~s ~s" name form)
                                                           (case name
                                                             (:direct-default-initargs
-                                                             ;; (error "FROB2 ~S" form)
                                                              `(list
                                                                ,name
                                                                (list ,@(mapcar #'(lambda (f)
