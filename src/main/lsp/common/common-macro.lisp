@@ -28,7 +28,7 @@ See also: `simplify-string'"
 
 (defmacro with-gensym ((&rest names) &body body)
   `(let (,@(mapcar (lambda (name)
-		     (let ((tmp (gensym (format* "%~A-" name))))
+		     (let ((tmp (gensym (symbol-name name))))
 		       `(,name (quote ,tmp))))
 		   names))
      ,@body))
@@ -41,7 +41,7 @@ See also: `simplify-string'"
   ;;
   ;; FIXME Documentation. Note divergence onto the "with-gensyms" pattern
   `(let (,@(mapcar (lambda (name)
-		     (let ((tmp (make-symbol (format* "%~A-" name))))
+		     (let ((tmp (make-symbol (symbol-name name))))
 		       `(,name (quote ,tmp))))
 		   names))
      ,@body))
