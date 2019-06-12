@@ -74,8 +74,7 @@ element becomes the LAST element of WHERE"
 (defmacro map-plist (fn whence)
   (with-symbols (retv dispatch p v %whence %%whence %fn val)
     `(let ((,%fn ,fn)
-           (,%%whence ,whence)
-           ,retv)
+           (,%%whence ,whence))
        (labels ((,dispatch (,%whence ,val)
                   (cond
                     ((and (consp ,%whence)
