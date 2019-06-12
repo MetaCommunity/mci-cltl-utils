@@ -82,6 +82,8 @@
    #:push-last
    #:nappend
    #:npushl
+   #:map-plist
+
    #:simplify-vector
    #:do-vector
    #:simplify-string

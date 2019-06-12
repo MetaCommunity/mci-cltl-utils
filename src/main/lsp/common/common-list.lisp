@@ -70,3 +70,28 @@ element becomes the LAST element of WHERE"
 
 ;; (let ((b '(1 5))) (values (copy-list b) (npushl 17 b) b))
 
+
+(defmacro map-plist (fn whence)
+  (with-symbols (retv dispatch p v %whence %%whence %fn val)
+    `(let ((,%fn ,fn)
+           (,%%whence ,whence)
+           ,retv)
+       (labels ((,dispatch (,%whence ,val)
+                  (cond
+                    ((and (consp ,%whence)
+                          (consp (cdr ,%whence)))
+                     (let* ((,p (car ,%whence))
+                            (,v (cadr ,%whence))
+                            (,retv (funcall ,%fn ,p ,v)))
+                       (,dispatch (cddr ,%whence)
+                                  (nappend ,val (list ,retv)))))
+                    (,%whence
+                     (error "~<Invalid property list syntax:~>~< ~S~>"
+                            ,%%whence))
+                    (t (values ,val)))))
+         (,dispatch ,%%whence nil)))))
+
+;; (map-plist #'cons '(:a 1 :b 2))
+;; (map-plist #'cons '(:a (1) :b (2 3)))
+;; (apply #'nconc (map-plist #'list '(:a 1 :b 2)))
+;; (apply #'nconc (map-plist #'list '(:a (1) :b (2 3))))
