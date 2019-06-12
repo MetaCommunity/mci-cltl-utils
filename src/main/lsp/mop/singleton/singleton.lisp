@@ -13,48 +13,6 @@
 
 
 
-;; NOTE - a concern with regards to implicit class definitions and the
-;; implementation compiler environment.
-;;
-;; NB - see also: ENSURE-CLASS
-;;
-#+NIL
-(list* (find-class nil nil) ;; simple matter - no class named NIL
-       (let* ((nm (gentemp "Class-"))
-              (c (make-instance 'standard-class :name nm
-                                :direct-superclasses
-                                (list (find-class 'standard-class)))))
-         (list (find-class nm nil)
-               c)))
-;; => NIL, NIL, <CLASS>
-;;
-;; The class C is defined, but not located by FIND-CLASS
-;;
-;; The implementation may provide some forms in the evaluation of
-;; DEFCLASS, such that cannot be portably emulated in a program using
-;; only MAKE-INSTANCE.
-;;
-;; As such, some concerns for portable programs:
-;;
-;; - Any "User-created" classes not defined in such as a top-level
-;;   DEFCLASS form may not be recognized by the compiler as being
-;;   classes.
-;;
-;; - Such "User-created" classes may not be reachable by FIND-CLASS
-;;
-;; - Any such "User-created" class may -- in some effects -- appear to
-;;   shadow a system class, superficially, by that class reusing the
-;;   system class' class-name even while the class is not EQ to the
-;;   class returned by FIND-CLASS for that same class-name.
-;;
-;;
-;; This, in short, is why the macroexpansion for DEFSINGLETON will
-;; produce two top-level DEFCLASS calls.
-;;
-;; This concern, in another effect, may serve to limit some extensions
-;; of the SINGLETON framework.
-
-
 (in-package #:cl-user)
 
 ;; Ed. NB: See also Garnet [KR]
@@ -663,6 +621,11 @@ standard-class, in this implementation"))))
              ;; NB: This implementation, in effect, prevents any usage
              ;; of forward-referenced classes in the SUPERCLASSES list
 
+
+             ;; FIXME - Consider leaving this explicit DEFCLASS form out
+             ;; of the source, for the prototype class -- considering
+             ;; the updated ALLOCATE-INITIALIZE method, prototyped below
+             ;;
              (defclass ,%proto-name (,@user-metaclass prototype-class
                                                       ,@superclasses)
                ;; NB: See also, the FIXME remark in the definition of
@@ -718,7 +681,7 @@ standard-class, in this implementation"))))
   ;; OK ...
 
   (subtypep (make-instance (find-class 'frob-s-1)) 'frob-c)
-  ;; FIXME => NIL, T
+  ;; NB => NIL, T ;; FIXME - BREAKS in CCL (??)
   ;;
   ;; ^ T.D: Dispatch in INITIALIZE-INSTANCE SINGLETON ??
   ;;
@@ -730,6 +693,12 @@ standard-class, in this implementation"))))
   ;; Note that a flag value may need to be provided such as to prevent that
   ;; behavior during DEFSINGLETON - if the DEFSINGLETON prototype class
   ;; definition will not be moved entirely into that prototol.
+
+  ;; NB
+  (subtypep (make-instance (find-class 'frob-s-1)
+                           :direct-superclasses (list (find-class 'frob-s-1)))
+            'frob-c)
+  ;; => T, T
 
   #+NIL ;; NB: the :DIRECT-SUPERCLASSES sequence may be ignored, "By now" ....
   (shared-initialize (find-class 'frob-s-1) t
@@ -787,7 +756,7 @@ standard-class, in this implementation"))))
 
 (defsingleton singleton-2-2 (singleton-1-1)
   ((sl-c)))
-
+;; FIXME [CCL] - LOOP (??)
 
 (class-slots (find-class 'singleton-2-2))
 
@@ -810,14 +779,20 @@ standard-class, in this implementation"))))
 
 
 (subtypep (make-instance 'singleton-1-1) 'singleton-1-1)
-;; => NIL, T ;; not OK
+;; => NIL, T
 
 (subtypep (make-instance 'singleton-2-2) 'singleton-1-1)
-;; => NIL, T ;; not OK
+;; => NIL, T
+
+(subtypep (make-instance 'singleton-2-2
+                         :direct-superclasses
+                         (list (find-class 'singleton-2-2)))
+          'singleton-1-1)
+;; => T, T
 
 (typep (make-instance 'singleton-2-2) 'singleton-1-1)
 ;; => T
-;; OK ! ... insofar as for direct superclasses.
+;; OK !
 
 
 ;; NB: To produce a suclass C2 of a class C1, such that C2 is both an
@@ -1090,6 +1065,12 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
 
 ;; --
 
+;; TBD: Does the following really result in any substantial difference
+;; to the DEFSINGLETON* semantics unadorned?
+;;
+;; NB: It at least implements a behavior similar to DEFSINGLETON as
+;; namely via some calls to ALLOCATE-INSTANCE
+
 (defgeneric class-prototype-metaclass (class)
   (:method ((class singleton))
     ;; FIXME - Handle specially when CLASS would be the PROTOTYPE-CLASS class
@@ -1169,8 +1150,7 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
   (:method ((for-metaclass singleton) (class-name symbol))
     (intern
      (concatenate 'simple-string (symbol-name class-name)
-                  "!" (symbol-name (class-name for-metaclass))
-                  #.(symbol-name (quote #:!prototype))))))
+                  "!" (symbol-name (class-name for-metaclass))))))
 
 
 (defclass singleton* (singleton)
@@ -1200,6 +1180,9 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
      ;; have a conventional PROTOTYPE that is an instance of that class'
      ;; metaclass, rather than an instance of any class as would be
      ;; created, below.
+
+     ;; FIXME - Consider inheriting direct superclasses (filtered) from
+     ;; the metaclass
 
      (labels ((mk-default-name (class)
                 (make-symbol
@@ -1246,7 +1229,7 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
     ;; [SBCL]
     ;;
     (defparameter *the-s*
-      (make-instance s :name (gentemp "S")
+      (make-instance s :name (gentemp "S-")
                      :prototype-class (gensym "S-PROTO-")
                      :direct-superclasses (list s)
                      ;; :ensure-prototype t ;; this obviates the previous remarks
@@ -1289,14 +1272,42 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
   ;; T
 
   (typep *the-s* 'singleton**)
-  ;; T ;; OK.
+  ;; T ;; OK
+
+
+  ;; and of course (per CLOS unadorned) ...
+  (typep (make-instance *the-s*) 'singleton)
+  ;; T
+
+  (typep (make-instance *the-s*) 'singleton*)
+  ;; T
+
+  (typep (make-instance *the-s*) 'singleton**)
+  ;; T
+
 
   ;; NOW THIS NEEDS DOCUMENTATION
 
 
+
+  ;; although (FIXME?)  ...
+  (subtypep (make-instance *the-s*) 'singleton)
+  ;; T, T ;; per CLOS
+
+  (subtypep (ensure-class (gensym "THE-S") :metaclass *the-s*) 'singleton*)
+  ;; NIL, T
+
+  (subtypep (make-instance *the-s*) 'singleton**) ;; FIXME
+  ;; NIL, T
+
+
+
+
+  ;; --
+
   (let ((s (find-class 'singleton**)))
     (defparameter *the-s-2*
-      (make-instance s :name (gentemp "S2")
+      (make-instance s :name (gentemp "S2-")
                      ;; NB - make-instance with :prototype-class class
                      ;; .. ensuring prototype-class reuse here - trivial hack
                      :prototype-class (find-class 'prototype-class)
@@ -1304,21 +1315,89 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
                      :ensure-prototype t
                      ))
     (values #+NIL (typep *the-s* s)
-            *the-s-2*))
+            (symbol-value '*the-s-2*)))
+
+  ;; (typep *the-s-2* 'singleton**)
+  ;; => NIL ;; consequent of the user-specified metaclass
+
+  ;; (typep *the-s-2* 'singleton*)
+  ;; => NIL ;; consequent of the user-specified metaclass
+
+  ;; (typep *the-s-2* 'singleton)
+  ;; => T ;; consequent of the user-specified metaclass
 
 
 
 
   (let ((s (find-class 'singleton**)))
     (defparameter *the-s-3*
-      (make-instance s :name (gentemp "S2")
+      (make-instance s :name (gentemp "S3-")
                      ;; NB test prototype-class name initialization
                      :direct-superclasses (list s)
                      :ensure-prototype t
                      ))
     (values #+NIL (typep *the-s* s)
-            *the-s-3*))
+            (symbol-value '*the-s-3*)))
 
 
+  ;; -- test with non-singleton user-specified superclasses
+
+  (defclass obj-a ()
+    ())
+
+  (let ((s (find-class 'singleton**)))
+    (defparameter *the-s-4*
+      (ensure-class (gentemp "S4-") :metaclass s
+                     :direct-superclasses (list (find-class 'obj-a))
+                     :ensure-prototype t
+                     ))
+    (values #+NIL (typep *the-s* s)
+            (symbol-value '*the-s-4*)))
+
+
+  (typep *the-s-4* 'obj-a)
+  ;; => T
+  ;;
+  (subtypep *the-s-4* 'obj-a)
+  ;; => T, T
+  ;;
+  (typep (make-instance *the-s-4*) 'obj-a)
+  ;; => T
+  ;;
+  ;; ... which is pretty much the point of this - NB [DOCUMENTATION]
+  ;; ... in which it's more or less like DEFSINGLETON but implemented
+  ;;     via ALLOCATE-INSTANCE
+
+  ;; nb - consequent of ENSURE-CLASS
+  (find-class (class-name *the-s-4*) nil)
+  ;; => <CLASS>
+  ;;
+  (find-class (class-name (class-of *the-s-4*)) nil)
+  ;; => <CLASS>
+
+  (class-direct-superclasses *the-s-4*)
+
+
+  (subtypep (make-instance *the-s-4*) 'obj-a)
+  ;; FIXME => NIL, T
+  ;; NB: WHILE (PER CLOS)
+  (subtypep *the-s-4* 'obj-a)
+  ;; => T
+
+  ;; (describe (find-class 'obj-a))
+
+  ;; NB
+  (class-of (class-of *the-s-4*))
+  ;; => <PROTOTYPE-CLASS>
+
+
+  (subtypep (make-instance *the-s-4* :direct-superclasses (list *the-s-4*))
+            'obj-a)
+  ;; => T, T
+
+  ;; --
+
+
+  ;; FIXME - Test with user-specified metaclass
 
 )
