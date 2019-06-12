@@ -1092,7 +1092,10 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
 
 (defgeneric class-prototype-metaclass (class)
   (:method ((class singleton))
+    ;; FIXME - Handle specially when CLASS would be the PROTOTYPE-CLASS class
+    ;; itself, as within ENSURE-PROTOTYPE-METACLASS
     (find-class 'prototype-class))
+
   #+NIL
   (:method ((class standard-class))
     ;; NB: STANDARD-CLASS would not support an :IMPLEMENTATION-CLASS
@@ -1102,18 +1105,25 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
 
 (defgeneric ensure-prototype-metaclass (proto use-metaclass for-class
                                         direct-superclasses)
-  (:method ((proto prototype-class) (use-metaclass standard-class)
+  (:method ((proto singleton) (use-metaclass standard-class)
             (for-class singleton)
             (direct-superclasses list))
-    (declare (ignore use-metaclass for-class direct-superclasses))
-    ;; FIXME - DO NOT IGNORE PARAMS - VERIFY PROTO onto those parameters
-    (values proto))
+    ;; (declare (ignore use-metaclass for-class direct-superclasses))
+    ;; FIXME - note the FIND-CLASS call, below, similarly
+    ;; (values proto))
+
+    ;; NB - a trivial hack to ensure that the PROTO class matches per
+    ;; the  protocol implemented for a newly defined prototype-metaclass
+    (ensure-prototype-metaclass (class-name proto)
+                                use-metaclass for-class
+                                (remove proto direct-superclasses
+                                        :test #'eq)))
 
 
   (:method ((proto null) (use-metaclass standard-class)
             (for-class singleton)
             (direct-superclasses list))
-    (error "Erroneous prototype metaclass name for ~s: ~s" proto
+    (error "Invalid prototype metaclass name for ~s: ~s" proto
            for-class))
 
 
@@ -1122,25 +1132,37 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
             (direct-superclasses list))
 
     (or (find-class proto nil) ;; NB - CLASS REUSE
+        ;; FIXME - only reuse the class when it conforms to the
+        ;; following implementation pattern - else generate a new
+        ;; prototype class name and dispatch to the following
 
-        (let ((proto-metaclass (class-prototype-metaclass for-class))
-              (%direct-superclasses
-               ;; TBD - wrap the COMPUTE-CLASS call with something to
-               ;; signal a FORWARD-REFERENCED-SUPRECLASS error
-               ;; onto FOR-CLASS, for any forward-referenced class
-               ;; in direct-superclasses
-               (mapcar #'compute-class direct-superclasses)))
-          (ensure-class proto
-                        :metaclass  proto-metaclass
-                        :name proto
-                        :direct-superclasses (list* ;; proto-metaclass
-                                                    for-class
-                                                    ;; ^ Needed but
-                                                    ;; breaking it here
-                                                    use-metaclass
+        (labels ((sort-classes (proto-meta for-c use-meta direct-supers)
+                   (list* proto-meta for-c use-meta
+                          (remove proto-meta
+                                  (remove use-meta
+                                          (remove for-c direct-supers
+                                                  :test #'eq)
+                                          :test #'eq)
+                                  :test #'eq))))
+          (let ((proto-metaclass (class-prototype-metaclass for-class))
+                (%direct-superclasses
+                 ;; TBD - wrap the COMPUTE-CLASS call with something to
+                 ;; signal a FORWARD-REFERENCED-SUPRECLASS error
+                 ;; onto FOR-CLASS, for any forward-referenced class
+                 ;; in direct-superclasses
+                 (mapcar #'compute-class direct-superclasses)))
+            (ensure-class proto
+                          :metaclass  proto-metaclass
+                          :name proto
 
-                                                    %direct-superclasses)
-                        :implementation-class for-class)))))
+                          :direct-superclasses
+                          ;; FIXME : Trivial superclass sorting
+                          (sort-classes proto-metaclass
+                                        for-class
+                                        use-metaclass
+                                        %direct-superclasses)
+
+                          :implementation-class for-class))))))
 
 
 (defgeneric ensure-prototype-metaclass-name (for-metaclass class-name)
@@ -1168,51 +1190,96 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
 
 
 (defmethod allocate-instance ((class singleton*) &rest initargs)
-  (labels ((mk-default-name (class)
-             (make-symbol
-              (concatenate 'simple-string
-                           #.(symbol-name (quote #:uninterned-))
-                           (symbol-name (class-name class))))))
-    (let* ((name (or (getf initargs :name (mk-default-name class))))
-           (proto-spec (getf initargs :prototype-class
-                             (ensure-prototype-metaclass-name class name)))
-           (metaclass (compute-class
-                       (getf initargs :metaclass
-                             (load-time-value (find-class 'singleton*)
-                                              t))))
-           (direct-supers (getf initargs :direct-superclasses))
-           (proto-metaclass
-             (ensure-prototype-metaclass proto-spec metaclass class
-                                         direct-supers)))
-      (setf (getf initargs :name) name) ;; always set (FIXME)
+  (cond
+    ((or (getf initargs :prototype-class)
+         (getf initargs :ensure-prototype))
+     ;; ^ NB: Prevent that this protocol would be, in effect, active for
+     ;; definitions of classes outside of DEFSINGLETON and similar.
+     ;;
+     ;; This, by side effect, may serve to ensure that each class will
+     ;; have a conventional PROTOTYPE that is an instance of that class'
+     ;; metaclass, rather than an instance of any class as would be
+     ;; created, below.
 
-      (warn "ALLOCATE-INSTANCE ~s as instance of ~s" class proto-metaclass)
-      #+NIL ;; unused
-      (setf (getf initargs :prototype-class)
-            proto-metaclass)
+     (labels ((mk-default-name (class)
+                (make-symbol
+                 (concatenate 'simple-string
+                              #.(symbol-name (quote #:uninterned-))
+                              (symbol-name (class-name class))))))
+       (let* ((name (or (getf initargs :name (mk-default-name class))))
+              (proto-spec (getf initargs :prototype-class
+                                (ensure-prototype-metaclass-name class name)))
+              (metaclass (compute-class
+                          (getf initargs :metaclass
+                                (load-time-value (find-class 'singleton*)
+                                                 t))))
+              (direct-supers (getf initargs :direct-superclasses))
+              (proto-metaclass
+               (ensure-prototype-metaclass proto-spec metaclass class
+                                           direct-supers)))
 
-      (apply #'allocate-instance proto-metaclass initargs))))
+         ;; (warn "ALLOCATE-INSTANCE ~s as instance of ~s" class proto-metaclass)
+         #+NIL ;; unused
+         (setf (getf initargs :prototype-class)
+               proto-metaclass)
+
+         (apply #'allocate-instance proto-metaclass initargs))))
+    (t (call-next-method))))
 
 
 (eval-when ()
 
   (let ((s (find-class 'singleton**)))
+    ;; NB: As a side-effect, this form may result in [FIXME] two subclasses
+    ;;     of PROTOTYPE-CLASS for the first call, and [OK] one subclass
+    ;;     for each subsequent call. [SBCL]
+    ;;
+    ;; In some implementations ...
+    ;;
+    ;; The first of those is produced for SINGLETON** here -- certainly,
+    ;; due to how the ALLOCATE-INSTANCE method is specialized onto
+    ;; SINGLETON*. The latter, of course, is the metaclss of SINGLETON**
+    ;;
+    ;; FIXME: That first metaclass might appear to be unused, except as
+    ;; it being - by some side effect - the metaclass of the PROTOTYPE
+    ;; object created for the SINGLETON** class (during class finalization?)
+    ;; [SBCL]
+    ;;
     (defparameter *the-s*
       (make-instance s :name (gentemp "S")
                      :prototype-class (gensym "S-PROTO-")
-                     ;; :direct-superclasses (list s) ;; BREAKS NOW & LATER [FIXME]
+                     :direct-superclasses (list s)
+                     ;; :ensure-prototype t ;; this obviates the previous remarks
                      ))
     (values #+NIL (typep *the-s* s)
             *the-s*))
 
-  ;; still DNW - FIXME
+  ;; (class-of *the-s*)
+
+  ;; (class-of (class-of *the-s*))
+
+  ;; (class-direct-superclasses (class-of *the-s*))
+
+  ;; (class-direct-subclasses (find-class 'prototype-class))
+
+  ;; (class-prototype (find-class 'singleton**))
+  ;; ^ is of class SINGLETON** which is [OK]
+
+  (eq (class-of (class-prototype *the-s*) ) *the-s*)
+  ;; => T
+
+  (eq (class-of (class-prototype (class-of *the-s*)))
+      (class-of *the-s*))
+  ;; => T
+
   (subtypep *the-s* 'singleton**)
+  ;; => T, T
 
-  ;; DNW also - FIXME
   (subtypep *the-s* 'singleton*)
+  ;; => T, T
 
-  ;; this only
   (subtypep *the-s* 'singleton)
+  ;; => T, T
 
 
   (typep *the-s* 'singleton)
@@ -1222,9 +1289,36 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
   ;; T
 
   (typep *the-s* 'singleton**)
-  ;; T ;; THIS NOW - OK ...
+  ;; T ;; OK.
+
+  ;; NOW THIS NEEDS DOCUMENTATION
 
 
-  ;; FIXME
+  (let ((s (find-class 'singleton**)))
+    (defparameter *the-s-2*
+      (make-instance s :name (gentemp "S2")
+                     ;; NB - make-instance with :prototype-class class
+                     ;; .. ensuring prototype-class reuse here - trivial hack
+                     :prototype-class (find-class 'prototype-class)
+                     :direct-superclasses (list s)
+                     :ensure-prototype t
+                     ))
+    (values #+NIL (typep *the-s* s)
+            *the-s-2*))
+
+
+
+
+  (let ((s (find-class 'singleton**)))
+    (defparameter *the-s-3*
+      (make-instance s :name (gentemp "S2")
+                     ;; NB test prototype-class name initialization
+                     :direct-superclasses (list s)
+                     :ensure-prototype t
+                     ))
+    (values #+NIL (typep *the-s* s)
+            *the-s-3*))
+
+
 
 )
