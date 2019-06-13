@@ -94,3 +94,7 @@ element becomes the LAST element of WHERE"
 ;; (map-plist #'cons '(:a (1) :b (2 3)))
 ;; (apply #'nconc (map-plist #'list '(:a 1 :b 2)))
 ;; (apply #'nconc (map-plist #'list '(:a (1) :b (2 3))))
+;;
+;; (map-plist #'cons '(:a 1 :b 2 :err))
+;; (map-plist #'cons nil)
+
