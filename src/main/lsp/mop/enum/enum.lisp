@@ -15,8 +15,8 @@
 ;; FIXME: Move this to a separate source file;
 ;; consider defining this in LTP itself
 
-(defgeneric %enum-members (enum))
-(defgeneric (setf %enum-members) (new enum))
+(defgeneric %storage-context-members (enum))
+(defgeneric (setf %storage-context-members) (new enum))
 
 (defclass enum ()
   ;; FIXME: Provide a guard (mutex e.g) onto the %MEMBERS buffer
@@ -72,18 +72,13 @@
 ;; --
 
 
-(defclass dynamic-enum (enum #+TD storage-object)
+(defclass dynamic-enum (enum)
   ;; Assumption: Static ENUM definitions may be initialized once, then
   ;; would be read-only
   ;;
   ;; FIXME: Ensure such a semantics, for the ENUM %MEMBER slot of a
   ;; STATIC-ENUM class
-  ((%members
-    :initarg :%members
-    :accessor %enum-members ;; see also: :SYNCHRONIZE (NB)
-    ;; :synchronize (:read :write)
-    :type (array t (*)))
-   (member-register-function
+  ((member-register-function
     ;; :access :read-only
     ;; may be unbound
     :initarg :member-register-function
@@ -95,8 +90,106 @@
     :type function)))
 
 
+(defclass array-storage-context ()
+  ((%members
+    :type array)))
 
-(defmethod shared-initialize ((instance dynamic-enum) slots
+
+(defclass expandable-vector-storage-context (array-storage-context)
+  ((%members
+    :initarg :%members
+    :accessor %storage-context-members ;; see also: :SYNCHRONIZE (NB)
+    ;; :synchronize (:read :write)
+    :type (array t (*)))))
+
+
+(defmethod initialize-storage ((context expandable-vector-storage-context))
+  (unless (slot-boundp context '%members)
+    (setf (%storage-context-members context)
+          (make-array 8 :fill-pointer 0)))
+  (values context))
+
+
+;; -- Dynamic Deallocation for Storage Objects
+
+(defgeneric storage-empty-object (storage #+NIL context))
+;; cf. DEALLOCATE-STORAGE
+
+(defgeneric deallocate-storage (obj #+NIL context)
+  ;; NB: This assumes that every reachable object within OBJ can be
+  ;; destructively modified. As such, this does not operate on
+  ;; implementation classes.
+  ;;
+  ;; FIXME This does not operate onto any manner of portable reference
+  ;; pointers, in Common Lisp
+  (:method ((buff null))
+    ;; no-op
+    (values))
+  (:method ((buff cons))
+    ;; NB: does not perform any circular list detection.
+    ;;
+    ;; Any calling program should ensure that there are no circular
+    ;; lists in the respective OBJ
+    (deallocate-storage (cdr buff))
+    (setf (cdr buff) nil)
+    (deallocate-storage (car buff))
+    (setf (car buff) nil)
+    (values t))
+  (:method  ((buff simple-string))
+    ;; no-op
+    (values))
+  (:method  ((buff simple-bit-vector))
+    ;; no-op
+    (values))
+
+  #++NIL
+  (:method ((buff vector))
+    (multiple-value-prog1 (call-next-method)
+      (when (array-has-fill-pointer-p buff)
+        (setf (fill-pointer buff) 0))))
+  #+NIL
+  (:method ((buff array))
+    (dotimes (n (apply #'* (array-dimensions buff)) (values t))
+      (deallocate-storage (row-major-aref buff n))
+      (setf (row-major-aref buff n)
+            (storage-empty-object buff #+NIL context))))
+
+  (:method ((buff fixnum))
+    ;; no-op
+    (values))
+  (:method ((buff complex))
+    ;; portably, no-op [FIXME]
+    (values))
+  (:method ((buff symbol) #+NIL (context t))
+    ;; NO-OP in this context [PROTOTYPE]
+    (values))
+  #+NIL
+  (:method ((buff symbol))
+    ;;; FIXME - limit this onto a specific context
+    ;;
+    ;; NB: This will not affect any existing references to a symbol
+    (unintern buff)
+    (values t)))
+
+;; (deallocate-storage (make-array 10 :fill-pointer 10) nil)
+
+
+;; --
+
+(defmethod close-storage ((context expandable-vector-storage-context))
+  (cond
+    ((slot-boundp context '%members)
+     (deallocate-storage (%storage-context-members context) #+NIL context)
+     (slot-makunbound context '%members)
+     (values t))
+    (t (values))))
+
+
+(defclass simple-dynamic-enum (expandable-vector-storage-context dynamic-enum)
+  ())
+
+
+(defmethod shared-initialize ((instance simple-dynamic-enum) slots
                               &rest initargs
                               &key (members nil memp) (%members nil %memp)
                                 &allow-other-keys)
@@ -127,23 +220,25 @@
       (next-method))))
 
 
+
 (defgeneric enum-members (enum)
-  (:method ((enum dynamic-enum))
+  (:method ((enum simple-dynamic-enum))
     (when (slot-boundp enum '%members)
-      (coerce (the (array t (*)) (%enum-members enum))
+      (coerce (the (array t (*)) (%storage-context-members enum))
               'list))))
 
+
 (defgeneric (setf enum-members) (new-value enum)
-  (:method ((new-value list) (enum dynamic-enum))
+  (:method ((new-value list) (enum simple-dynamic-enum))
     (setf (enum-members enum)
           (coerce (the list new-value) 'simple-vector)))
-  (:method ((new-value vector) (enum dynamic-enum))
+  (:method ((new-value vector) (enum simple-dynamic-enum))
     (cond
       ((array-has-fill-pointer-p new-value)
-       (setf (%enum-members enum) new-value))
+       (setf (%storage-context-members enum) new-value))
       (t
        (let ((len (length new-value)))
-         (setf (%enum-members enum)
+         (setf (%storage-context-members enum)
                (make-array len
                            :element-type t
                            :fill-pointer len
@@ -162,9 +257,9 @@
 
   (enum-members *enum*)
 
-  (%enum-members *enum*)
+  (%storage-context-members *enum*)
 
-  (vector-push-extend "E" (%enum-members *enum*))
+  (vector-push-extend "E" (%storage-context-members *enum*))
 
   (enum-members *enum*)
 
@@ -173,7 +268,7 @@
 
   (enum-members *enum*)
 
-  (let* ((buf (%enum-members *enum*))
+  (let* ((buf (%storage-context-members *enum*))
          (n (length buf))
          (newbuf
           (make-array n
@@ -182,7 +277,7 @@
                       :initial-contents (nreverse buf))))
     (values
      (setf (enum-members *enum*) newbuf)
-     (eq (%enum-members *enum*) newbuf)))
+     (eq (%storage-context-members *enum*) newbuf)))
   ;; last value => T
 
 
@@ -192,20 +287,33 @@
 
 ;; ----
 
+#+NIL ;; simple example NB
 (defsingleton dynamic-enum-class (dynamic-enum)
   ())
 
 
 ;; --
 
-(defclass static-enum (enum #+TD storage-object)
+(defclass static-enum (enum)
+  ())
+
+
+(defclass simple-vector-storage-context (array-storage-context)
+  ;; NB: Leaving the semantics undefined for INITIALIZE-STORAGE
+  ;;     of a SIMPLE-VECTOR-STORAGE-CONTEXT
+  ;;
+  ;;     Similarly, for CLOSE-STORAGE
   ((%members
-    :type simple-vector
-    ;; :access :read-only ;; TD
-    :reader %enum-members)))
+    :accessor %storage-context-members
+    ;; :read-only t
+    :type simple-vector)))
 
 
-(defmethod shared-initialize ((instance static-enum) slots
+(defclass simple-static-enum (simple-vector-storage-context static-enum)
+  ())
+
+
+(defmethod shared-initialize ((instance simple-static-enum) slots
                               &rest initargs
                               &key (members nil memp) #+NIL (%members nil %memp)
                                 &allow-other-keys)
@@ -225,9 +333,9 @@
 
       (next-method))))
 
-(defmethod enum-members ((enum static-enum))
+(defmethod enum-members ((enum simple-static-enum))
   (when (slot-boundp enum '%members)
-    (coerce (the simple-vector (%enum-members enum))
+    (coerce (the simple-vector (%storage-context-members enum))
             'list)))
 
 ;; TD: Instance tests - STATIC-ENUM Initialization, Accessors
@@ -236,6 +344,7 @@
 
 ;; ----
 
+#+NIL ;; simple example NB
 (defsingleton static-enum-class (static-enum)
   ())
 
@@ -496,7 +605,9 @@ in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
 
   ;; (shared-initialize (find-class 'trivial-enum) t)
 
-  (defsingleton trivial-enum (#+TBD storage-class dynamic-enum)
+;;(macroexpand-1 (quote
+
+  (defsingleton trivial-enum (simple-dynamic-enum)
     ()
     #+TD (:member-key-test . eq)
     ;; FIXME/API Design - The following two slots, in effect, will limit
@@ -506,7 +617,11 @@ in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
     (:member-key-slot . name)
     #+TD (:conc-suffix . #:-tem)
     )
-  ;; FIXME/QA: How is the class not finalized?
+
+;; (class-finalized-p (find-class 'trivial-enum))
+;; => T
+
+;;))
 
   ;; FIXME: Initialize %members slot for TRIVIAL-ENUM
   ;; (cannot be done via shared-initialize, in this configuration)
@@ -530,7 +645,7 @@ in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
              (type not-found-symbol not-found)
              (values (or array-dim null) &optional))
     (let* ((whence (find-class 'trivial-enum))
-           (buf (%enum-members whence))
+           (buf (%storage-context-members whence))
            (n (position name (the vector buf)
                         :key #'tenum-member-name)))
       (declare (dynamic-extent whence))
@@ -554,7 +669,7 @@ in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
              (values (or tenum-member null) boolean
                      &optional))
     (let* ((whence (find-class 'trivial-enum))
-           (buf (%enum-members whence))
+           (buf (%storage-context-members whence))
            (n (position-of-tem name not-found)))
       (declare (dynamic-extent whence))
       (cond
@@ -577,7 +692,7 @@ in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
              (if-exists-symbol if-exists)
              (values (or tenum-member null) &optional))
     (let* ((whence (find-class 'trivial-enum))
-           (buf (%enum-members whence)))
+           (buf (%storage-context-members whence)))
       (declare (dynamic-extent whence))
       (labels ((dispatch-reg-new ()
                  ;; FIXME When Debug - Emit a signal here
@@ -642,7 +757,7 @@ in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
 
       ;; NB Shared NOT-FOUND semantics w/ REMOVE-TEM
       (let* ((whence (find-class 'trivial-enum))
-             (buf (%enum-members whence)))
+             (buf (%storage-context-members whence)))
         (declare (dynamic-extent whence))
         (labels ((dispatch-remove ()
                    (delete obj (the vector buf)
@@ -700,7 +815,7 @@ in DEFINE-SINGLETON-ENUM~>~< (:CONC-SUFFIX . ~S)~>" conc-rest))
 
     (eq (find-tem :tem-1) *t3*)
 
-    (%enum-members (find-class 'trivial-enum))
+    (%storage-context-members (find-class 'trivial-enum))
 )
 
 
