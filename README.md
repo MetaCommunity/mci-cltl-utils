@@ -1,9 +1,7 @@
-Lisp Tools Project - thinkum.space
-==================================
+Lisp Tools Project - Main Source Repository - thinkum.space
+===========================================================
 
-Summary: Generic utilities for programming with Lisp Systems
-
-Availability (DEPRECATED): [git@github.com:MetaCommunity/mci-cltl-utils.git][mci-cltl-utils]
+**Summary:** Generic utilities for programming with Lisp Systems
 
 ## Reference
 
