@@ -64,7 +64,7 @@
      ;;
      ;; TBD: Portable representation for implementation-specific lexical
      ;; environment definitions, in LTP/Common
-     (format s  "~<No binding is availble for ~s~>"
+     (format s  "~<No binding availble for ~s~>"
              (cell-error-name c)))))
 
 ;; (error 'no-binding :name (make-symbol "_FrobP"))
@@ -111,7 +111,7 @@
 ;; Expect Failure:
 ;; (symbol-type (make-symbol "frob") (SB-KERNEL:MAKE-NULL-LEXENV))
 
-;; NB using the following mcro
+;; NB using the following macro
 ;; (let ((s (make-symbol "frob"))) (setf (symbol-value s) nil) (symbol-type* s))
 ;; => T
 
