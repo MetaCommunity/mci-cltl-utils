@@ -32,7 +32,8 @@
 #+SBCL
 (defun find-lvar (name env)
   ;; NB: Roughly analogous to (sb-int:info :variable :type name)
-  ;; but applied for purpose of accessing the lexical environmnent ENV
+  ;; but applied for access to binding information in the lexical
+  ;; environmnent ENV
   (declare (type symbol name)
            (type sb-kernel:lexenv env)
            (values &optional sb-c::lambda-var))
@@ -60,11 +61,11 @@
    (lambda (c s)
      ;; Assumption: If this error occurs, the debugger should be able to
      ;; provide information about the lexical environment in which the
-     ;; error occurred
+     ;; error occurred.
      ;;
      ;; TBD: Portable representation for implementation-specific lexical
      ;; environment definitions, in LTP/Common
-     (format s  "~<No binding availble for ~s~>"
+     (format s  "~<No binding available for ~s~>"
              (cell-error-name c)))))
 
 ;; (error 'no-binding :name (make-symbol "_FrobP"))
@@ -72,8 +73,8 @@
 
 #+SBCL
 (defun symbol-type (s env)
-  ;; NB: Broadly analogous to SYMBOL-VALUE but providing access to some
-  ;; information with regrads to runtime type system reflection
+  ;; NB: Broadly analogous to SYMBOL-VALUE, but providing access to some
+  ;; information with regards to runtime type system reflection
   ;;
   ;; See also: SPECIFIER-TYPE in CMUCL, SBCL
   (declare (type symbol s)
@@ -94,7 +95,7 @@
        ;;
        ;; Susbq, return information for S, from the global environment.
        ;;
-       ;; Assumption The globl binding state of the symbol has been
+       ;; Assumption The global binding state of the symbol has been
        ;; verified, previous to the following.
        ;;
        (sb-kernel:type-specifier (sb-int:info :variable :type s)))
