@@ -72,6 +72,10 @@
 ;; FIXME_DOCS Publication Model TBD
 ;; FIXME_DOCS Integration with site-local knowledgebases TBD
 
-(deftype typed-vector (element-type &optional (dimension '*))
-  ;; i.e non-simple vector - convenience defn.
+(deftype typed-svector (element-type &optional (dimension '*))
+  ;; i.e simple vector of a specific element type - convenience defn.
   `(simple-array ,element-type (,dimension)))
+
+(deftype typed-vector (element-type &optional (dimension '*))
+  ;; i.e vector that may be "Non-simple" - convenience defn.
+  `(array ,element-type (,dimension)))

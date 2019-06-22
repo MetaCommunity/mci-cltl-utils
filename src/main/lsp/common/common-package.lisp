@@ -93,6 +93,7 @@
    #:array-dim
    #:array-index
    #:array-length
+   #:typed-svector
    #:typed-vector
    #:split-string-1
    #:split-string
