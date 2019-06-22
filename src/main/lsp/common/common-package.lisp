@@ -91,7 +91,9 @@
    #:null-string
    #:string-null-p
    #:array-dim
+   #:array-index
    #:array-length
+   #:typed-vector
    #:split-string-1
    #:split-string
 

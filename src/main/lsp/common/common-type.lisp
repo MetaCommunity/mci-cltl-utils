@@ -1,4 +1,4 @@
-;; type-utils.lisp
+;; common-type.lisp
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2017 Sean Champ and others. All rights reserved.
@@ -58,7 +58,11 @@
 (deftype array-dim ()
   ;; FIXME_DOCS See also `array-length'
   ;; FIXME_DOCS Application Example - see DO-VECTOR
-  '(integer 0 (#.array-dimension-limit)))
+  '(mod #.array-dimension-limit))
+
+(deftype array-index ()
+  ;; type alias - defined for convenience in applications, cf. aref
+  'array-dim)
 
 (deftype array-length ()
   ;; FIXME_DOCS See also `array-dim'
@@ -67,3 +71,7 @@
 
 ;; FIXME_DOCS Publication Model TBD
 ;; FIXME_DOCS Integration with site-local knowledgebases TBD
+
+(deftype typed-vector (element-type &optional (dimension '*))
+  ;; i.e non-simple vector - convenience defn.
+  `(simple-array ,element-type (,dimension)))
