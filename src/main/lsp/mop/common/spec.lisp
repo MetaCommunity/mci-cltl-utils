@@ -363,21 +363,41 @@
 
 (defstruct (param
              (:constructor))
-  (name #.(make-symbol "unbound")
+  (name (quote #.(make-symbol "unbound"))
         :type symbol
         :read-only t))
 
-(defstruct (specializable-param
+
+(defstruct (param-subset
+             (:constructor))
+  (members #.(make-array 0)
+           :type simple-vector
+           :read-only t))
+
+(defstruct (required-param
              (:include param)
-             (:constructor make-specializable-param (name))))
+             (:constructor make-required-param (name))))
+
+(defstruct (required-param-subset
+             (:include param-subset)
+             (:constructor %make-required-param-subset (members))))
 
 (defstruct (optional-param
              (:include param)
              (:constructor make-optional-param (name))))
 
+(defstruct (optional-param-subset
+             (:include param-subset)
+             (:constructor %make-optional-param-subset (members))))
+
 (defstruct (rest-param
              (:include param)
-             (:constructor make-rest-param (name))))
+             (:constructor make-rest-param (name)))
+  #+THISv2 ;; FIXME add parser/unparser support for this
+  (kind (quote &rest)
+        :type symbol ;; (member &rest &body) ;; typically
+        :read-only t)
+  )
 
 (defstruct (keyword-param
              (:include param)
@@ -385,22 +405,88 @@
   ;; FIXME - need more structure here
   )
 
+
+(defstruct (keyword-param-subset
+             (:include param-subset)
+             #+THISV2
+             (:constructor %make-keyword-param-subset
+                           (members &optional allow-other-keys))
+             )
+  ;; NB: FIXME: Update this model to indicate &ALLOW=OTHER-KEYS here
+  #+THISV2
+  (allow-other-keys
+   nil
+   :type boolean
+   :read-only t))
+
+
+#+NIL ;; unused as yet - see annotations, subsq.
 (defstruct (aux-param
              (:include param)
              (:constructor make-aux-param (name))))
 
 
 (defstruct (lambda-signature
+             #-THISv2
              (:constructor %make-lambda-signature
-                           (params &optional allow-other-keys)))
+                           (params &optional allow-other-keys))
+             #+THISv2
+             (:constructor %make-lambda-signature
+                           (&optional required-param-subset
+                                      optional-param-subset
+                                      keyword-param-subset
+                                      rest-param))
+             )
+  #-THISv2
   (params
    #.(make-array 0)
    :type simple-vector
    :read-only t)
+  #-THISv2
   (allow-other-keys
    nil
    :type boolean
-   :read-only t))
+   :read-only t)
+  #+THISv2
+  (required-param-subset
+   nil
+   :type (or required-param-subset null)
+   :read-only t)
+  #+THISv2
+  (optional-param-subset
+   nil
+   :type (or optional-param-subset null)
+   :read-only t)
+  #+THISv2
+  (keyword-param-subset
+   nil
+   :type (or keyword-param-subset null)
+   :read-only t)
+  #+THISv2
+  (rest-param
+   nil
+   :type (or rest-param null)
+   :read-onky t)
+  ;; TBD in extensions:
+  ;; - AUX-PARAM-SUBSET - specifically for anonymous lambdas & defun forms
+  ;; - ENV-PARAM - specifically for macro lambda forms
+  ;; - WHOLE-PARAM - cf. SETF forms and similar
+  ;; ... and interop. for implementation-specific lambda forms
+  ;; ... with further specialization, in applications.
+  ;;     NB: Optional parameter defaulting for DEFTYPE lambda signatures
+  ;;     NB: Parameter name matching for DEFSTRUCT lambda signatures and
+  ;;         structure-class slot definitions
+  ;;     ... etc.
+  ;;
+  ;; NB/Topic: User Interfaces & Accessibility for Lambda Model Definitions
+  ;;
+  ;; NB: This was originally defined for supporting implementation of
+  ;; GENERIC-OP, begeinning with a method onto the standard generic
+  ;; function, COMPUTE-FTYPE-PARAMS-TYPE. As such, the syntax supported
+  ;; with this protocol is -- at this time -- limited to the lambda list
+  ;; syntax supported for standard generic functions.
+  )
+
 
 (declaim (ftype (function (sequence &optional t)
                           (values lambda-signature &optional))
@@ -413,15 +499,9 @@
 
 ;; ----
 
-#+NIL ;; defined in LTP/COMMON (internal)
-(defconstant* +defun-lambda-param-kwd+
-    ;; NB: This provides a more specialized set of symbols than
-    ;; CL:LAMBDA-LIST-KEYWORDS
-  '(&optional &rest &key &allow-other-keys))
-
 
 (declaim (ftype (function (lambda-signature) (values list &optional))
-                compute-lambda-signature))
+                compute-lambda-list))
 
 (defun compute-lambda-list (signature)
   (let* ((params (lambda-signature-params signature))
@@ -439,8 +519,9 @@
         (let ((name (param-name param)))
         (etypecase param
           ;; NB: for now, not parsing for other types of lambda kwd
-          (specializable-param
+          (required-param
            (add-to-buffer name))
+          ;; FIXME add parseer subtree for OPTIONAL-PARAM-SUBSET
           (optional-param
            (update-context (quote &optional))
            (add-to-buffer name))
@@ -450,6 +531,7 @@
            (update-context (quote  &rest))
            (setq restp t)
            (add-to-buffer name))
+          ;; FIXME add parseer subtree for KEY-PARAM-SUBSET
           (keyword-param
            ;; FIXME - need further processing here
            (update-context (quote &key))
@@ -463,61 +545,155 @@
       (coerce buf 'list))))
 
 
+
+(define-condition lambda-list-syntax-error (simple-error)
+  ((lambda-list
+    :initarg :lambda-list
+    :reader error-lambda-list))
+  (:report
+   (lambda (c s)
+     (apply #'format s
+            (concatenate 'simple-string
+                         "~<" (simple-condition-format-control c)
+                         ":~>~< ~S~>")
+            (append (simple-condition-format-arguments c)
+                    (list (error-lambda-list c)))))))
+
+(defmacro lambda-list-syntax-error (which fmt &rest args)
+  `(error 'lambda-list-syntax-error
+          :format-control ,fmt
+          :format-arguments (list ,@args)
+          :lambda-list ,which))
+
+;; (lambda-list-syntax-error '(n/a) "Unsupported N/A in lambda pseudo-form")
+
+
+
 (declaim (ftype (function (list) (values lambda-signature &optional))
                 compute-lambda-signature))
 
 (defun compute-lambda-signature (lambda-list)
   (let ((buf (make-array (length lambda-list) ;; NB: approx. final length
                          :fill-pointer 0 :adjustable t))
+        #+THISv2 required-subtree
+        #+THISv2 keyword-subtree
+        #+THISv2 optional-subtree
         allow-other-keys
-        restp
+        rest-p
+        rest-param
         context)
     ;; see also: LTP/COMMON:DEFUN*
-    (labels ((add-to-buffer (elt)
-               (vector-push-extend elt buf))
+
+    (labels ((add-to-buffer (elt #-THISv2 &optional #-THISv2 (which buf)
+                                 #+THISv2 which)
+               (vector-push-extend elt which))
+             (set-state (which)
+               (setq context which))
              (parse-signature (llist)
+               ;; FIXME - use DO-CONS and err for any non-list CDR
                (dolist (elt llist buf)
                  (etypecase elt
                    (symbol
-                    (cond
-                      ((find elt ltp/common::+defun-lambda-param-kwd+
-                             :test #'eq)
-                       (when (eq elt (quote &allow-other-keys))
-                         (when allow-other-keys
-                           (error "~<Lambda list contains ~
-more than one &ALLOW-OTHER-KEYS symbol:~>~< ~S~>" lambda-list))
-                         (setq allow-other-keys t))
-                       ;; update parser state
-                       (setq context elt))
-                      ;; parse in current parser state
-                      ((null context)
-                       (add-to-buffer (make-specializable-param elt)))
-                      ((eq context (quote &optional))
-                       (add-to-buffer (make-optional-param elt)))
-                      ((eq context (quote &key))
-                       ;; FIXME - need further processing here
+                    (case elt
+                      (&key
+                       #+THISv2
+                       (setq keyword-subtree
+                             (make-array 0 :fill-pointer 0 :adjustable t))
+                       (set-state elt))
+                      (&optional
+                       #+THISv2
+                       (setq optional-subtree
+                             (make-array 0 :fill-pointer 0 :adjustable t))
+                       (set-state elt))
+                      (&allow-other-keys
+                       #+THISv2
+                       (unless keyword-subtree
+                         (lambda-list-syntax-error lambda-list
+                                                   "Lambda list contains ~
+&ALLOW-OTHER-KEYS other than after &KEY symbol"))
 
-                       ;; FIXME check for &optional / warn on ambiguity
-                       (add-to-buffer (make-keyword-param elt)))
-                      ((eq context (quote &rest))
-                       (when restp
-                         ;; FIXME - specialize this error
-                         (error "~<Lambda list contains ~
-more than one &REST parameter:~> ~<~S~>" lambda-list))
-                       (add-to-buffer (make-rest-param elt)))
-                      ;; FIXME: Specialize the following error,
-                      ;; and improve the message text - same for the
-                      ;; second, below.
-                      (t (error "~<Lambda list syntax not supported: ~>~<~S~>"
-                                lambda-list))
-                      ))
+                       (when allow-other-keys
+                         (lambda-list-syntax-error lambda-list
+                                                   "Lambda list contains ~
+more than one &ALLOW-OTHER-KEYS symbol"))
+
+                       (setq allow-other-keys t)
+                       (set-state elt))
+
+                      ((&rest)
+                       #+THISv2
+                       (when rest-p
+                         (lambda-list-syntax-error lambda-list
+                                                  "Lambda list contains ~
+more than one &REST symbol"))
+                       (setq rest-p t)
+                       (set-state elt))
+
+                      ;; proceed under current parser state
+                      (t
+                       (case context
+                         ((nil)
+                          #+THISv2
+                          (unless required-subtree
+                            (setq required-subtree
+                                  (make-array 1 :fill-pointer 0
+                                              :adjustable t)))
+                          (add-to-buffer (make-required-param elt)
+                                         #+THISv2
+                                         required-subtree))
+                         (&optional
+                          (add-to-buffer (make-optional-param elt)
+                                         #+THISv2 optional-subtree))
+                         (&key
+                          ;; FIXME - need further processing here,
+                          ;; for specialized &KEY syntax forms
+
+                          ;; FIXME check for &optional / warn on ambiguity
+                          (add-to-buffer (make-keyword-param elt)
+                                         #+THISv2 keyword-subtree))
+                         (&rest
+                          (when rest-param
+                            (lambda-list-syntax-error
+                             lambda-list "Lambda list contains ~
+more than one &REST parameter"))
+                          #-THISv2
+                          (add-to-buffer (make-rest-param elt))
+                          #-THISv2
+                          (setq rest-param t)
+                          #+THISv2
+                          (setq rest-param (make-rest-param elt))
+                          )
+                         ;; FIXME: Specialize the following error,
+                         ;; and improve the message text - same for the
+                         ;; second, below.
+                         (t (lambda-list-syntax-error lambda-list
+                                                      "Syntax not supported"))))
+                      )) ;; SYMBOLP ELT
                    (cons
-                    (t (error "~<Lambda list syntax not supported: ~>~<~S~>" 
-                              lambda-list)
-                       ))))))
+                    ;; FIXME (??)
+                    (lambda-list-syntax-error lambda-list
+                                              "Syntax not supported"))
+                   (t
+                    (lambda-list-syntax-error lambda-list
+                                              "Unrecognized syntax"))
+                   ))))
       ;; FIXME - note other FIXME notes here
+      #-THISv2
       (make-lambda-signature (parse-signature lambda-list)
-                             allow-other-keys))))
+                             allow-other-keys)
+      #+THISv2
+      (%make-lambda-signature (when required-subtree
+                                (%make-required-param-subset
+                                 (coerce required-subtree 'simple-vector)))
+                              (when optional-subtree
+                                (%make-optional-param-subset
+                                 (coerce optional-subtree 'simple-vector)))
+                              (when keyword-subtree
+                                (%make-keyword-param-subset
+                                 (coerce optional-subtree 'simple-vector)
+                                 allow-other-keys))
+                              rest-param))
+    ))
 
 ;; (compute-lambda-signature '(a b &optional q &rest other &key frob &allow-other-keys))
 
@@ -526,7 +702,7 @@ more than one &REST parameter:~> ~<~S~>" lambda-list))
 ;; (compute-lambda-list (compute-lambda-signature '(a b &optional q &rest other &key frob (fixme tbd))))
 
 ;; (compute-lambda-list (compute-lambda-signature '(a b &optional q &rest other &key)))
-;; ^ FIXME Do need to support a NULL &KEY list
+
 
 ;; -- Partial MOP Interop
 
@@ -546,12 +722,38 @@ more than one &REST parameter:~> ~<~S~>" lambda-list))
 
 
 (defgeneric compute-ftype-params-type (genop)
+  #+FIXME
   (:method ((genop generic-op))
     (let ((signature (generic-function-lambda-signature genop)))
       ;; see also: defun*
+      ;;
+      ;; Note, the reusable COMPUTE-LAMBDA-SIGNATURE function defined above
+      ;;
+      ;; - would not be needed here, directly, for a GENERIC-OP
+      ;;   in which (GENERIC-OP-SIGNATURE GENOP)
+      ;;   is assumed to return a LAMBDA-SIGNATURE
+      ;;
+      ;; - may be of some use if implementing a method for this
+      ;;   function, specialized directly onto STANDARD-GENERIC-CLASSa
+      ;;
+      ;; - NB handle the LAMBDA-SIGNATURE-REQUIRED-PARAM-SUBSET mainly,
+      ;;   with special processing as per e.g methods defined to the
+      ;;   GENOP at the time when this function is called.
+      ;;
+      ;; - TBD Provide some manner of caching and update mechanism, such
+      ;;   that may serve to ensure that any new ftype declration has
+      ;;   all specializable parameters specified as subtypep their
+      ;;   specification in any previous declaration. Failing that,
+      ;;   consider using CERROR as to permit any incompatible ftype
+      ;;   declaration, after notification & #"CONTINUE
+      ;;
+      ;; - FIXME also enure that this is called in the compiler
+      ;;   environment, when defining slot accessors onto an extension of
+      ;;   STANDARD-GENERIC-FUNCTION - to which, the set of definitive
+      ;;   ftype declarations may be cached and emitted at some point
+      ;;   after the top-level ENSURE-CLASS call. See also, the
+      ;;   SINGLETON definition in LTP. NB: DEFCLASS-LIKE-DEFSTRUCT
       )))
-;; ^ NB: Warn/Err when adding a method that is not subtypep the params-type
-;; - Polcy (warn/err/signal/ignore) may be specified per each genop
 
 (defgeneric compute-ftype-values-type (genop)
   (:method ((genop generic-op))
