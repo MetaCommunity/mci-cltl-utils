@@ -40,7 +40,7 @@
 ;; => (FIXNUM T T)
 
 
-;; NB: The consing ! .... for purpose of demonstration
+;; NB: The consing - a generalization of &REST ??
 (compute-applicable-methods #'frob-call '("Frob" 5 nil))
 ;; ^ it matches the specilization in spec.lisp
 
