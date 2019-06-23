@@ -244,6 +244,7 @@
                         #+NIL (values reachable))
                  ;; FIXME - Cheap convenience hack for iterative computation
                  ;; onto a static form. Uses needless CONS initialization
+
                  (destructuring-bind (param-class param-offset
                                                   &optional (%reachable reachable)) hack
                    #+DEBUG
@@ -266,14 +267,9 @@
                                       (car inst-b)
                                     (declare (type (integer 0 #.most-positive-fixnum)
                                                    a-n-1 a-n-2 a-n-3
-                                                   b-n-1 b-n-2 b-n-3)
-                                             #-DEBUG
-                                             ;; only if these depth values are
-                                             ;; not referenced elsewhere
-                                             (dynamic-precedence
-                                              a-n-1 a-n-2 a-n-3
-                                              b-n-1 b-n-2 b-n-3)
-                                             )
+                                                   b-n-1 b-n-2 b-n-3))
+                                    ;; NB: As sparse as this may seem,
+                                    ;; it work out in tests.
                                     (cond
                                       ((and (= a-n-1 b-n-1)
                                             (= a-n-2 b-n-2))
@@ -350,3 +346,240 @@
 )
 
 ;; see also: spec-mop.lisp
+
+#+NIL
+(defgeneric compute-call-lambda (op)) ;; cf COMPUTE-CALL-INFO-FOR... ^
+;; ^ cf. SET-FUNCALLABLE-INSTANCE-FUNCTION
+;; ^ nb: May be called whenver a defop-method is added or removed from
+;;       the generic-op
+;;
+;;
+;; ^ In lieu of MOP COMPUTE-DISCRIMINATING-FUNCTION
+
+;; NB, "Goal:" Do not make any more consing. to determine "applicable methods"
+
+
+;; --
+
+(defstruct (param
+             (:constructor))
+  (name #.(make-symbol "unbound")
+        :type symbol
+        :read-only t))
+
+(defstruct (specializable-param
+             (:include param)
+             (:constructor make-specializable-param (name))))
+
+(defstruct (optional-param
+             (:include param)
+             (:constructor make-optional-param (name))))
+
+(defstruct (rest-param
+             (:include param)
+             (:constructor make-rest-param (name))))
+
+(defstruct (keyword-param
+             (:include param)
+             (:constructor make-keyword-param (name)))
+  ;; FIXME - need more structure here
+  )
+
+(defstruct (aux-param
+             (:include param)
+             (:constructor make-aux-param (name))))
+
+
+(defstruct (lambda-signature
+             (:constructor %make-lambda-signature
+                           (params &optional allow-other-keys)))
+  (params
+   #.(make-array 0)
+   :type simple-vector
+   :read-only t)
+  (allow-other-keys
+   nil
+   :type boolean
+   :read-only t))
+
+(declaim (ftype (function (sequence &optional t)
+                          (values lambda-signature &optional))
+                make-lambda-signature))
+
+(defun make-lambda-signature (params &optional allow-other-keys)
+  (%make-lambda-signature (coerce params 'simple-vector)
+                          (and allow-other-keys t)))
+
+
+;; ----
+
+#+NIL ;; defined in LTP/COMMON (internal)
+(defconstant* +defun-lambda-param-kwd+
+    ;; NB: This provides a more specialized set of symbols than
+    ;; CL:LAMBDA-LIST-KEYWORDS
+  '(&optional &rest &key &allow-other-keys))
+
+
+(declaim (ftype (function (lambda-signature) (values list &optional))
+                compute-lambda-signature))
+
+(defun compute-lambda-list (signature)
+  (let* ((params (lambda-signature-params signature))
+         (buf (make-array (length params) ;; NB: approx. final length
+                         :fill-pointer 0 :adjustable t))
+        restp
+        context)
+    (labels ((add-to-buffer (elt)
+               (vector-push-extend elt buf))
+             (update-context (which)
+               (unless (eq context which)
+                 (setq context which)
+                 (add-to-buffer which))))
+      (do-vector (param params)
+        (let ((name (param-name param)))
+        (etypecase param
+          ;; NB: for now, not parsing for other types of lambda kwd
+          (specializable-param
+           (add-to-buffer name))
+          (optional-param
+           (update-context (quote &optional))
+           (add-to-buffer name))
+          (rest-param
+           (when restp
+             (error "More than on &REST param in ~S" signature))
+           (update-context (quote  &rest))
+           (setq restp t)
+           (add-to-buffer name))
+          (keyword-param
+           ;; FIXME - need further processing here
+           (update-context (quote &key))
+           (add-to-buffer name))
+          )))
+
+      ;; FIXME - cheap hack, as yet
+      (when (lambda-signature-allow-other-keys signature)
+        (add-to-buffer (quote &allow-other-keys)))
+
+      (coerce buf 'list))))
+
+
+(declaim (ftype (function (list) (values lambda-signature &optional))
+                compute-lambda-signature))
+
+(defun compute-lambda-signature (lambda-list)
+  (let ((buf (make-array (length lambda-list) ;; NB: approx. final length
+                         :fill-pointer 0 :adjustable t))
+        allow-other-keys
+        restp
+        context)
+    ;; see also: LTP/COMMON:DEFUN*
+    (labels ((add-to-buffer (elt)
+               (vector-push-extend elt buf))
+             (parse-signature (llist)
+               (dolist (elt llist buf)
+                 (etypecase elt
+                   (symbol
+                    (cond
+                      ((find elt ltp/common::+defun-lambda-param-kwd+
+                             :test #'eq)
+                       (when (eq elt (quote &allow-other-keys))
+                         (when allow-other-keys
+                           (error "~<Lambda list contains ~
+more than one &ALLOW-OTHER-KEYS symbol:~>~< ~S~>" lambda-list))
+                         (setq allow-other-keys t))
+                       ;; update parser state
+                       (setq context elt))
+                      ;; parse in current parser state
+                      ((null context)
+                       (add-to-buffer (make-specializable-param elt)))
+                      ((eq context (quote &optional))
+                       (add-to-buffer (make-optional-param elt)))
+                      ((eq context (quote &key))
+                       ;; FIXME - need further processing here
+
+                       ;; FIXME check for &optional / warn on ambiguity
+                       (add-to-buffer (make-keyword-param elt)))
+                      ((eq context (quote &rest))
+                       (when restp
+                         ;; FIXME - specialize this error
+                         (error "~<Lambda list contains ~
+more than one &REST parameter:~> ~<~S~>" lambda-list))
+                       (add-to-buffer (make-rest-param elt)))
+                      ;; FIXME: Specialize the following error,
+                      ;; and improve the message text - same for the
+                      ;; second, below.
+                      (t (error "~<Lambda list syntax not supported: ~>~<~S~>"
+                                lambda-list))
+                      ))
+                   (cons
+                    (t (error "~<Lambda list syntax not supported: ~>~<~S~>" 
+                              lambda-list)
+                       ))))))
+      ;; FIXME - note other FIXME notes here
+      (make-lambda-signature (parse-signature lambda-list)
+                             allow-other-keys))))
+
+;; (compute-lambda-signature '(a b &optional q &rest other &key frob &allow-other-keys))
+
+;; (compute-lambda-list (compute-lambda-signature '(a b &optional q &rest other &key frob &allow-other-keys)))
+
+;; (compute-lambda-list (compute-lambda-signature '(a b &optional q &rest other &key frob (fixme tbd))))
+
+;; (compute-lambda-list (compute-lambda-signature '(a b &optional q &rest other &key)))
+;; ^ FIXME Do need to support a NULL &KEY list
+
+;; -- Partial MOP Interop
+
+(defclass generic-op (standard-generic-class)
+  ((lambda-signature
+    :reader generic-op-lambda-signature
+    :type lambda-signature)))
+
+(defclass generic-op-method (standard-method)
+  ())
+
+(defmethod generic-function-method-class ((genop generic-op))
+  (find-class 'generic-op-method))
+
+;; ---
+
+
+
+(defgeneric compute-ftype-params-type (genop)
+  (:method ((genop generic-op))
+    (let ((signature (generic-function-lambda-signature genop)))
+      ;; see also: defun*
+      )))
+;; ^ NB: Warn/Err when adding a method that is not subtypep the params-type
+;; - Polcy (warn/err/signal/ignore) may be specified per each genop
+
+(defgeneric compute-ftype-values-type (genop)
+  (:method ((genop generic-op))
+    `(values t)))
+
+(defgeneric compute-ftype (genop)
+  (:method ((genop generic-op))
+    `(ftype (function ,(compute-ftype-params-type genop)
+                      ,(compute-ftype-values-type genop))
+            ,(generic-function-name genop))))
+
+
+
+
+;; ---
+
+#+NIL
+(defmacro define-generic-op (name signature ....))
+
+
+#+NIL
+(defmacro define-op-method (name signature &body body &environment env))
+
+
+#+NIL
+(defmethod compute-discriminating-function ((gf generic-op))
+  (let ((llist (generic-function-lambda-list gf)))
+    (compile (generic-function-name gf)
+             `(lambda ,llist
+                ;; ...
+                ))))
