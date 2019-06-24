@@ -19,8 +19,8 @@
 ;;
 ;; co spec.lisp
 
-#+NIL ;; unused macro, in this revision
 (defmacro do-cons ((first rest whence &optional return) &body body)
+  ;; FIXME - move to ltp/common
   (with-symbols (dispatch %whence)
     `(block nil
        (labels ((,dispatch (,%whence)
@@ -72,6 +72,10 @@
 )
 
 ;; --------------------
+
+;; NB: FIXME WHILE is used only once, below
+;;
+;; Consider moving these two macros to LTP/COMMON
 
 (defmacro while* ((clause &optional retv) &body body)
   `(loop (or ,clause (return ,retv))
@@ -131,6 +135,8 @@
 ;; Trivial prototyping for specialized method dispatching
 ;; with minimal consing in generic function calls
 
+;; FIXME move to spec-proto.lisp and update reference in spec-mop.lisp
+
 
 (defun mk-expandable-vec ()
   (make-array 0 :fill-pointer t :adjustable t))
@@ -171,9 +177,9 @@
 
                (dolist (c (class-precedence-list cls))
                  (let ((known known))
-                   (while (progn #+DEBUG (warn "ITERATE ~D ~D ~D"
-                                               specializer-offset depth (length known))
-                                 known)
+                   (while (progn
+                            #+DEBUG (warn "ITERATE ~D ~D ~D" specializer-offset depth (length known))
+                            known)
                      ;; (warn "ITERATE w/ KNOWN ~S" known)
                      (let ((n (position c (the cons known)
                                         :key #'(lambda (row)
@@ -361,29 +367,84 @@
 
 ;; -----
 
+#|
+
+Ed. NB: The following was defined originally in an effort to provide a
+complete semantic model for lambda list expressions. It had provided, in
+version one, a preliminary support for the subset of labmda list syntax
+as supported in standard generic functions.
+
+The API is still in revision. Though it may lastly resemble not much
+more than a specially typed list-like API, but perhaps it may serve to
+be of some use in application support.
+
+|#
+
 (eval-when (:compile-toplevel :execute)
   (defmacro lform (val)
-    `(load-time-value ,val :constant t))
-  )
+    `(load-time-value ,val t)))
 
-(defstruct (param
+
+(defstruct (lambda-element
              (:constructor))
   (name
    (lform (make-symbol "Unbound Name"))
    :type symbol
-   :read-only t)
-  #+NEXT_CHANGE
+   :read-only t))
+
+
+(defstruct (lambda-keyword
+             (:include lambda-element)
+             (:constructor
+              make-lambda-keyword (name))))
+
+(defstruct (param
+             (:include lambda-element)
+             (:constructor))
   (next
    nil ;; indicating, in effect, "End of lambda list"
    :type (or param null)
-   ;; NB: Not defined as read-only, due to how PARAM subclases are
-   ;; initialized within COMPUTE-LAMBDA-SIGNATURE
+   ;; NB: Theoretically, COMPUTE-LAMBDA-SIGNATURE could be updated to
+   ;; allow for this slot to be defined as not read-only. It's been
+   ;; defined as being not read-only, due to how PARAM subclases
+   ;; will be initialized sequentially, within
+   ;; COMPUTE-LAMBDA-SIGNATURE.
+   ;l
+   ;; As to why this slot is not defined as read-only, remarks in
+   ;; the source form of COMPUTE-LAMBDA-SIGNATURE may serve to detail
+   ;; that decision.
    ;;
-   ;; If any application modifies the value of this slot once it's
-   ;; bound, the behaviors will be unspecified for any procedure
-   ;; unparsing a lambda list from any containing LAMBDA-SIGNATURE.
+   ;; If any application destructively modifies the value of this slot,
+   ;; in any procedure external to COMPUTE-LAMBDA-SIGNATURE, the
+   ;; behaviors will be unspecified for any later procedures operating
+   ;; as to unparse a lambda list from any LAMBDA-SIGNATURE containing
+   ;; such a modified PARAM.
+   ;;
+   ;; NB: Together with the FIRST-PARAM slot of LABMDA-SIGNATURE, these
+   ;; data structures provide an interface not entirely unlike Lisp LIST
+   ;; objects, insofar as for LIST CAR and CDR accessors. Somewhat
+   ;; unlike CDR, however, the PARAM-NEXT accessor returns a PARAM
+   ;; object, as whenever it does not return NIL.
+   ;;
+   ;; One might consider that this may be fairly trivial, for any data
+   ;; sturctures that may be defined initially as being singularly
+   ;; linked.
    :read-only nil)
   )
+
+;; FIXME: Although this API might be expanded beyond any point of
+;; obvious utility, there may be support provided for storage of the
+;; actual lambda list keywords symbols within the effective sequence of
+;; PARAM-NEXT values. Otherwise, it may be impossible to maintain an
+;; accurate, parsed representation of such as:
+;; - &KEY without any subsequent keyword parameters
+;; - &OPTIONAL without any subsequent optional parameters
+;;
+;; Furthermore, such an addition should serve to simplify the unparsing.
+;;
+;; Albeit, this API then would provide  something very much like lambda
+;; lists in a list format, albeit with some additional semantic
+;; properties stored for any later application.
 
 
 (defstruct (initialized-param
@@ -395,12 +456,18 @@
    :type t
    :read-only t)
   (initfunction
-   (lform #'(lambda () (error "Unbound Initfunction")))
-   :type function
+   ;; NB: NIL in this slot implies that the initorm slot can be ignored
+   nil
+   :type (or function null)
    :read-only t)
+  ;; NB this needs a value-p-p slot, as the structure slot cannot be unbound
   (value-p-name
-   (lform (make-symbol "Unbound Suppllied-P-Name"))
+   (lform (make-symbol "Unbound Value-P-Name"))
    :type symbol
+   :read-only t)
+  (value-p-p
+   nil
+   :type boolean
    :read-only t))
 
 
@@ -434,7 +501,8 @@
                             ;; in applications. also for KEYWORD-PARAM
                             initform
                             initfunction
-                            value-p-name))))
+                            value-p-name
+                            value-p-p))))
 
 (defstruct (optional-param-subset
              (:include param-subset)
@@ -461,13 +529,13 @@
                             initform
                             initfunction
                             value-p-name
+                            value-p-p
                             (keyword-name
                              (intern (symbol-name name) :keyword)))))
   (keyword-name
    (lform "Unbound Keyword Name")
    :type symbol
-   :read-only t))
-
+   :read-only t)
   ;;
   ;; TBD subsq. usage for modelingof e.g defun/anononymous lambda and
   ;; method lambda lists
@@ -507,13 +575,21 @@
              (:constructor make-aux-param (name #:FIXME_INIT))))
 
 
+(defstruct (other-param-subset
+             (:include param-subset)
+             (:constructor %mk-other-param-subset
+                           (members))))
+
 
 (defstruct (lambda-signature
              (:constructor %mk-lambda-signature
                            (&key
+                            lambda-list
+                            ((:first first-param) nil)
                             ((:required required-param-subset) nil)
                             ((:optional optional-param-subset) nil)
                             ((:keyword keyword-param-subset) nil)
+                            ((:other other-subset) nil)
                             ((:rest rest-param) nil)
                             )))
   ;; Ed. NB: See remarks about the design of this lambda list parser
@@ -522,6 +598,12 @@
   (first-param
    nil
    :type param
+   :read-only t)
+
+  (lambda-list
+   ;; NB: Redundant storage, but usable for PRINT-OBJECT methods
+   (lform (list (make-symbol "Unbound Lambda List")))
+   :type list
    :read-only t)
 
   (required-param-subset
@@ -582,7 +664,7 @@
    ;;
    ;;
    nil
-   :type (or other-param-subset-set null)
+   :type (or other-param-subset null)
    :read-only t)
   ;; TBD in extensions:
   ;; - AUX-PARAM-SUBSET - specifically for anonymous lambdas & defun forms
@@ -612,6 +694,12 @@
   )
 
 
+(defmethod print-object ((object lambda-signature) (stream t))
+  (print-unreadable-object (object stream :type t :identity t)
+    (princ (lambda-signature-lambda-list object)
+           stream)
+    ))
+
 
 ;; (declaim (ftype (function (sequence &optional t)
 ;;                           (values lambda-signature &optional))
@@ -633,51 +721,87 @@
                           (values list &optional))
                 compute-lambda-list))
 
-(defun compute-lambda-list (signature ;; <- as a LAMBDA-SIGNATURE
-                            #+TBD &optional #+TBD other-handler)
-  ;; NB: OTHER-HANDLER - if provided, a function accepting one argument,
-  ;; i.e a PARM object "not otherwise handled" below. Should return a
-  ;; list of symbols (optionally null) such that ... TBD ordering for
-  ;; OTHER-SUBSET onto the original lambda list expression.
+
+;; FIXME/TBD: COMPUTE-CALL-FORM cf. GENERIC-OP
+
+(defun compute-lambda-list (signature &optional other-handler)
+
+  ;; FIXME: Needs further update
   ;;
-  ;; see also:  COMPUTE-LAMBDA-SIGNATURE
-  (let* ((params (lambda-signature-params signature))
-         (buf (make-array (length params) ;; NB: approx. final length
-                         :fill-pointer 0 :adjustable t))
-        restp
-        context)
+  ;; - Empty &KEY and &OPTIONAL subsets not being correctly unparsed.
+  ;;
+  ;;   - The present LAMBDA-SIGNATURE definition may need to be updated
+  ;;     for those special conditions of syntax
+
+  ;; NB: OTHER-HANDLER - if provided, a function accepting two
+  ;; argument, i.e a PARAM object not handled below, and the SIGNATURE
+  ;; object itself. The function should return a  list of expressions
+  ;; (optionally null) such that will be suffixed to the computed
+  ;; lambda-list, for representing each respective PARAM received by the
+  ;; function.
+  ;;
+  ;; The OTHER-HANDLER function, if provided, should maintain internal
+  ;; state as to ensure that any appropriate lambda-list-keyword symbol
+  ;; are returned. [FIXME: Untested]
+  ;;
+  ;; NB: The OTHER-HANDLER should accept two arguments, namely
+  ;; the "Other" PARAM and the original LAMBDA-SIGNATURE
+
+  (let* ((buf (make-array 0 :fill-pointer 0 :adjustable t))
+         context
+         (kwd (lambda-signature-keyword-param-subset signature))
+         (kwd-last (when kwd
+                     (let* ((kwd-memb (keyword-param-subset-members kwd))
+                            (n (length (the simple-vector kwd-memb))))
+                       (when (plusp (the array-index n))
+                         (svref kwd-memb (1- n))))))
+         (kwd-others-p (when kwd
+                         (keyword-param-subset-allow-other-keys kwd)))
+         (param (lambda-signature-first-param signature)))
     (labels ((add-to-buffer (elt)
                (vector-push-extend elt buf))
+             (add-param (param)
+               ;; FIXME need to do further type dispatching here,
+               ;; or in the loop below
+               (add-to-buffer (param-name param)))
              (update-context (which)
                (unless (eq context which)
                  (setq context which)
                  (add-to-buffer which))))
-      (do-vector (param params)
-        (let ((name (param-name param)))
-        (etypecase param
-          ;; NB: for now, not parsing for other types of lambda kwd
-          (required-param
-           (add-to-buffer name))
-          ;; FIXME add parseer subtree for OPTIONAL-PARAM-SUBSET
-          (optional-param
-           (update-context (quote &optional))
-           (add-to-buffer name))
-          (rest-param
-           (when restp
-             (error "More than on &REST param in ~S" signature))
-           (update-context (quote  &rest))
-           (setq restp t)
-           (add-to-buffer name))
-          ;; FIXME add parseer subtree for KEY-PARAM-SUBSET
-          (keyword-param
-           ;; FIXME - need further processing here
-           (update-context (quote &key))
-           (add-to-buffer name))
-          )))
 
-      ;; FIXME - cheap hack, as yet
-      (when (lambda-signature-allow-other-keys signature)
-        (add-to-buffer (quote &allow-other-keys)))
+      ;; FIXME - need to handle empty KWD members, empty optional
+      ;; members separate to the following ... but this would require
+      ;; further update to the LAMBDA-SIGNATURE model, for so much as to
+      ;; ensure that the &KEY or &OPTIONAL with-no-contextual-args
+      ;; condition will be modeled from the lambda list.
+
+      (loop
+         (typecase param
+           (null (return))
+           (required-param
+            (add-param param))
+           (optional-param
+            (update-context (quote &optional))
+            (add-param param))
+           (rest-param
+            (update-context (quote  &rest))
+            (add-param param))
+           (keyword-param
+            ;; FIXME - need further processing here - initform etc
+            ;;
+            ;; FIXME - Understanding that initforms are not supported in
+            ;; some lambda list syntaxes, this model should be
+            ;; accompanied with forms for validating any parsed
+            ;; LAMBDA-SIGNATURE onto any single lambda list syntax.
+            (update-context (quote &key))
+            (add-param param)
+            (when (and (eq param kwd-last) kwd-others-p)
+              (add-to-buffer (quote &allow-other-keys))))
+            ;; FIXME - the other-handler support needs testing, for
+            ;; this unparser function
+           (t (mapcar #'add-to-buffer
+                      (funcall other-handler param signature))))
+         (setq param (param-next param)))
 
       (coerce buf 'list))))
 
@@ -707,15 +831,14 @@
 
 
 (declaim (ftype (function
-                 (list #+TBD &optional #+TBD function)
+                 (list &optional function)
                  (values lambda-signature &optional))
                 compute-lambda-signature))
 
-(defun compute-lambda-signature (lambda-list
-                                 #+TBD &optional #+TBD other-handler)
+(defun compute-lambda-signature (lambda-list &optional other-handler)
   ;;
-  ;; NB: OTHER-HANDLER - if provided, a function accepting TBD arguments,
-  ;; at the least:
+  ;; NB: OTHER-HANDLER - if provided, a function accepting three
+  ;; arguments:
   ;;
   ;; - a lambda-list keyword symbol, or a symbol or list type PARAM
   ;;   expression -- namely, as not "otherwise handled", below.
@@ -729,10 +852,6 @@
   ;;     parameter" would be provided as the first argument to the
   ;;     function, with the second argument's value being the symbol
   ;;     CL:&AUX
-  ;;
-  ;; - the previous PARAM object parsed from the LAMBDA-LIST expression
-  ;;   (??) NB: Not actually needed, as the PARAM objects are not doubly
-  ;;   linked, in this design.
   ;;
   ;; - the original LAMBDA-LIST expression
   ;;
@@ -775,31 +894,58 @@
   ;; extesionally, portably, & without any requirement for rewriting the
   ;; function, COMPUTE-LAMBDA-SIGNATURE.
 
-  ;; Ed. NB: Evaluation environments and initializer-param initfunctions
+  ;; Ed. NB: Ad hoc, but practical
 
-  (let (required-subtree
+  (let (first
+        required-subtree
         keyword-subtree
         optional-subtree
-        #+TBD other-subtree
+        other-subtree
         allow-other-keys
         rest-p
         rest-param
-        #+NEXT_CHANGE last
-        context)
+        last
+        context
+        (other-keywords
+         (set-difference lambda-list-keywords
+                         ;: NB: These are all handled internally here:
+                         '(&optional &key &allow-other-keys &rest)
+                         :test #'eq)))
+    (declare (type cons other-keywords))
+
     ;; see also: LTP/COMMON:DEFUN*
 
-    (macrolet ((add-to-buffer (elt which)
-                 (with-symbols (%which)
-                 `(let ((,%which ,which))
-                    #+NEXT_CHANGE (setf (param-next last) ,%which)
+    (macrolet ((update-for-param (elt)
+                 `(progn
+                    (unless first
+                      (setq first ,elt))
+                    (when last
+                      (setf (param-next last) ,elt))
+                    (setq last ,elt)))
+               (mk-buffer (&optional (len 0))
+                 (make-array len :fill-pointer len
+                             :adjustable t))
+               (add-to-buffer (elt which)
+                 ;; NB: This model may be updated to use a read-only
+                 ;; PARAM-NEXT slot. Albeit, the indirection required
+                 ;; for that change may seem a little less easy to
+                 ;; "Parse" from the source definition.
+                 ;;
+                 ;; It would, furthermore, require some changes in the
+                 ;; structure of this function's definiion -- as due to
+                 ;; a deferred "add to buffer" semantics, such as may be
+                 ;; implemented in such update.
+                 `(progn
+                    ;; NB: Evaluation of either ELT or WHICH will not
+                    ;; cause side-effects, for how this macro is called
+                    ;; within this function.
+                    (update-for-param ,elt)
                     (cond
-                      (,%which
-                       (vector-push-extend ,elt ,%which))
-                      (t (setq ,which
-                               (make-array 1 :fill-pointer 1
-                                           :adjustable t))
+                      (,which
+                       (vector-push-extend ,elt ,which))
+                      (t (setq ,which (mk-buffer 1))
                          (setf (aref ,which 0)
-                               ,elt)))))))
+                               ,elt))))))
 
     (labels ((add-to-required-buffer (elt)
                (add-to-buffer elt required-subtree))
@@ -807,95 +953,154 @@
                (add-to-buffer elt optional-subtree))
              (add-to-key-buffer (elt)
                (add-to-buffer elt keyword-subtree))
-             #+TBD
              (add-to-other-buffer (elt)
                (add-to-buffer elt other-subtree))
-
              (set-state (which)
                (setq context which))
-             (parse-signature (llist)
-               ;; FIXME - use DO-CONS and err for any non-list CDR
-               (dolist (elt llist buf)
-                 (etypecase elt
-                   (symbol
-                    (case elt
-                      (&key
-                       (setq keyword-subtree
-                             (make-array 0 :fill-pointer 0 :adjustable t))
-                       (set-state elt))
-                      (&optional
-                       (setq optional-subtree
-                             (make-array 0 :fill-pointer 0 :adjustable t))
-                       (set-state elt))
-                      (&allow-other-keys
-                       (unless keyword-subtree
-                         (lambda-list-syntax-error lambda-list
-                                                   "Lambda list contains ~
-&ALLOW-OTHER-KEYS other than after &KEY symbol"))
+             (mkerr (msg)
+               (lambda-list-syntax-error lambda-list msg))
 
-                       (when allow-other-keys
-                         (lambda-list-syntax-error lambda-list
-                                                   "Lambda list contains ~
-more than one &ALLOW-OTHER-KEYS symbol"))
+             (process-symbol-expr (elt)
+               (declare (type symbol elt))
+               (case elt
+                 (&optional
+                  (set-state elt)
+                  (cond
+                    (optional-subtree
+                     (mkerror "Lambda list contains more than &OPTIONAL keyword"))
+                    (t
+                     (setq optional-subtree (mk-buffer 0)))))
+                 (&key
+                  (set-state elt)
+                  (cond
+                    (keyword-subtree
+                     (mkerror "Lambda list contains more than &KEY keyword"))
+                    (t
+                     (setq keyword-subtree (mk-buffer 0)))))
+                 (&allow-other-keys
+                  (unless keyword-subtree
+                    (mkerr "Lambda list contains &ALLOW-OTHER-KEYS ~
+other than after &KEY symbol"))
+                  (when allow-other-keys
+                    (mkerr "Lambda list contains more than one ~
+&ALLOW-OTHER-KEYS symbol"))
+                  (setq allow-other-keys t)
+                  (set-state elt))
+                 (&rest
+                  ;; NB: &BODY not handled here.
+                  ;;
+                  ;; Handling for &BODY may be defined as to reuse the
+                  ;; exixting REST-PARAM class
+                  (when rest-p
+                    (mkerr "Lambda list contains more than one &REST symbol"))
+                  (setq rest-p t)
+                  (set-state elt))
+                 ((position elt other-keywords :test #'eq)
+                  (process-other-expr elt))
+                 (t
+                  ;; proceed under the current parser state
+                  (case context
+                    ((nil)
+                     (add-to-required-buffer (make-required-param elt)))
+                    (&optional
+                     (add-to-optional-buffer (make-optional-param elt)))
+                    (&key
+                     ;; FIXME check for &optional / warn on ambiguity
+                     (add-to-key-buffer
+                      (make-keyword-param
+                       elt
+                       :keyword-name (intern (symbol-name elt)
+                                             :keyword))))
+                    (&rest
+                     (when rest-param
+                       (mkerr "Lambda list contains more than one ~
+&REST parameter"))
+                     (setq rest-param
+                           (make-rest-param elt context))
+                     (update-for-param rest-param))
 
-                       (setq allow-other-keys t)
-                       (set-state elt))
+                    (t (process-other-expr elt))))))
 
-                      ((&rest)
-                       (when rest-p
-                         (lambda-list-syntax-error lambda-list
-                                                  "Lambda list contains ~
-more than one &REST symbol"))
-                       (setq rest-p t)
-                       (set-state elt))
+             (process-cons-expr (elt)
+               (declare (type cons elt))
+               (cond
+                 ((eq context (quote &optional))
+                  (destructuring-bind (param-name &optional
+                                                  initform
+                                                  (value-p nil v-p-p))
+                      elt
+                    (let ((initfunction
+                           (when initform
+                             ;; FIXME: Compile the initfunction
+                             ;;
+                             ;; NB: After a review of the behaviors
+                             ;; of GET-SETF-EXPANSION this function
+                             ;; does not implement any special
+                             ;; handling for compilation environments
+                             ;; in LAMBDA definitions
+                             (coerce `(lambda () ,initform)
+                                     'function))))
 
-                      ;; proceed under current parser state
-                      (t
-                       (case context
-                         ((nil)
-                          (unless required-subtree
-                            (setq required-subtree
-                                  (make-array 1 :fill-pointer 0
-                                              :adjustable t)))
-                          (add-to-required-buffer (make-required-param elt))))
+                      (add-to-optional-buffer (make-optional-param
+                                               param-name
+                                               :initform initform
+                                               :initfunction initfunction
+                                               :value-p-name value-p
+                                               :value-p-p v-p-p)))))
+                 ((eq context (quote &key))
+                  (destructuring-bind (key-first &optional
+                                                 initform
+                                                 (value-p nil v-p-p))
+                      elt
+                    (let ((key-name
+                           (etypecase key-first
+                             (symbol (intern (symbol-name key-first)
+                                             (lform (find-package :keyword))))
+                             (cons (car key-first))))
+                          (param-name
+                           (etypecase key-first
+                             (symbol key-first)
+                             (cons (cadr key-first))))
+                          (initfunction
+                           (when initform
+                             ;; FIXME: Compile the initfunction
+                             ;;
+                             ;; NB: After a review of the behaviors
+                             ;; of GET-SETF-EXPANSION this function
+                             ;; does not implement any special
+                             ;; handling for compilation environments
+                             ;; in LAMBDA definitions
+                             (coerce `(lambda () ,initform)
+                                     'function))))
+                      (add-to-key-buffer (make-keyword-param
+                                          param-name
+                                          :keyword-name key-name
+                                          :initform initform
+                                          :initfunction initfunction
+                                          :value-p-name value-p
+                                          :value-p-p v-p-p)))))
+                 (t (process-other-expr elt))))
 
-                         (&optional
-                          (add-to-optional-buffer (make-optional-param elt)))
+             (process-other-expr (elt)
+               (cond
+                 (other-handler
+                  (funcall (the function other-handler)
+                           elt context lambda-list))
+                 (t
+                  ;; FIXME: Improve this error's  message text
+                  (mkerr "Syntax not supported")))))
 
-                         (&key
-                          ;; FIXME - need further processing here,
-                          ;; for specialized &KEY syntax forms
+      (do-cons (elt rest lambda-list)
+        (unless (listp rest)
+          (mkerr "Syntax not supported - not a well formed list"))
+        (etypecase elt
+          (symbol (process-symbol-expr elt))
+          (cons (process-cons-expr elt))
+          (t (process-other-expr elt))))
 
-                          ;; FIXME check for &optional / warn on ambiguity
-                          (add-to-key-buffer (make-keyword-param elt)))
-
-                         (&rest
-                          (when rest-param
-                            (lambda-list-syntax-error
-                             lambda-list "Lambda list contains ~
-more than one &REST parameter"))
-                          (setq rest-param (make-rest-param elt context))
-                          )
-                         ;; FIXME: Specialize the following error,
-                         ;; and improve the message text - same for the
-                         ;; second, below.
-                         (t (lambda-list-syntax-error lambda-list
-                                                      "Syntax not supported"))))
-                      )) ;; SYMBOLP ELT
-                   (cons
-                    ;; FIXME - parse per &OPTIONAL and &KEY context
-                    ;;
-                    ;; FIXME - use OTHER-SUBSET when OTHER-HANDLER is
-                    ;; provided, else err
-                    (lambda-list-syntax-error lambda-list
-                                              "Syntax not supported"))
-                   (t
-                    ;; FIXME - use OTHER-SUBSET when OTHER-HANDLER is
-                    ;; provided, else err
-                    (lambda-list-syntax-error lambda-list
-                                              "Unrecognized syntax"))
-                   ))))
       (%mk-lambda-signature
+       :lambda-list lambda-list
+       :first first
        :required (when required-subtree
                    (%mk-required-param-subset
                     (coerce required-subtree 'simple-vector)))
@@ -906,20 +1111,47 @@ more than one &REST parameter"))
                   (%mk-keyword-param-subset
                    (coerce keyword-subtree 'simple-vector)
                    allow-other-keys))
-       #+TBD :other #+TBD (when other-subtree
-                            (%mk-other-param-subset
-                             (coerce other-subtree 'simple-vector)
-                             allow-other-keys))
+       :other (when other-subtree
+                (%mk-other-param-subset
+                 (coerce other-subtree 'simple-vector)
+                 allow-other-keys))
        :rest rest-param))
-    ))
 
-;; (compute-lambda-signature '(a b &optional q &rest other &key frob &allow-other-keys))
+    )))
 
-;; (compute-lambda-list (compute-lambda-signature '(a b &optional q &rest other &key frob &allow-other-keys)))
+(eval-when ()
+  ;; test for a limited subset of lambda list syntax
 
-;; (compute-lambda-list (compute-lambda-signature '(a b &optional q &rest other &key frob (fixme tbd))))
+  (defparameter *l*
+    (compute-lambda-signature
+     '(a b &optional q &rest other &key frob &allow-other-keys)))
 
-;; (compute-lambda-list (compute-lambda-signature '(a b &optional q &rest other &key)))
+  (values
+   (lambda-signature-first-param *l*)
+   ;; (lambda-signature-required-param-subset *l*)
+   ;; (lambda-signature-optional-param-subset *l*)
+   (lambda-signature-rest-param *l*)
+   ;; (lambda-signature-keyword-param-subset *l*))
+   )
+
+  (compute-lambda-list
+   (compute-lambda-signature
+    '(a b &optional q &rest other &key frob &allow-other-keys)))
+
+  (compute-lambda-list
+   (compute-lambda-signature
+    '(a b &optional q &rest other &key frob (fixme tbd))))
+
+  ;; FIXME - empty key set not being unparsed correctly
+  (describe (compute-lambda-signature
+               '(a b &optional q &rest other &key)))
+
+  (compute-lambda-list
+   (compute-lambda-signature
+    '(a b &optional q &rest other &key))
+   )
+)
+
 
 
 ;; -- Partial MOP Interop
