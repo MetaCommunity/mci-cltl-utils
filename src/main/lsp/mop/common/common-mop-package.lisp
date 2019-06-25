@@ -61,8 +61,11 @@
    #:finalize-reachable-superclass
    )
 
+  ;; locally defined forms
   (:export
    #:validate-class
+   #:least-common-superclass
+   #:instance
    )
 
   )
