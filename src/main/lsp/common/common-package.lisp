@@ -98,6 +98,8 @@
    #:split-string-1
    #:split-string
 
+   #:featurep
+
    #:compile-condition
    #:compile-warning
    #:compilation-error
