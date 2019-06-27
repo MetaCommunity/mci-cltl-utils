@@ -117,6 +117,8 @@ behavior is analogous onto `CL:DEFCONSTANT'"
          (cond
            ((boundp (quote ,%name))
             (let ((,%previous (symbol-value (quote ,%name)))
+                  ;; ^ NB: LOAD-TIME-VALUE may DNW when binding %PREVIOUS
+                  ;;
                   ;; NB This ensures, by side effect, that the VALUES
                   ;; expression is always evaluated in DEFCONSTANT*
                   (,%value ,value))
