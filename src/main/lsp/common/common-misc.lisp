@@ -144,7 +144,11 @@
 
 ;; (featurep '(and :ansi-cl (or :unsupp-2 :unix)))
 
+;; --
 
+(defmacro mk-lf (form)
+  "Evalutae FORM within a constantp LOAD-TIME-VALUE expression"
+  `(load-time-value ,form t))
 
 ;; ----------
 ;;

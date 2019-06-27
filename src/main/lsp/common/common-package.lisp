@@ -99,6 +99,7 @@
    #:split-string
 
    #:featurep
+   #:mk-lf
 
    #:compile-condition
    #:compile-warning
