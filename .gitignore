@@ -7,3 +7,6 @@
 *.lisp-temp
 ## Eratosthenes
 *.bib.bak
+## Local Prototyping
+RCS/
+*,v
