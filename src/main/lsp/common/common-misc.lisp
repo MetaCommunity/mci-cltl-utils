@@ -136,13 +136,13 @@
 
 ;; (featurep '(and :ansi-cl (or :unsupp-1 :unsupp-2)))
 
-;; (featurep '(and :ansi-cl (and (not :UNIX) :unsupp-2)))
+;; (featurep '(and :ansi-cl (and (not :unix) :unsupp-2)))
 
-;; (featurep '(and :ansi-cl (or (not :UNIX) :unsupp-2)))
-
-;; (featurep '(and :ansi-cl (or :unsupp-2 :UNIX)))
+;; (featurep '(and :ansi-cl (or (not :unix) :unsupp-2)))
 
 ;; (featurep '(and :ansi-cl (or :unsupp-2 :unix)))
+
+;; (featurep '(and :ansi-cl (and :unsupp-2 :unix)))
 
 ;; --
 
