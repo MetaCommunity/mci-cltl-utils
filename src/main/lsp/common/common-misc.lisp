@@ -111,6 +111,10 @@
                       (decl-p (values nil expr nil))
                       (t (values t nil expr))))))))))))
 
+;; FIXME: Note the topic, Global Locking During *FEATURES* Eval,
+;; in project doc/markdown/ src. FEAUTREP should not be assumed
+;; to be safe for application during concurrent evaluation of arbitrary
+;; source forms such that may modify the value of *FEATURES*
 
 
 ;; (featurep 'sbcl)
