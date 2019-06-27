@@ -34,6 +34,12 @@ in this implementation -~> ~<class ~s with superclass ~s~>"
 
 ;; ---- Class Precedence Reflection
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+
+;; NB: ensure LEAST-COMMON-SUPERCLASS is defined in the environment,
+;; previous to the INSTANCE deftype, such that uses MAKE-LOAD-FORM with
+;; CONSTANTP non-nil.
+
 (declaim (ftype (function (class-designator class-designator)
                           (values class cons &optional))
                 least-common-superclass))
@@ -51,58 +57,31 @@ in this implementation -~> ~<class ~s with superclass ~s~>"
              (type cons common))
     (values (car common) common)))
 
+
+) ;; EVAL-WHEN
+
 ;; (least-common-superclass 'standard-object 'structure-object)
+;; (least-common-superclass 'structure-object 'standard-object)
 
 
 ;; ---- Portable INSTANCE (not CONDITION) alias type
 
 (deftype instance ()
-  (load-time-value (class-name
-                    #+NIL
-                    (least-common-superclass
-                     (find-class 'condition)
-                     (least-common-superclass 'standard-object
-                                              'structure-object))
-                    #-NIL
-                    (least-common-superclass 'standard-object
-                                             'structure-object))
-                   t))
-
-;; (typep (class-prototype (find-class 'standard-class )) 'instance)
-;; => T
-
-;; (typep (class-prototype (find-class 'structure-class )) 'instance)
-;; => T
-
-;; QA - INSTANCE deftype & [SBCL]
-;;
-;; (typep (class-prototype (find-class 'condition)) 'sb-pcl::slot-object)
-;; => NIL
-;;
-;; Subsq ...
-;;
-;; (typep (class-prototype (find-class 'condition)) 'instance)
-;; => NIL
-;;
-;; NB [SBCL]
-;;    (class-precedence-list (find-class 'condition))
-;; ... which may seem inconsistent onto the above TYPEP calls.
-;;
-;; Subsq ...
-;;
-;; [Indemnification Clause Here]
-
-#+NIL
-(eval-when ()
-  ;; QA - test the INSTANCE type for consistency onto an initialized
-  ;; CONDITION object
-  ;;
-  ;; - tested with SBCL 1.4.16.debian
-  ;;   - TYPEP CONDITION 'INSTANCE => NIL
-  (handler-bind ((condition (lambda (c)
-                              (warn "FROB: ~S ~S"
-                                    (typep c 'instance)
-                                    (class-of c)))))
-    (signal 'condition))
-
-)
+  (mk-lf (class-name
+          ;; FIXME - CONDITION is not ever TYPEP SLOT-OBJECT [SBCL]
+          #+NIL
+          (least-common-superclass
+           (find-class 'condition)
+           (least-common-superclass 'standard-object
+                                    'structure-object))
+          ;; ^ NB: The previous form returns the same as the following
+          ;; form, in SBCL. The previous is not used, here, as it
+          ;; introduces an inconsistency from the implementation.
+          ;;
+          ;; This inconsistency has been described to a further
+          ;; extent, in the project tech note, `CONDITION` object is not
+          ;; ever typep `SLOT-OBJECT` in some SBCL - avaialble in the
+          ;; project  documentation files under doc/markdown/
+          #-NIL
+          (least-common-superclass 'standard-object
+                                   'structure-object))))
