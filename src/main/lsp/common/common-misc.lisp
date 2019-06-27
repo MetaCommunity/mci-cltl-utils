@@ -147,7 +147,7 @@
 ;; --
 
 (defmacro mk-lf (form)
-  "Evalutae FORM within a constantp LOAD-TIME-VALUE expression"
+  "Evaluate FORM within a constantp LOAD-TIME-VALUE expression"
   `(load-time-value ,form t))
 
 ;; ----------
