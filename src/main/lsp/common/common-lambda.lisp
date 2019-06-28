@@ -413,19 +413,59 @@
 ;; ----
 
 
-#+(and SBCL TBD) ;; TBD: Test in CMUCL, Other
-(defmacro mk-lambda (args &body body &environment env)
-  ;; TBD: LAMBDA like DEFUN* w/ ENV - [Implementation-Specific Section]
+
+(defmacro lambda* (args &body body )
+  ;; NB: This macro was going to be named MK-LAMBDA.
   ;;
-  ;; using SB-C:COMPILE-IN-LEXENV
+  ;;     This macro has been named LAMBDA* mostly due to concerns
+  ;;     entailed of some source editing environments.
   ;;
   ;; see also:
   ;; - common-misc.lisp
-  ;;   - COMPILE** [X]
-  ;;   - [FIXME] FORMAT-COMDITION (Is not PRINT-OBJECT) [NEEDSWK @ PORTABILITY]
-  ;;   - COMPILE* [NB: uses DEFUN]
+  ;;   - COMPILE** (NB: REMOVE) [NB: uses DEFMACRO]
+  ;;   - [FIXME] FORMAT-CONDITION (Is not PRINT-OBJECT)
+  ;;   - COMPILE* (NB: REMOVE) [NB: uses DEFUN]
   ;;
-  ;; Note that COMPILE* and/or COMPILE** may be removed, after effective
-  ;; merge into this MK-LAMBDA utility
-  )
+  (with-symbols (%warnings %errors %form %fn)
+    `(let ((,%form (quote (lambda ,args ,@body)))
+           ,%warnings ,%errors)
+       (handler-bind ((warning #'(lambda (c) (npushl c ,%warnings)))
+                      (error #'(lambda (c) (npushl c ,%errors))))
+         (let ((,%fn (coerce ,%form 'function)))
+           (cond
+             (,%errors
+              ;; NB: This may not ever be reached, in some
+              ;; implementations.
+              ;;
+              ;; NB: Temporary reuse of this ad hoc condition type.
+              (error 'errors-during-function-compile
+                     :function-name nil ;; ... FIXME specialize for LAMBDA
+                     :lambda-form ,%form))
+             (,%warnings (values ,%fn ,%warnings))
+             (t (values ,%fn nil))))))))
+;;
+;; ^ Operate similar to COMPILE, principally, for anonymous lambda forms
+;;   but without any mangling of the lexical environment in which the
+;;   function is produced.
+;;
+;;   Furthermore, this ensure that all warnings will be emitted in the
+;;   second return value.
+;;
+;;   TBD: Special handling for errors during the CORECE call to the
+;;   lambda form. Note that this approach may not require special
+;;   binding onto *BREAK-ON-SIGNALS*, juxtaposed to behaviors of
+;;   *COMPILE* in some implementations.
 
+
+(eval-when ()
+  ;; FIXME - this source system needs an update for hacking onto Emacs font-lock
+  (lambda* ()
+    unbound-symbol)
+
+  (lambda* #:fail)
+  ;; ^ NB: Even here, the error may not get caught by the HANDLER-BIND w/ SBCL
+  ;;       ... due to the implementation injecting a NULL-LEXENV (again)
+  ;;       (quite similar to why this workaround was developed for that
+  ;;       behavior of COMPILE in SBCL)
+
+  )
