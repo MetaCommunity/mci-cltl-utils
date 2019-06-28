@@ -178,6 +178,7 @@
 ;;
 
 (define-condition function-compile-condition (compile-condition)
+  ;; FIXME: Portable "In what section" declaration
   ((function-name
     :initarg :function-name
     :initform nil
@@ -253,6 +254,45 @@
 
 ;; Compilation Wrapper Forms
 
+;; NB: Some general considerations being approached, in whatsover, with
+;; the following ad hoc source forms:
+;;
+;; - Policy - namely, optimizatoin policy - during runtime COMPILE
+;; - Call to COMPILE specifically for anonymous LAMBDA forms
+;; - User-visible presentation for messages produced during runtime
+;;   COMPILE (warning, or error)
+;;
+;; The last of those concerns has not been very thoroughly approached,
+;; below. Rather than establishing any handler-bind for ERROR and/or
+;; WARNING, the forms simply rely on the return-value from COMPILE
+;;
+;; Not addressed, below:
+;; - Selection of an appropriate, non-null lexical environment for the
+;;   compilation - such that may require implementation-specific
+;;   support, in any application.
+;;
+;; NB: These forms may be of some utility for applications producing
+;; anonymous LAMBDA forms at runtime, namely as for any subsequent
+;; FUNCALL. e.g
+;;
+;; - Extensions onto MOP, such as with regards to class initialization
+;;   with slot definitions in MOP, insofar as concerning slot definition
+;;   initfunction forms
+;;
+;; - Other application-specific initfunction forms - e.g for
+;;   initialization of default parameter values, for some function-like
+;;   procedural calls
+;;
+;; - Arbitrary callback procedures, as operating onto implementation-
+;;   specific support for external call stacks, such as vis a vis
+;;   the ALIEN system in CMUCL, SB-ALIEN in SBCL, and any analogous
+;;   external object systems interface in other Common Lisp
+;;   implementations.
+;;
+;; Ed. NB: Albeit, these forms may appear to be defined as to sacrifice
+;; some manners of fucntionality, lieu of producing a generally portable
+;; interface for application programs.
+
 
 ;; NOTE: Define WITH-CONDITION-CACHING (??)
 ;;
@@ -317,6 +357,15 @@
 
 ;; Instance Failure Tests
 
+;; TBD: Deferred application of a local string-output-stream
+;; for purpose of capturing compiler error and compiler warning
+;; messages within any specific section of source eval.
+;;
+;; and/or
+;;
+;; TBD: Compile with localized handling for all error,
+;;      and capture for warning messages
+
 #+nil
 (eval-when ()
   (let* ((form '(lambda () (foo bar)))
@@ -351,7 +400,6 @@
   ;;           NB [Implementation-Specific Section]
   ;;
   ;; FIXME: Align onto the error/waning handling semantics of COMPILE**
-  ;; see opt-utils.lisp
   "Evalute COMPILE on NAME and DEFN.
 
 If COMPILE indicates errors during compilation, an error of type
@@ -372,6 +420,8 @@ In other instances, the compiled function is returned."
 	   (values function &optional))
   (multiple-value-bind (fn warnings-p failure-p)
       (compile name defn)
+    ;; NB: This avoids any specific handling for any ERROR during the
+    ;; actual COMPILE call, as a matter of ad hoc convenience
       (cond
 	(failure-p
 	 (error 'errors-during-function-compile

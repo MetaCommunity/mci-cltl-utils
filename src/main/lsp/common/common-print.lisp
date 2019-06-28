@@ -69,7 +69,7 @@
 
 #| Remarks - API Documentation
 
- The functions PRINT-NAME an PRINT-LABEL, and the functions
+ The functions PRINT-NAME and PRINT-LABEL, and the functions
  OBJECT-PRINT-NAME and OBJECT-PRINT-LABEL, may be applied
  interchangably -- respectively, for printing an object's name or label
  to a stream, or for returning an object's name or label as a simple
@@ -100,6 +100,11 @@
  the Lisp environment. However, an object's print-label may serve to
  illustrate values indicating of the object's containing lexical
  context.
+
+----
+
+Subsequently, the ltp-common-mop-index system [....]
+
 
 ----
 
