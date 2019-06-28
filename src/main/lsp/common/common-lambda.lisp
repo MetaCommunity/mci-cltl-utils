@@ -412,7 +412,29 @@
 
 ;; ----
 
+(define-condition compile-condition ()
+  ;; FIXME: Portable "In-what-section" declaration
+  ())
 
+(define-condition lambda-compile-condition (compile-condition)
+  ((form
+    :initarg :form
+    :initform nil
+    :reader lambda-compile-condition-form)))
+
+#+NIL ;; unused here
+(define-condition lambda-compile-warning  (warning compile-condition)
+  ())
+
+
+(define-condition lambda-compile-error (error lambda-compile-condition)
+  ()
+  (:report
+   (lambda (c s)
+     (format s "~<Error when compiling lambda form~>~< ~S~>"
+             (lambda-compile-condition-form)))))
+
+;; ----
 
 (defmacro lambda* (args &body body )
   ;; NB: This macro was going to be named MK-LAMBDA.
@@ -420,11 +442,11 @@
   ;;     This macro has been named LAMBDA* mostly due to concerns
   ;;     entailed of some source editing environments.
   ;;
-  ;; see also:
+  ;; NB in earlier changesets, in the LTP-Common source repository
   ;; - common-misc.lisp
-  ;;   - COMPILE** (NB: REMOVE) [NB: uses DEFMACRO]
-  ;;   - [FIXME] FORMAT-CONDITION (Is not PRINT-OBJECT)
-  ;;   - COMPILE* (NB: REMOVE) [NB: uses DEFUN]
+  ;;   - COMPILE** (NB: REMOVED) [NB: used DEFMACRO]
+  ;;   - [FIXME/NB] FORMAT-CONDITION (Is not PRINT-OBJECT)
+  ;;   - COMPILE* (NB: REMOVED) [NB: used DEFUN]
   ;;
   (with-symbols (%warnings %errors %form %fn)
     `(let ((,%form (quote (lambda ,args ,@body)))
@@ -434,38 +456,55 @@
          (let ((,%fn (coerce ,%form 'function)))
            (cond
              (,%errors
-              ;; NB: This may not ever be reached, in some
-              ;; implementations.
-              ;;
-              ;; NB: Temporary reuse of this ad hoc condition type.
-              (error 'errors-during-function-compile
-                     :function-name nil ;; ... FIXME specialize for LAMBDA
-                     :lambda-form ,%form))
+              ;; NB: This may not ever be reached, in
+              ;; some implementations.
+              (error 'lambda-compile-error
+                     :form ,%form))
              (,%warnings (values ,%fn ,%warnings))
              (t (values ,%fn nil))))))))
 ;;
 ;; ^ Operate similar to COMPILE, principally, for anonymous lambda forms
 ;;   but without any mangling of the lexical environment in which the
-;;   function is produced.
+;;   function is produced. Thus, the HANDLER-BIND forms many generally
+;;   be accessible, at least for WARNING.
 ;;
-;;   Furthermore, this ensure that all warnings will be emitted in the
+;;   Furthermore, this ensures that all warnings will be emitted in the
 ;;   second return value.
 ;;
-;;   TBD: Special handling for errors during the CORECE call to the
-;;   lambda form. Note that this approach may not require special
-;;   binding onto *BREAK-ON-SIGNALS*, juxtaposed to behaviors of
-;;   *COMPILE* in some implementations.
+;;   Rather than using COMPILE, this approach does not require special
+;;   binding onto *BREAK-ON-SIGNALS* for some implementations.
+;;
+;;   COMPILE itself may inject a null lexical environment, even when
+;;   compiling anonymous lambda forms, on some implementations. This may
+;;   have an unwanted side effect of making any condition handlers in
+;;   the calling environment unavailable in the context of the call to
+;;   COMPILE.
 
 
+#+NIL
 (eval-when ()
   ;; FIXME - this source system needs an update for hacking onto Emacs font-lock
-  (lambda* ()
-    unbound-symbol)
+
+  (lambda* () unbound-symbol)
+  ;; ^ warning returned
 
   (lambda* #:fail)
   ;; ^ NB: Even here, the error may not get caught by the HANDLER-BIND w/ SBCL
-  ;;       ... due to the implementation injecting a NULL-LEXENV (again)
-  ;;       (quite similar to why this workaround was developed for that
-  ;;       behavior of COMPILE in SBCL)
+  ;;       ... possibly, due to the implementation injecting a NULL-LEXENV
+  ;;       during the internal LAMBDA eval -- quite similar to why this
+  ;;       workaround was developed for that behavior of COMPILE in SBCL.
+
+  (lambda* (&key ((((unreachable))))  (funcall #:fail)))
+  ;; ^ similarly, the ERROR handler is not reached
+
+  (lambda* () (funcall #:fail))
+  ;; ^ a warning is returned, no error
+
+
+  (funcall (lambda* () (+ 1 3)))
+  ;; => 4
+
+  (funcall (lambda* () unbound-symbol (+ 1 3)))
+  ;; ^ error outside of the LAMBDA* eval
 
   )

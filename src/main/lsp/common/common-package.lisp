@@ -102,16 +102,10 @@
    #:mk-lf
 
    #:compile-condition
-   #:compile-warning
-   #:compilation-error
-   #:function-compile-condition
-   #:fun-compile-condition-function-name
-   #:fun-compile-condition-lambda-form
-   #:warnings-during-function-compile
-   #:errors-during-function-compile
-   #:compile*
-   #:compile**
-
+   #:lambda-compile-condition
+   #:lambda-compile-condition-form
+   #:lambda-compile-error
+   #:lambda*
 
    ;; FIXME: Move the following to another system - ltp-common-parse e.g
    ;; Note the fairly XML-oriented nature of the terms, here.
