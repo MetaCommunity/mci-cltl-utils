@@ -290,6 +290,9 @@
 ;; --
 
 (defmacro compile** (form &optional optimization)
+  ;; See also: MK-LAMBDA prototype, common-lambda.lisp
+  ;;           NB [Implementation-Specific Section]
+  ;;
   ;; Just-in-time compilation for anonymous lambda forms -
   ;; defined such as to be evaluated within the calling lexical
   ;; environment.
@@ -344,6 +347,9 @@
 
 
 (defun* compile* (name &optional defn)
+  ;; See also: MK-LAMBDA prototype, common-lambda.lisp
+  ;;           NB [Implementation-Specific Section]
+  ;;
   ;; FIXME: Align onto the error/waning handling semantics of COMPILE**
   ;; see opt-utils.lisp
   "Evalute COMPILE on NAME and DEFN.

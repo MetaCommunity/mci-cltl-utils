@@ -409,3 +409,23 @@
 
 )
 
+
+;; ----
+
+
+#+(and SBCL TBD) ;; TBD: Test in CMUCL, Other
+(defmacro mk-lambda (args &body body &environment env)
+  ;; TBD: LAMBDA like DEFUN* w/ ENV - [Implementation-Specific Section]
+  ;;
+  ;; using SB-C:COMPILE-IN-LEXENV
+  ;;
+  ;; see also:
+  ;; - common-misc.lisp
+  ;;   - COMPILE** [X]
+  ;;   - [FIXME] FORMAT-COMDITION (Is not PRINT-OBJECT) [NEEDSWK @ PORTABILITY]
+  ;;   - COMPILE* [NB: uses DEFUN]
+  ;;
+  ;; Note that COMPILE* and/or COMPILE** may be removed, after effective
+  ;; merge into this MK-LAMBDA utility
+  )
+
