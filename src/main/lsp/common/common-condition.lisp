@@ -55,6 +55,14 @@ Example:
       (terpri s)
       (call-next-method)))")
 
+  (:method ((condition condition) (stream t))
+    (simple-style-warning
+     "~<Default FORMAT-CONDITION (T T) reached for (~S ~S)"
+     condition stream)
+    ;; cf. the CLHS as concerning definitions and semnatics of
+    ;; DEFINE-CONDITION :REPORT forms in CLtL2
+    (print-object condition stream))
+
   (:method ((condition condition) (stream symbol))
     ;; FIXME_DESIGN symbol as stream designator => constant
     #+NIL
