@@ -826,7 +826,7 @@
 ;; TBD: Use UNPARSE-FTYPE-FUNCTION-DECLARATION for producing a second return
 ;; value in the macroexpansion of LAMBDA* - Refer to documentation, above.
 
-(defmacro lambda* (args &body body )
+(defmacro lambda* (args &body body &environment env)
   ;; NB: This macro was going to be named MK-LAMBDA.
   ;;
   ;;     This macro has been named LAMBDA* mostly due to concerns
@@ -838,21 +838,37 @@
   ;;   - [FIXME/NB] FORMAT-CONDITION (Is not PRINT-OBJECT)
   ;;   - COMPILE* (NB: REMOVED) [NB: used DEFUN]
   ;;
-  (with-symbols (%warnings %errors %form %fn)
-    `(let ((,%form (quote (lambda ,args ,@body)))
-           ,%warnings ,%errors)
-       (handler-bind ((warning #'(lambda (c) (npushl c ,%warnings)))
-                      (error #'(lambda (c) (npushl c ,%errors))))
-         (let ((,%fn (coerce ,%form 'function)))
-           (cond
-             (,%errors
-              ;; NB: This may not ever be reached, in
-              ;; some implementations.
-              (error 'lambda-compile-error
-                     :form ,%form))
-             (,%warnings (values ,%fn ,%warnings))
-             (t (values ,%fn nil))))))))
-;;
+
+  ;; NB: Unlike the function, COMPILE, the third return value from the
+  ;; macroespansion of this function will denote a function declaration,
+  ;; in a syntax similar onto FTYPE. That function declaratiion will
+  ;; have been derived from the lambda ARGS and any TYPE and VALUES
+  ;; declarations preceding evaluation forms in the lambda BODY
+  ;; forms. The function declaration, as such, is derived directly in
+  ;; the macro function itself.
+  ;;
+  ;; The same declaration will be used in a THE form effectively
+  ;; wrapping the form denoting the resulting lambda fujction, itself.
+
+  (with-symbols (%warnings %errors %form %fn %functype)
+    (let ((functype
+           (unparse-ftype-function-declaration args body 'lambda* env)))
+      `(let ((,%form (quote (lambda ,args ,@body)))
+             ,%warnings ,%errors)
+         (handler-bind ((warning #'(lambda (c) (npushl c ,%warnings)))
+                        (error #'(lambda (c) (npushl c ,%errors))))
+           (let ((,%fn (coerce ,%form 'function))
+                 (,%functype ,(list 'quote functype)))
+             (cond
+               (,%errors
+                ;; NB: This may not ever be reached, in
+                ;; some implementations.
+                (error 'lambda-compile-error
+                       :form ,%form))
+               (,%warnings (values (the ,functype ,%fn) ,%warnings
+                                   ,%functype))
+               (t (values (the ,functype ,%fn) nil ,%functype)))))))))
+
 ;; ^ Operate similar to COMPILE, principally, for anonymous lambda forms
 ;;   but without any mangling of the lexical environment in which the
 ;;   function is produced. Thus, the HANDLER-BIND forms many generally
@@ -891,7 +907,7 @@
   ;; ^ a warning is returned, no error
 
 
-  (funcall (lambda* () (+ 1 3)))
+  (funcall (lambda* () (declare (values (member 4))) (+ 1 3)))
   ;; => 4
 
   (funcall (lambda* () unbound-symbol (+ 1 3)))
