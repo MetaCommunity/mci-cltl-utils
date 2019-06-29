@@ -103,8 +103,7 @@
 
 ----
 
-Subsequently, the ltp-common-mop-index system [....]
-
+NB: ENUM wk - LTP
 
 ----
 
