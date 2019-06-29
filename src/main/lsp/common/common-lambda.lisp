@@ -18,6 +18,9 @@
 
   Topic: `DEFUN*` Redesign
 
+  NB: Redesign finalized in the LTP-Main source repository, at changeset
+  [55cd4cd79d87d3cb66adca25a2217252c38261de] 2019-06-29 12:04:20+0000
+
   The DEFUN* macro was originally designed as to provide a portable
   emulation _vis a vis_ `VALUES` declarations in `DEFUN` -- the latter,
   as typically supported in CMUCL and SBCL Common Lisp implementations.
