@@ -177,8 +177,8 @@
 ;; of editor integration, should be - as a symbol - stored in the
 ;; initialized CONDITION object representing the error.
 
-(deftype eval-context-name ()
-  '(or symbol list))
+(deftype eval-context ()
+  '(or symbol list string standard-object structure-object))
 
 (define-condition macroexpansion-condition ()
   ;; FIXME : Move to COMMON-CONDITION.LISP
@@ -198,47 +198,57 @@
     ;;       corresponding :REPORT function, generally illustrative of
     ;;       such application.
     :initform nil
-    :type eval-context-name
+    :type eval-context
     :initarg :context
     :reader macroexpansion-condition-context)))
 
 
-(declaim (ftype (function (eval-context-name eval-context-name)
-                          (values list &optional))
+(declaim (ftype (function (eval-context eval-context)
+                          (values eval-context &optional))
                  eval-context-add-suffix))
 
 (defun eval-context-add-suffix (suffix whence)
-  ;; utility for forms that may dispatch to generally signal a
+  ;; NB: Utility for forms that may dispatch to generally signal a
   ;; MACROEXPANSION-CONDITION - add SUFFIX to WHENCE, in a manner
   ;; dependent on the syntax of each value
-
-  ;; NB Could style-warning when (NULL SUFFIX)
-
   (etypecase whence
     (cons
-     (etypecase suffix
-       (symbol
-        (append whence (list suffix)))
+     (typecase suffix
        (cons
         (append whence suffix))
        (null
-        (values whence))))
+        (values whence))
+       (t
+        (append whence (list suffix)))))
     (null
-     (etypecase suffix
-       (symbol
-        (list suffix))
+     (typecase suffix
        (cons
         (values suffix))
        (null
-        (values nil))))
+        (values nil))
+       (t
+        (values suffix))))
     (symbol
-     (etypecase suffix
-       (symbol
-        (list whence suffix))
+     (typecase suffix
        (cons
         (append (list whence) suffix))
        (null
-        (list whence))))))
+        (values whence))
+       (t
+        (list whence suffix))))))
+
+
+;; (eval-context-add-suffix 'b 'a)
+;; (eval-context-add-suffix 'c '(a b))
+;; (eval-context-add-suffix 'c nil)
+;;
+;; (eval-context-add-suffix nil 'a)
+;; (eval-context-add-suffix nil '(a b))
+;; (eval-context-add-suffix nil nil)
+;;
+;; (eval-context-add-suffix '(b c) 'a)
+;; (eval-context-add-suffix '(c d) '(a b))
+;; (eval-context-add-suffix '(c d) 'nil)
 
 
 (define-condition lambda-parser-condition (macroexpansion-condition)
@@ -257,7 +267,7 @@
      (let ((ctxt (macroexpansion-condition-context c))
            (l (lambda-parser-condition-lambda-list c)))
        (format s "~<Unrecognized lambda expression~>~< ~S~>~
-~< in~:[~@[ ~S~]~;~{ ~S~}~] lambda list~>~< ~:[()~;~S~]~>"
+~< in~:[~@[ ~A~]~;~{ ~A~}~] lambda list~>~< ~:[()~;~S~]~>"
                (unrecognized-lambda-expression-datum c)
                (consp ctxt) ctxt
                l l)))))
@@ -855,7 +865,7 @@
            (unparse-ftype-function-declaration args body 'lambda* env)))
       `(let ((,%form (quote (lambda ,args ,@body)))
              ,%warnings ,%errors)
-         (handler-bind ((warning #'(lambda (c) (npushl c ,%warnings)))
+         (handler-bind ((warning #'(lambda (c) (npushl c ,%warnings)))/
                         (error #'(lambda (c) (npushl c ,%errors))))
            (let ((,%fn (coerce ,%form 'function))
                  (,%functype ,(list 'quote functype)))
