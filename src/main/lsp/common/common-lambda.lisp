@@ -310,26 +310,26 @@
 
 ;; -- DEFUN* parser functions (internal/ephemeral - see previous annotations)
 
-(declaim (ftype (function (list &optional list)
-                          (values list list &optional))
-                parse-forms-declarations)
+(declaim (ftype (function (list function)
+                          (values &optional))
+                walk-forms-declarations)
 
          (ftype (function (list)
                           (values list (or null string) &optional))
                 parse-named-forms-docs)
 
-         (ftype (function (list)
+         (ftype (function (list &optional (or symbol cons))
                           (values list &optional))
                 ;; => lambda call-form-signature, formatted vis FTYPE
                 ;;    .. containing params information
                 parse-lambda-call-params)
 
-         (ftype (function (list &optional t)
-                          (values list &optional))
+         (ftype (function (list t)
+                          (values list list &optional))
                 ;; => type map (from a list of partially parsed DECLARE forms)
                 parse-declared-types)
 
-         (inline parse-forms-declarations
+         (inline #+NIL walk-forms-declarations
                  parse-named-forms-docs
                  parse-lambda-call-params))
 
@@ -342,24 +342,17 @@
 ;;     UNPARSE-NAMES-FTYPE
 
 
-(defun nparse-forms-declarations (forms &optional previous-decls)
+(defun walk-forms-declarations (forms callback)
   ;; assumption: any docstring has been removed from FORMS
   ;;
-  ;; NB: Handle multiple DECLARE / FIXME handle with a provided callback fn
-  ;;
-  ;; NB: PREVIOUS-DECLS may be destructively modified, in this
-  ;; implementation - thus, the "nparse" prefix on the function's name.
-
+  ;; NB: Handle multiple DECLARE
   (let ((frst (car forms)))
     (cond
       ((and (consp frst) (eq (car frst) 'declare))
-       (nparse-forms-declarations (cdr forms)
-                                  (nconc previous-decls
-                                         (cdr frst))))
+       (funcall callback (cdr frst))
+       (walk-forms-declarations (cdr forms) callback))
       (t
-       ;; TBD If using any intermediate SIGNATURE object, a slot of that
-       ;; object can be initialized here.
-       (values forms previous-decls)))))
+       (values)))))
 
 
 (defun parse-named-forms-docs (forms)
@@ -370,7 +363,7 @@
       (t
        (values forms nil)))))
 
-(defun parse-lambda-call-params (llist)
+(defun parse-lambda-call-params (llist &optional error-context)
   ;; NB: This function's return value is used together with
   ;; the return value from PARSE-DECLARED-TYPES, for computing
   ;; an FTYPE declaration in UNPARSE-NAMED-FTYPE
@@ -467,8 +460,8 @@
                       :datum expr
                       ;; FIXME note that the CONTEXT (EVAL-CONTEXT)
                       ;; should be provided by any calling form
-                      :context (list (quote defun*) name)
-                      :lambda-list lambda)))
+                      :context error-context
+                      :lambda-list llist)))
            ))))))
 
 
@@ -683,28 +676,31 @@
   ;; parsed from the provided FORMS.
 
   (labels ((parse-meta (name llist forms)
-             (let ((lparms (parse-lambda-call-params llist)))
+             (let ((lparms (parse-lambda-call-params llist
+                                                     (list 'defun* name)))
+                   type-map values-type)
                (multiple-value-bind (forms docs)
                    (parse-named-forms-docs forms)
-                 ;; TBD: Top-level API for the following
-                 ;; towards application in DEFUN*, LABELS*, LAMBDA*
-                 (multiple-value-bind (forms decls)
-                     (nparse-forms-declarations forms)
-                   (multiple-value-bind (type-map vdecl)
-                       (parse-declared-types decls env)
-                     (multiple-value-bind (ftype)
-                         (unparse-named-ftype name lparms type-map vdecl)
-                       (values ftype docs decls forms))))))
-             ))
+                 (declare (ignore docs)) ;; as if.
+                 (labels ((build-type-map (decl-rest)
+                            (multiple-value-bind (map vdecl)
+                                (parse-declared-types decl-rest env)
+                              (setq type-map
+                                    (nconc type-map map))
+                              (when vdecl
+                                (setq values-type vdecl)))))
 
-    (multiple-value-bind (ftype docs decls forms)
+                   (walk-forms-declarations forms #'build-type-map)
+
+                   (multiple-value-bind (ftype)
+                       (unparse-named-ftype name lparms type-map values-type)
+                     (values ftype forms)))))))
+
+    (multiple-value-bind (ftype)
         (parse-meta name lambda forms)
       `(progn
          (declaim ,ftype)
-         (defun ,name ,lambda
-           ,@(when docs (list docs))
-           ,@(when decls (list `(declare ,@decls)))
-           ,@forms)
+         (defun ,name ,lambda ,@forms)
          ))))
 
 
@@ -791,7 +787,7 @@
   (:report
    (lambda (c s)
      (format s "~<Error when compiling lambda form~>~< ~S~>"
-             (lambda-compile-condition-form)))))
+             (lambda-compile-condition-form c)))))
 
 ;; ----
 
