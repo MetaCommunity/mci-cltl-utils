@@ -21,6 +21,10 @@
   NB: Redesign finalized in the LTP-Main source repository, at changeset
   [55cd4cd79d87d3cb66adca25a2217252c38261de] 2019-06-29 12:04:20+0000
 
+  The following documentation may refer to source forms in changesets
+  previous to that finalization.
+
+
   The DEFUN* macro was originally designed as to provide a portable
   emulation _vis a vis_ `VALUES` declarations in `DEFUN` -- the latter,
   as typically supported in CMUCL and SBCL Common Lisp implementations.
@@ -55,8 +59,8 @@
   5. Producing the corresponding FTYPE declaration and the intrinsic
      DEFUN form for evaluation, in the macroexpansion.
 
-  It is expected that this generalized application pattern will be
-  retained, across the DEFUN* redesign.
+  It is expected that this generalized application pattern will have
+  been retained, across the DEFUN* redesign.
 
   While DEFUN* may provide a manner of convenience, for definitions of
   strongly typed, named functions in the null lexical environment, the
@@ -64,15 +68,16 @@
   discrete concerns.
 
   - It should be portable, in its implementation, for supporting a
-    similar semantics for definition of a similar, portable. strongly
-    typed "Wrapper Macro" for LABELS forms
+    similar semantics for definition of a by-in-large strongly
+    typing "Wrapper Macro" for LABELS forms and other forms generally
+    operating in function objects.
 
-  - A portable implementation of DEFUN* should also be reusable for
+  - A portable implementation of DEFUN* should be reusable for an
     implementation of a methodology for strong typing of arbitrary
     anononymous lambda functions, _vis a vis_ the LAMBDA* macro as
     defined in this source system. It may be assumed that an FTYPE
     declaration may be usable for forms similar to
-      (funcall (the <FTYPE> <FN>) <ARGS...>)
+      (funcall (the <FTYPE_FUNCTYPE> <FN>) <ARGS...>)
     in some Common Lisp implementations.
 
   - A portable definition of DEFUN* may furthermore be reusable for
@@ -80,22 +85,18 @@
     accessors and funcallable standard objects, _vis a vis_ extensions
     onto CLOS and MOP.
 
-  In its original implementation, DEFUN* produces a small number of
+  In its original implementation, DEFUN* produced a small number of
   ephemeral CONS objects, namely as pursuant of the construction of an
   effective, declared types table for lambda list parameters, and
   otherwise as for storage of lambda list parameter names, pursuant to
-  producing an FTYPE form of the lambda list provided to DEFUN*. It may
-  be subsequently redesigned to use, in a manner, _callback functions_
+  producing an FTYPE form of the lambda list provided to DEFUN*. It was
+  subsequently redesigned to use, in a manner, _callback functions_
   with discrete function signatures, in lieu of arbitrary list
-  construction in the parser functions, themselves. Subsequently, the
-  _type map_ subsystem may be updated as to use ephemeral _hash table_
-  objects, onto EQ, in lieu of associative lists for declared parameter
-  types.
-
+  construction in the parser functions, themselves.
 
 
   During the redesign of the the DEFUN* implementation, a generalized
-  approach may be developed as follows:
+  approach was developed as follows:
 
   1. Move and optionally rename the set of lexically scoped functions,
   such as to be defined at the lexical _top level_, in the defining
