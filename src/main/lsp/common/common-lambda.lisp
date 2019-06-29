@@ -14,332 +14,691 @@
 
 (in-package #:ltp/common)
 
-(defconstant* +declare-notype+
-  ;; Untyped DECLARE specifiers
+#|
+
+  Topic: `DEFUN*` Redesign
+
+  The DEFUN* macro was originally designed as to provide a portable
+  emulation _vis a vis_ `VALUES` declarations in `DEFUN` -- the latter,
+  as typically supported in CMUCL and SBCL Common Lisp implementations.
+
+  Pursuant of the definition of the LAMBDA* macro, the definition of the
+  LAMBDA-SINGATURE system in the LTP-Main source repository, the
+  general goal as to support a semantics similar to DEFUN* for LABELS
+  and DEFMACRO, and -- in applications of the LAMBDA* macro -- the goal
+  of supporting localiczed FTYPE declarations, such as for extensions
+  onto CLOS and MOP, DEFUN* is being generally redesigned from its
+  original definition.
+
+  In the original definition of DEFUN* in the LTP-Main source
+  repository, the macro was defined as to use a small number of
+  lexically scoped functions, for a general purpose of:
+
+  1. Parsing the provided lambda list, to detect parameters to the
+     corresponding DEFUN lambda form
+
+  2. Parsing any declarations provided to the DEFUN* form, _vis a vis_
+     conventional DECLARE semantics in DEFUN, extended with the
+     addition of the VALUES declaration.
+
+  3. Parsing out any documentation string provided, for the expansion to
+     DEFUN in the macro form.
+
+  4. Producing an FTYPE declaration, assembled of any provided type
+     declarations -- using the default type, T -- and any provided
+     VALUES declaration -- using the default VALUES type, (VALUES T) --
+     from declarations provided within the DEFUN* forms expression.
+
+  5. Producing the corresponding FTYPE declaration and the intrinsic
+     DEFUN form for evaluation, in the macroexpansion.
+
+  It is expected that this generalized application pattern will be
+  retained, across the DEFUN* redesign.
+
+  While DEFUN* may provide a manner of convenience, for definitions of
+  strongly typed, named functions in the null lexical environment, the
+  implementation of DEFUN* as a macro form has not been without some
+  discrete concerns.
+
+  - It should be portable, in its implementation, for supporting a
+    similar semantics for definition of a similar, portable. strongly
+    typed "Wrapper Macro" for LABELS forms
+
+  - A portable implementation of DEFUN* should also be reusable for
+    implementation of a methodology for strong typing of arbitrary
+    anononymous lambda functions, _vis a vis_ the LAMBDA* macro as
+    defined in this source system. It may be assumed that an FTYPE
+    declaration may be usable for forms similar to
+      (funcall (the <FTYPE> <FN>) <ARGS...>)
+    in some Common Lisp implementations.
+
+  - A portable definition of DEFUN* may furthermore be reusable for
+    definitions of generalized operations on lambda signature forms for
+    accessors and funcallable standard objects, _vis a vis_ extensions
+    onto CLOS and MOP.
+
+  In its original implementation, DEFUN* produces a small number of
+  ephemeral CONS objects, namely as pursuant of the construction of an
+  effective, declared types table for lambda list parameters, and
+  otherwise as for storage of lambda list parameter names, pursuant to
+  producing an FTYPE form of the lambda list provided to DEFUN*. It may
+  be subsequently redesigned to use, in a manner, _callback functions_
+  with discrete function signatures, in lieu of arbitrary list
+  construction in the parser functions, themselves. Subsequently, the
+  _type map_ subsystem may be updated as to use ephemeral _hash table_
+  objects, onto EQ, in lieu of associative lists for declared parameter
+  types.
+
+
+
+  During the redesign of the the DEFUN* implementation, a generalized
+  approach may be developed as follows:
+
+  1. Move and optionally rename the set of lexically scoped functions,
+  such as to be defined at the lexical _top level_, in the defining
+  source file.
+
+  2. Redefine those functions such as to "Fold" any effective top-level
+  functionality into a minimum of top-level functions. During this
+  effort, in the redesign, the _callback_ and _type hash table_
+  additions, denoted above, may be introduced to the DEFUN*
+  implementation. The latter addition may, in effect, be developed as in
+  a manner extensional to the updated, parser-callback approach.
+
+  3. Expand the test set of the original DEFUN* such as to ensure a
+  consistent handling for functions using arbitrary keyword arguments
+  for lambda-list parameters, namely such as for any keyword argument
+  differing in symbol name, between the effective  _call form_ and
+  _lambda parameter form_ for the respective keyword argument form.
+
+  4. Test by extension, in adopting the updated implementation for
+  support of:
+
+      - Emitting an FTYPE declaration as a return value in evaluation of
+        the macroexpansion for LAMBDA*. This may be tested by extension,
+        subsequently, for a "DEFCLASS like DEFSTRUCT" extension onto
+        CLOS and MOP, in which the emitted FTYPE declaration -- such as
+        when constructing any single slot value initform's lambda
+        function -- may be used in a manner principally internal to the
+        extension, as such. This may follow the general pattern, in
+        application, `(funcall (the <FTYPE> <FN>) <ARGS...>)`
+
+      - Adding FTYPE declarations for lexically scoped functions defined
+        in a LABELS context - assumimg that the added FTYPES
+        declarations may be of use as information to the compiler, in
+        some Common Lisp implememtations. This, in effect, may represent
+        an effort for supporting localized VALUES declarations in
+        lexically scoped LABELS functions, in Common Lisp implementations
+        beside CMUCL or SBCL.
+
+      - Implementation-specific forms emulating `(COERCE <FORM> 'FUNCTION)`
+        within any expressly provided lexical environment not the _null
+        lexical environment_. This may be approached, in an implementation-
+        specific manner, broadly as complimentary to the definition of
+        the updated `LAMBDA*` macro. This matter, although not described
+        above, may be developed as for concerns with regards to
+        lexically scoped symbols -- as typed or untyped variables --
+        such that may be accessed for their lexically scoped symbol
+        values, during compile time, and lexically scoped condition
+        handlers within any non-null lexical environment, such as
+        principally when compiling an anonymous lambda function.
+        Perhaps there may be any concern discovered with regards to
+        lexical scoping for _restart forms_ in non-null lexical
+        environments, moreover. While not singularly dependent on any
+        methodology in a definition for DEFUN*, but as this concern may
+        be approached in a manner effectively complimentary to an
+        update to the definition of the portable LAMBDA* macro, it
+        therefore finds a concern in relation to the update to the
+        definition of DEFUN*.
+
+      - Formal modeling for lambda list forms in LAMBDA-SIGNATURE
+        objects. This is presently being developed, within other source
+        forms in the LTP-Main source repository.
+
+  Subsequently, these updated may be adopted -- generally, in
+  application and for  purposes of reflective source system modeling --
+  in the CommonIDE project, an informal initiative of Thinkum Labs.
+
+|#
+
+
+;; --------------------
+
+;; NB: UNPARSE-FTYPE-NAMED-FORMS (NAME FORMS &optional eval-context)
+;;
+;;     ^ NB (quote DEFUN*) or (quote LABELS*) as EVAL-CONTEXT
+
+;; NB: UNPARSE-FTYPE-LAMBDA-FORMS (forms &optional eval-context)
+
+;; NB; UNPARSE-FTYPE-NAMED-DECLS (name decls &optional eval-context)
+;; ^ for defportable.lisp DEFSIGNATURE
+
+;; ^ NB EVAL-CONTEXT: A symbol (or cons of symbol), uniquely denoting the context in which
+;; the function may be understood as being evaluated, e.g DEFUN*
+;; for when any error condition is detected during FTYPE unparsing for a
+;; DEFUN* macroexpansion. May be printed readably for notation in the
+;; corresponding condition report stream, on event of error. For purpose
+;; of editor integration, should be - as a symbol - stored in the
+;; initialized CONDITION object representing the error.
+
+(define-condition macroexpansion-condition ()
+  ;; FIXME : Move to COMMON-CONDITION.LISP
   ;;
-  ;; These should be processed before any type declarations are parsed
-  ;; from a DECLARE form
+  ;; Note extensions/applications in system reference documentation.
+  ((context
+    ;; NB: symbol or cons of generally symbolic designator, denoting the
+    ;; context of evaluation in which the MACROEXPANSION-CONDITION has
+    ;; occurred - for assistance in debugging.
+    ;;
+    ;; Usage e.g
+    ;; - cf. UNRECOGNIZED-LAMBDA-EXPRESSION vis. DEFUN* and subsq. --
+    ;;       in which, this condition slot would contain a list whose
+    ;;       CAR is the symbol, DEFUN* and whose CADR is a symbol
+    ;;       denoting the function for which the DEFUN* expression is
+    ;;       being evaluated. This condition class provides a
+    ;;       corresponding :REPORT function, generally illustrative of
+    ;;       such application.
+    :initform nil
+    :type (or symbol cons)
+    :initarg :context
+    :reader macroexpansion-condition-context)))
+
+
+(define-condition lambda-parser-condition (macroexpansion-condition)
+  ((lambda-list
+    :type list
+    :initarg :lambda-list
+    :reader lambda-parser-condition-lambda-list)))
+
+
+(define-condition unrecognized-lambda-expression (lambda-parser-condition)
+  ((datum
+    :initarg :datum
+    :reader unrecognized-lambda-expression-datum))
+  (:report
+   (lambda (c s)
+     (let ((ctxt (macroexpansion-condition-context c))
+           (l (lambda-parser-condition-lambda-list c)))
+       (format s "~<Unrecognized lambda expression~>~< ~S~>~
+~< in~:[~@[ ~S~]~;~{ ~S~}~] lambda list~>~< ~:[()~;~S~]~>"
+               (unrecognized-lambda-expression-datum c)
+               (consp ctxt) ctxt
+               l l)))))
+
+;;; NB
+;; (error "Frob~:[~@[: ~S~]~;:~{ ~S~}~]" (consp nil) nil)
+;; (error "Frob~:[~@[ : ~S~]~; :~{ ~S~}~]" (consp '(a b)) '(a b))
+;; (error "Frob~:[~@[ : ~S~]~; :~{ ~S~}~]" (consp 'a) 'a)
+
+;;; Formatting tests
+;; (defparameter *s* (quote  unrecognized-lambda-expression))
+;; (error *s* :context '(def-frob frob) :datum "Str" :lambda-list '(a  b "Str"))
+;; (error *s* :datum "Str" :lambda-list '(a  b "Str"))
+;; (error *s* :datum "Str" :lambda-list nil)
+
+
+(define-condition unrecognized-lambda-expression-warning
+    (warning unrecognized-lambda-expression)
+  ())
+
+(define-condition unrecognized-lambda-expression-style-warning
+    (style-warning unrecognized-lambda-expression-warning)
+  ())
+
+(define-condition unrecognized-lambda-expression-error
+    (error unrecognized-lambda-expression)
+  ())
+
+;; --
+
+(defconstant* +declare-notype+
+    ;; Untyped DECLARE specifiers - by-in-large standard DECLARE
+    ;; expression kinds, excepting TYPE, FTYPE, and VALUES
+    ;;
+    ;; NB This value is used as complimentary to the handling for
+    ;; simplified type declarations in such as
+    ;;   (declare (simple-string name))
+    ;;
   '(dynamic-extent ignore optimize inline special ignorable notinline
     declaration))
 
-#+NIL
-(defconstant* +declare+
-    ;; NB Not used in DEFUN*; provided for illustration
-    (append '(type ftype) +declare-notype+))
+;; NB/DNW: (typep 'type 'declaration)
+;;
+;; TBD: Arbitary implementation-specific storage and portable access for
+;;      "The list" of declared DECLARATION kinds, in any/each supported
+;;      implementation.
+
 
 (defconstant* +defun-lambda-param-kwd+
     ;; NB: This provides a more specialized set of symbols than
-    ;; CL:LAMBDA-LIST-KEYWORDS
+    ;; CL:LAMBDA-LIST-KEYWORDS itself.
+    ;;
+    ;; This is believed to represent a general subset of keywords
+    ;; available for lambda lists in LAMBDA, DEFUN, DEFGENERIC,
+    ;; DEFMETHOD, and other effectively functional forms, in Common
+    ;; Lisp.
   '(&optional &rest &key &allow-other-keys))
 
 (defconstant* +defun-lambda-kwd+
+    ;; Keywords not per se supproted in conventional DEFGENERIC or
+    ;; DEFMETHOD lambda list forms.
     (append +defun-lambda-param-kwd+
             '(&aux)))
 
 (defvar *default-ftype-values* '(values t))
+;; ^ NB/Documentation - for purpose of convenience, this symbol can be
+;; lexically bound in applications -- to an effect, producing any one or
+;; more FTYPE declaration with a single VALUES type, in the effective
+;; function signature, using DEFUN* (or similar) without per se
+;; providing a VALUES declaration in the forms expression.
+;;
+;; TBD: Extending this onto arbitrary parameter type declarations
+;;      - Note the initial value to NPARSE-FORMS-DECLARATIONS
+;;      - TBD Adopting this extension, when implementing support for
+;;        {param, type} (EQ) hash tables in the DEFUN* parameter type
+;;        declarations parser
 
 #-(or cmucl sbcl)
 (declaim (declaration values))
+;; ^FIXME Note this in any top-level systems reference documentation.
+;;
+;; As this system provides a manner of portable support for VALUES
+;; declarations, in a manner described above, the behavior of declaring
+;; VALUES as a declaration type in implementations not CMUCL or SBCL
+;; should not have any negative impact on applications.
+
+
+;; -- DEFUN* parser functions (internal/ephemeral - see previous annotations)
+
+(declaim (ftype (function (list &optional list)
+                          (values list list &optional))
+                parse-forms-declarations)
+
+         (ftype (function (list)
+                          (values list (or null string) &optional))
+                parse-named-forms-docs)
+
+         (ftype (function (list)
+                          (values list &optional))
+                ;; => lambda call-form-signature, formatted vis FTYPE
+                ;;    .. containing params information
+                parse-lambda-call-params)
+
+         (ftype (function (list &optional t)
+                          (values list &optional))
+                ;; => type map (from a list of partially parsed DECLARE forms)
+                parse-declared-types)
+
+         (inline parse-forms-declarations
+                 parse-named-forms-docs
+                 parse-lambda-call-params))
+
+
+;; TBD; Revise NPARSE-FORMS-DECLARATIONS
+;;      --> WALK-FORMS-DECLARATIONS (FORMS CALLBACK)
+;;      & update UNPARSE-FTYPE-NAMED-FORMS (was PARSE-META lexically
+;;     scoped in DEFUN*) to provide a lexically scoped callback
+;;     function, pursuant to providing a declared-types map for
+;;     UNPARSE-NAMES-FTYPE
+
+
+(defun nparse-forms-declarations (forms &optional previous-decls)
+  ;; assumption: any docstring has been removed from FORMS
+  ;;
+  ;; NB: Handle multiple DECLARE / FIXME handle with a provided callback fn
+  ;;
+  ;; NB: PREVIOUS-DECLS may be destructively modified, in this
+  ;; implementation - thus, the "nparse" prefix on the function's name.
+
+  (let ((frst (car forms)))
+    (cond
+      ((and (consp frst) (eq (car frst) 'declare))
+       (nparse-forms-declarations (cdr forms)
+                                  (nconc previous-decls
+                                         (cdr frst))))
+      (t
+       ;; TBD If using any intermediate SIGNATURE object, a slot of that
+       ;; object can be initialized here.
+       (values forms previous-decls)))))
+
+
+(defun parse-named-forms-docs (forms)
+  (let ((frst (car forms)))
+    (cond
+      ((stringp frst)
+       (values (cdr forms) frst))
+      (t
+       (values forms nil)))))
+
+(defun parse-lambda-call-params (llist)
+  ;; NB: This function's return value is used together with
+  ;; the return value from PARSE-DECLARED-TYPES, for computing
+  ;; an FTYPE declaration in UNPARSE-NAMED-FTYPE
+  ;;
+  ;; This function, as such, provides a value for the
+  ;; LPARMS parameter to UNPARSE-NAMED-FTYPE
+  ;;
+  ;; Usage - Within UNPARSE-NAMED-FTYPE, this function's return
+  ;; value is processed within an iterative form, such that
+  ;; will compute a type for each lambda parameter parsed
+  ;; out by PARSE-LAMBDA-CALL-PARAMS. For any parameter not
+  ;; given an explicit type in any declaration forms,
+  ;; UNPARSE-NAMED-FTYPE will provide a resonable default type -
+  ;; similarly, for the VALUES element in the resulting
+  ;; FTYPE declaration.
+  ;;
+  ;; For &key arguments, these two functions will utilize a
+  ;; specific, list-based data structure:
+  ;;   (CONTEXT . (VAR . KEYNAME))
+  ;; juxtaposed to the data structure used for other lambda
+  ;; list parameters:
+  ;;   (CONTEXT . VAR)
+  (let ((kwdpkg (load-time-value (find-package '#:keyword)
+                                 t))
+        ;; NB This function will continue to use a sequence
+        ;; for internal storage, to preserve the ordering of
+        ;; the original lambda signature when computing the
+        ;; effective FTYPE declaration form.
+        vars context)
+    (declare (type package kwdpkg))
+    (dolist (expr llist vars)
+      (etypecase expr
+        (symbol
+         (cond
+           ((find expr +defun-lambda-kwd+ :test #'eq)
+            (when (eq expr (quote &allow-other-keys))
+              ;; NB: This does not match ^ a VARINFO
+              ;; bucket - using NIL as a placeholder for a
+              ;; parameter name, locally. In usage, the CDR
+              ;; of the resulting expr should be ignored - as
+              ;; for the &allow-other-keys context, when
+              ;; unparsing the effective FTYPE declaration.
+              ;;
+              ;; In short: This keyword affects the lambda
+              ;; signature and any corresponding call forms,
+              ;; in a manner, by side-effect. It must appear
+              ;; in any FTYPE declaration for a function in
+              ;; which it appears in the function's lambda
+              ;; list.
+              (npushl (cons expr nil) vars))
+            ;; Update the parser context - NB this in itself
+            ;; does not verify, warn or err for unsupported
+            ;; lambda list syntax e.g duplicate keywords
+            (setq context expr))
+           ((eq context (quote &key))
+            ;; NB: already parsed the &KEY keyword itself
+            (let ((key (intern (symbol-name expr)
+                               ;; NB Simple interpolation for
+                               ;; an &KEY keyword symbol
+                               kwdpkg)))
+              (npushl (cons context (cons expr key))
+                      vars)))
+           ;; other symbol
+           (t (npushl (cons context expr) vars))))
+        (cons
+         ;; assumptions: EXPR is a CONS - thus decribing an
+         ;; &OPTIONAL or &KEY element of the effective
+         ;; lamabda list FTYPE signature.
+         ;;
+         ;; &AUX elements are ignored, here, for purpose of
+         ;; constructing the effective FTYPE signature.
+         (let ((vexpr (car expr)))
+           (case context
+             (&aux) ;; no-op
+             (&optional
+              (npushl (cons context vexpr) vars))
+             (&key
+              (etypecase vexpr
+                (symbol
+                 (let ((key (intern (symbol-name vexpr)
+                                    kwdpkg)))
+                   (npushl (cons context (cons vexpr key))
+                           vars)))
+                (cons
+                 ;; Specialized &key forms
+                 (let ((key (car vexpr))
+                       (var (cadr vexpr)))
+                   (npushl (cons context (cons var key))
+                           vars)))))
+             ;; NB DEFSIGNSTURE KIND handling
+             (t (warn 'unrecognized-lambda-expression-warning
+                      ;; NB: Only reached for CONS type lamba
+                      ;; element exprs
+                      :datum expr
+                      ;; FIXME note that the CONTEXT (EVAL-CONTEXT)
+                      ;; should be provided by any calling form
+                      :context (list (quote defun*) name)
+                      :lambda-list lambda)))
+           ))))))
+
+
+(defun parse-declared-types (decls env)
+  ;; NB: ENV param - used only in FIND-CLASS, below
+
+  ;; returns: Type table (assoc), Values expr if present in DECLS
+
+  ;; NB: Any simplified type declarations in effect shadowing
+  ;; known declaration kinds - vis +DECLARE-NOTYPE+ - will
+  ;; be, as by side effect, ignored in this portable
+  ;; implementation.
+
+  ;; TBD: Return value for UNPARSE-NAMED-FTYPE DECLS
+  (let (typed vdecl)
+
+    ;; NB: This does not need to provide a full, compiler-
+    ;; integrated defun (lambda) declarations parser. It
+    ;; must parse the declarations, to some extent, in
+    ;; order to determine which declarations denote types
+    ;; for bindings established per the defun lambda list.
+    ;;
+    ;; Subsequent functions may use this function's return
+    ;; value, for estalblishing type declarations for
+    ;; function parameters, such that would be visible from
+    ;; any calling lexical environment.
+    ;;
+    ;; Note that some ambiguity is possible, in the normal
+    ;; declarations syntax. This parser is a best effort for
+    ;; addressing such ambiguities as may pertain to typing of
+    ;; lambda list parameters.
+    (dolist (expr decls)
+      ;; process (and parse) each element of DECLS per declaration kind
+      (let ((kind (car expr)))
+        (cond
+          ((eq kind 'type)
+           (let ((type (cadr expr)))
+             ;; record the type for each explicitly typed
+             ;; variable
+             (dolist (var (cddr expr))
+               (npushl (cons var type) typed))))
+          ((eq kind 'values)
+           ;; Assumption: This EXPR denotes a CMUCL lambda
+           ;; VALUES declaration. This declaration may also
+           ;; be evaluated in SBCL.
+
+           ;; NB This does not warn about multiple VALUES
+           ;; declarations - would implicitly use the last
+           ;; VALUES decl.
+
+           ;; Note that DEFUN* will utilize the CMUCL (or
+           ;; SBCL) lambda VALUES declaration in producing a
+           ;; top-level FTYPE declaration - thus, supporting
+           ;; such a convention of strong typing, insofar as
+           ;; in FTYPE declarations, for all implementations.
+           ;;
+           ;; Implementation-specific optimizations would
+           ;; be beyond the scope of this comment
+           (setq vdecl expr))
+          ((eq kind 'ftype)
+           ;; NB a manner of a subset of TYPE decls
+           ;; Not parsed here (No-Op)
+           #+NIL (npushl expr ftyped)
+           )
+          ((find kind +declare-notype+ :test #'eq)
+           ;; No-Op
+           #+NIL
+           (npushl expr cldecl))
+          ((find-class kind nil env)
+           ;; parse as a simplified type decl
+           (dolist (var (cdr expr))
+             (npushl (cons var kind) typed)))
+          (t ;; No-Op
+           #+NIL
+           (npushl expr other)))))
+    ;; NB: OTHER may contain non-class-name simplified type
+    ;; declarations (FIXME? Portably?) and arbitrary
+    ;; function-specific declarations
+
+    ;; Otherwise expressed ...
+    ;;
+    ;; The DEFUN* FTYPE parser, in its present
+    ;; implementation, will not recognize any simplified type
+    ;; declarations that do not represent class names.
+
+    ;; Furthermore ...
+    ;;
+    ;; This implementation of DEFUN* will not provide any
+    ;; implementation-specific sections of program source
+    ;; code - vis a vis the type system implementation, in
+    ;; any single Common Lisp implementation.
+    ;;
+    ;; Assumption: Any declarations in OTHER will not provide
+    ;; any locally accessible type information about the
+    ;; LAMBDA list
+
+    ;; ...
+    (values typed vdecl)))
+
+
+(defun unparse-named-ftype (name params-call-form type-map values-decl)
+  ;; FIXME : NAME (update)
+
+  (declare (type list type-map))
+                                        ; FIXME Continue source review
+  ;; NB vis a vis VALUES in DECLARE w/ CMUCL and SBCL,
+  ;; and CL:FTYPE declarations
+  ;;
+  ;; Parse any VALUES decls from the original DECLARE set.
+  ;; Subsequently, use that value (when non-nil) in a
+  ;; top-level FTYPE declaration - using a default type T
+  ;; for the VALUES type and for any LAMBDA parameters
+  ;; that have not been expressly typed in the DECLARE form.
+  ;;
+  ;; When adapted for LABELS* the FTYPE declaration must be
+  ;; handled for a declaration within the calling lexical
+  ;; environment, a non-null lexical environment -- e.g
+  ;;  PARSE-NAMED-LAMBDA (NAME LAMBDA FORMS KIND ENV) => FTYPE, DOCS, FORMS
+
+  ;; NB To retain portability, this will implement some
+  ;; assumptions about type specifiers in the DECLARE list
+
+  ;; NB: The FTYPE declaration must match not only the names
+  ;; of variables provided in the lambda list - insofar as to
+  ;; specify a type for each parameter. Furthermore, the
+  ;; FTYPE declaration must match the grammar of the provided
+  ;; lambda list.
+  ;;
+  ;; Note that this is not for typing of all lexical
+  ;; variables that the lambda-list may specify to the
+  ;; defining function. It pertains only to functional
+  ;; parameters that would be provided, as via call forms,
+  ;; from within a calling lexical environment.
+
+  (let (param-spec context)
+    ;; Re-map PARAMS-CALL-FORM x TYPE-MAP into a lambda-like PARAM-SPEC
+    (dolist (bkt params-call-form)
+      ;; NB: for any &key parameter, the CDR of BKT will be
+      ;; a list -- as produced within PARSE-LAMBDA-CALL-PARAMS --
+      ;; in a general format: (CONTEXT . (VAR . KEYNAME))
+      ;; with CONTEXT being, as such `&KEY`
+      ;;
+      ;; For any other lambda list parameter, the CDR of
+      ;; BKT should be a symbol, denoting a variable name
+      ;; within the specified lambda list context, CTXT
+      (destructuring-bind (ctxt . varinfo ) bkt
+        (case ctxt
+          (&aux) ;; no-op
+          (&allow-other-keys
+           (npushl ctxt param-spec))
+          (t
+           (unless (eq ctxt context)
+             (setq context ctxt)
+             (npushl ctxt param-spec))
+           (let* ((varname (etypecase varinfo
+                             (cons (car varinfo))
+                             (symbol varinfo)))
+                  ;; NB: type-map un-parsing here
+                  (type-n (position varname type-map
+                                    :key #'car
+                                    :test #'eq))
+                  ;; FIXME: Parameterize this default type
+                  (type t))
+             (when type-n
+               ;; NB: else, initial type 'T' is used
+               (setq type (cdr (nth type-n type-map))))
+
+             (case ctxt
+               ;; FIXME use a default type LIST for any
+               ;; &REST param
+               (&key
+                (let ((kwd (cdr varinfo)))
+                  ;; Note the remark about "Specialized &key
+                  ;; forms" in PARSE-LAMBDA-CALL-PARAMS local defun
+                  (npushl (list kwd type) param-spec)))
+               (t
+                (npushl type param-spec))))
+           )))) ;; DOLIST
+    ;; Provide a default value for VALUES-DECL
+    (unless values-decl
+      (setq values-decl *default-ftype-values*))
+    ;; return from the unparser
+
+    ;; FIXME: This is the only location where NAME is used here.
+    ;;
+    ;; Move this much into UNPARSE-FTYPE-NAMED-FORMS
+    (values `(ftype (function ,param-spec ,values-decl) ,name))))
+
+;; --
+
+#+TBD
+(defun unparse-ftype-named-forms (name forms
+                                  &optional
+                                    (eval-context
+                                     (load-time-value
+                                      (make-symbol "unknown context") t)))
+  (
+  ))
+
+
+;; --
+
 
 (defmacro defun* (name lambda &rest forms &environment env)
-  ;; TD: LABELS* - refer to remarks, below. "Test here"
-  ;; - via PARSE-NAMED-LAMBDA - refer to function signature, below
-  (labels ((parse-docs (forms)
-             (let ((frst (car forms)))
-               (cond
-                 ((stringp frst)
-                  (values (cdr forms) frst))
-                 (t
-                  (values forms nil)))))
-           (parse-forms-declare (forms decls)
-             ;; assumption: any docstring has been removed from forms
-             ;;
-             ;; NB: Handle multiple DECLARE
-             (let ((frst (car forms)))
-               (cond
-                 ((eq (car frst) 'declare)
-                  (parse-forms-declare (cdr forms)
-                                       (nconc decls
-                                              (cdr frst))))
-                 (t
-                  (values forms decls)))))
-           (parse-lambda-params (llist)
-             ;; NB: This function's return value is used together with
-             ;; the return value from PARSE-DECL-TYPES, for computing
-             ;; an FTYPE declaration in PARSE-FTYPE
-             ;;
-             ;; This function, as such, provides a value for the
-             ;; LPARMS parameter to PARSE-FTYPE
-             ;;
-             ;; Usage - Within PARSE-FTYPE, this function's return
-             ;; value is processed within an iterative form, such that
-             ;; will compute a type for each lambda parameter parsed
-             ;; out by PARSE-LAMBDA-PARAMS. For any parameter not
-             ;; given an explicit type in any declaration forms,
-             ;; PARSE-FTYPE will provide a resonable default type -
-             ;; similarly, for the VALUES element in the resulting
-             ;; FTYPE declaration.
-             ;;
-             ;; For &key arguments, these two functions will utilize a
-             ;; specific, list-based data structure:
-             ;;   (CONTEXT . (VAR . KEYNAME))
-             ;; juxtaposed to the data structure used for other lambda
-             ;; list parameters:
-             ;;   (CONTEXT . VAR)
-             (let ((kwdpkg (find-package '#:keyword))
-                   vars context)
-               (declare (type package kwdpkg)
-                        (dynamic-extent kwdpkg))
-               (dolist (expr llist vars)
-                 (etypecase expr
-                   (symbol
-                    (cond
-                      ((find expr +defun-lambda-kwd+ :test #'eq)
-                       (when (eq expr (quote &allow-other-keys))
-                         ;; NB: This does not match a VARINFO
-                         ;; bucket - using NIL as a placeholder for a
-                         ;; parameter name. In usage, the CDR of this
-                         ;; should ultimately be ignored - as for the
-                         ;; &allow-other-keys context
-                         (npushl (cons expr nil) vars))
-                       (setq context expr))
-                      ;; NB: All symbol type expressions not denoted
-                      ;; in +DEFUN-LAMBDA-KWD+ should be parsed subsq.
-                      ((eq context (quote &key))
-                       ;; NB: already parsed the &KEY keyword
-                       (let ((key (intern (symbol-name expr)
-                                          kwdpkg)))
-                         (npushl (cons context (cons expr key))
-                                 vars)))
-                      (t (npushl (cons context expr) vars))))
-                   (cons
-                    ;; assumptions: EXPR is a CONS - thus decribing an
-                    ;; &optional or &key parameter. These specifiers
-                    ;; will include further information than a
-                    ;; parameter name, of course.
-                    (let ((vexpr (car expr)))
-                      (case context
-                        (&aux) ;; no-op
-                        (&optional
-                         (npushl (cons context vexpr) vars))
-                        (&key
-                         (etypecase vexpr
-                           (symbol
-                            (let ((key (intern (symbol-name vexpr)
-                                               kwdpkg)))
-                              (npushl (cons context (cons vexpr key))
-                                      vars)))
-                           (cons
-                            ;; Specialized &key forms
-                            (let ((key (car vexpr))
-                                  (var (cadr vexpr)))
-                              (npushl (cons context (cons var key))
-                                      vars)))))
-                        ;; FIXME: This style warning introduces NAME
-                        ;; and LAMBDA from the calling lexical
-                        ;; environment. As such, it introduces a
-                        ;; concern with regards to porting this lambda
-                        ;; list parser for both LABELS* and DEFUN*
-                        ;;
-                        ;; Note also, BOA lambda list forms in
-                        ;; constructor specifications for DEFSTRUCT -
-                        ;; vis a vis, "Ways to define a class" in CLOS
-                        ;; and MOP systems.
-                        (t (simple-style-warning
-                            ;; NB: Only reached for CONS type lamba
-                            ;; element exprs
-                            "~<Ignoring lambda list expression ~S ~S~>~
-~< in DEFUN* ~S ~S~>" context expr name lambda)))
-                      ))))))
+  ;; NB: FORMS should not be destructively modified in the
+  ;; macroexpansion, as it may represent constant data within a compiler
+  ;; environment. Any "New Lists" returned in the parser implementation
+  ;; may be destructively modified, however.
+  ;;
+  ;; Ideally, this implementation should produce only a minimum of "New
+  ;; Objects," for processing the LAMBDA form and any declarations
+  ;; parsed from the provided FORMS.
 
-           (parse-decl-types (decls env)
-             ;; TBD: Return value for PARSE-FTYPE DECLS
-             (let (typed
-                     ;;; unused lambda parser parameters
-                   ;; ftyped cldecl classed other
-                   vdecl)
-
-               ;; NB: This does not need to provide a full, compiler-
-               ;; integrated defun (lambda) declarations parser. It
-               ;; must parse the declarations, to some extent, in
-               ;; order to determine which declarations denote types
-               ;; for bindings established per the defun lambda list.
-               ;;
-               ;; Subsequent functions may use this function's return
-               ;; value, for estalblishing type declarations for
-               ;; function parameters, such that would be visible from
-               ;; any calling lexical environment.
-               ;;
-               ;; Note that some ambiguity is possible, in the normal
-               ;; declarations syntax. This parser is a best effort for
-               ;; addressing such ambiguities as may pertain to typing of
-               ;; lambda list parameters.
-               (dolist (expr decls)
-                 ;; sort each element of DECLS per declaration kind
-                 (let ((kind (car expr)))
-                   (cond
-                     ((eq kind 'type)
-                      (let ((type (cadr expr)))
-                        ;; record the type for each explicitly typed
-                        ;; variable
-                        (dolist (var (cddr expr))
-                          (npushl (cons var type) typed))))
-                     ((eq kind 'values)
-                      ;; Assumption: This EXPR denotes a CMUCL lambda
-                      ;; VALUES declaration. This declaration may also
-                      ;; be evaluated in SBCL.
-
-                      ;; NB This does not warn about multiple VALUES
-                      ;; declarations - would implicitly use the last
-                      ;; VALUES decl.
-
-                      ;; FIXME prune this VALUES EXPR from the set of
-                      ;; output declarations, when not either of CMUCL
-                      ;; or SBCL - thus avoiding some style warnings,
-                      ;; in implementations assumed not to implement
-                      ;; the VALUES declaration, per se.
-
-                      ;; Note that this DEFUN* proposes to utilize
-                      ;; the CMUCL (or SBCL) lambda VALUES declaration
-                      ;; in producing a top-level FTYPE declaration -
-                      ;; thus, supporting such a convention of strong
-                      ;; typing, insofar as in FTYPE declarations,
-                      ;; for all implementations.
-                      ;;
-                      ;; Implementation-specific optimizations would
-                      ;; be beyond the scope of this comment
-                      (setq vdecl expr))
-                     ((eq kind 'ftype)
-                      ;; NB a manner of a subset of TYPE decls
-                      ;; Not per se used here (No-Op)
-                      #+NIL (npushl expr ftyped)
-                      )
-                     ((find kind +declare-notype+ :test #'eq)
-                      ;; No-Op
-                      #+NIL
-                      (npushl expr cldecl))
-                     ((find-class kind nil env)
-                      #+NIL (npushl expr classed)
-                      #-NIL
-                      (dolist (var (cdr expr))
-                        (npushl (cons var kind) typed)
-                        ))
-                     (t ;; No-Op
-                      #+NIL
-                      (npushl expr other)))))
-               ;; NB: OTHER may contain non-class type-name and
-               ;; implementation-specific declarations
-               ;;
-               ;; FIXME: This, in its present revision, will not
-               ;; recognize any shorthand type declarations that do
-               ;; not represent class names.
-               ;;
-               ;; This revision of DEFUN* will not provide implementation-
-               ;; specific code.
-               ;;
-               ;; Assumption: Any declarations in OTHER will not provide
-               ;; type information about the LAMBDA list
-
-               ;; ...
-               (values typed vdecl)))
-           (parse-ftype (name lparms type-map vdecl)
-             (declare (type list type-map))
-             ;; NB vis a vis VALUES in DECLARE w/ CMUCL and SBCL,
-             ;; and CL:FTYPE declarations
-             ;;
-             ;; Parse any VALUES decls from the original DECLARE set.
-             ;; Subsequently, use that value (when non-nil) in a
-             ;; top-level FTYPE declaration - using a default type T
-             ;; for the VALUES type and for any LAMBDA parameters
-             ;; that have not been expressly typed in the DECLARE form.
-             ;;
-             ;; When adapted for LABELS* the FTYPE declaration must be
-             ;; handled for a declaration within the calling lexical
-             ;; environment, a non-null lexical environment -- vis a vis:
-             ;;  PARSE-NAMED-LAMBDA (NAME LAMBDA FORMS KIND ENV) => FTYPE, DOCS, FORMS
-             ;;
-             ;; NB: PARSE-NAMED-LAMBDA INLINE
-
-             ;; NB To retain portability, this will implement some
-             ;; assumptions about type specifiers in the DECLARE list
-
-             ;; NB: The FTYPE declaration must match not only the names
-             ;; of variables provided in the lambda list - insofar as to
-             ;; specify a type for each parameter. Furthermore, the
-             ;; FTYPE declaration must match the grammar of the provided
-             ;; lambda list.
-             ;;
-             ;; Note that this is not for typing of all lexical
-             ;; variables that the lambda-list may specify to the
-             ;; defining function. It pertains only to functional
-             ;; parameters that would be visible within the calling
-             ;; lexical environment.
-
-             ;; FIXME still need to parse out the non-standard VALUES decls
-             ;;
-             ;; ... b.c stong typing in Common Lisp programs, juxtaposed
-             ;; to a casual DECLARATION decl in non-CMUCL-fam lisps
-             (let (param-spec context)
-               ;; Re-map LPARMS x TYPE-MAP into a lambda-like PARAM-SPEC
-               (dolist (bkt lparms)
-                 ;; NB: for any &key parameter, the CDR of BKT will be
-                 ;; a list -- as produced within PARSE-LAMBDA-PARAMS --
-                 ;; to a general format: (CONTEXT . (VAR . KEYNAME))
-                 ;;
-                 ;; For any other lambda list parameter, the CDR of
-                 ;; BKT should be a symbol, denoting a variable name
-                 ;; within the specified lambda list context, CTXT
-                 (destructuring-bind (ctxt . varinfo ) bkt
-                   (case ctxt
-                     (&aux) ;; no-op
-                     (&allow-other-keys
-                      (npushl ctxt param-spec))
-                     (t
-                      (unless (eq ctxt context)
-                        (setq context ctxt)
-                        (npushl ctxt param-spec))
-                      (let* ((varname (etypecase varinfo
-                                        (cons (car varinfo))
-                                        (symbol varinfo)))
-                             (type-n (position varname type-map
-                                               :key #'car
-                                               :test #'eq))
-                             ;; FIXME: Parameterize this default type
-                             (type t))
-                        (when type-n
-                          ;; else, initial type 'T' is used
-                          (setq type (cdr (nth type-n type-map))))
-                        (case ctxt
-                          ;; FIXME use a default type LIST for any
-                          ;; &REST param
-                          (&key
-                           (let ((kwd (cdr varinfo)))
-                             ;; Note the remark about "Specialized &key
-                             ;; forms" in PARSE-LAMBDA-PARAMS local defun
-                             (npushl (list kwd type) param-spec)))
-                          (t
-                           (npushl type param-spec))))
-                      )))) ;; DOLIST
-               ;; Provide a default value for VDECL
-               (unless vdecl
-                 (setq vdecl *default-ftype-values*))
-               (values `(ftype (function ,param-spec ,vdecl) ,name))))
-
-           (parse-meta (name llist forms)
-             (let ((lparms (parse-lambda-params llist)))
+  (labels ((parse-meta (name llist forms)
+             (let ((lparms (parse-lambda-call-params llist)))
                (multiple-value-bind (forms docs)
-                   (parse-docs forms)
+                   (parse-named-forms-docs forms)
+                 ;; TBD: Top-level API for the following
+                 ;; towards application in DEFUN*, LABELS*, LAMBDA*
                  (multiple-value-bind (forms decls)
-                     (parse-forms-declare forms nil)
+                     (nparse-forms-declarations forms)
                    (multiple-value-bind (type-map vdecl)
-                       (parse-decl-types decls env)
+                       (parse-declared-types decls env)
                      (multiple-value-bind (ftype)
-                         (parse-ftype name lparms type-map vdecl)
+                         (unparse-named-ftype name lparms type-map vdecl)
                        (values ftype docs decls forms))))))
              ))
 
     (multiple-value-bind (ftype docs decls forms)
-        (parse-meta name lambda (copy-list forms))
+        (parse-meta name lambda forms)
       `(progn
          (declaim ,ftype)
          (defun ,name ,lambda
@@ -389,7 +748,7 @@
 (defun* find-frob (digit where &rest kwlist
                          &key ((:start %start) 0) from-end
                          &allow-other-keys &aux (c (digit-char digit)))
-  "Find NIL"
+  "Find the DIGIT-CHAR of DIGIT in the string WHERE"
   (declare (type (mod 10) digit) (string where)
            (ignore kwlist)
            (type (mod #.array-dimension-limit) %start))
