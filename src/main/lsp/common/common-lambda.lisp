@@ -164,13 +164,9 @@
 
 ;; --------------------
 
-;; NB: UNPARSE-FTYPE-NAMED-FORMS (NAME FORMS &optional eval-context)
-;;
-;;     ^ NB (quote DEFUN*) or (quote LABELS*) as EVAL-CONTEXT
+;; NB: UNPARSE-FTYPE-FUNCTION-DECLARATION (lambda-l forms &optional eval-context)
 
-;; NB: UNPARSE-FTYPE-LAMBDA-FORMS (forms &optional eval-context)
-
-;; NB; UNPARSE-FTYPE-NAMED-DECLS (name decls &optional eval-context)
+;; TBD; UNPARSE-FTYPE-NAMED-DECLS (name lambda-l decls &optional eval-context)
 ;; ^ for defportable.lisp DEFSIGNATURE
 
 ;; ^ NB EVAL-CONTEXT: A symbol (or cons of symbol), uniquely denoting the context in which
@@ -180,6 +176,9 @@
 ;; corresponding condition report stream, on event of error. For purpose
 ;; of editor integration, should be - as a symbol - stored in the
 ;; initialized CONDITION object representing the error.
+
+(deftype eval-context-name ()
+  '(or symbol list))
 
 (define-condition macroexpansion-condition ()
   ;; FIXME : Move to COMMON-CONDITION.LISP
@@ -199,9 +198,47 @@
     ;;       corresponding :REPORT function, generally illustrative of
     ;;       such application.
     :initform nil
-    :type (or symbol cons)
+    :type eval-context-name
     :initarg :context
     :reader macroexpansion-condition-context)))
+
+
+(declaim (ftype (function (eval-context-name eval-context-name)
+                          (values list &optional))
+                 eval-context-add-suffix))
+
+(defun eval-context-add-suffix (suffix whence)
+  ;; utility for forms that may dispatch to generally signal a
+  ;; MACROEXPANSION-CONDITION - add SUFFIX to WHENCE, in a manner
+  ;; dependent on the syntax of each value
+
+  ;; NB Could style-warning when (NULL SUFFIX)
+
+  (etypecase whence
+    (cons
+     (etypecase suffix
+       (symbol
+        (append whence (list suffix)))
+       (cons
+        (append whence suffix))
+       (null
+        (values whence))))
+    (null
+     (etypecase suffix
+       (symbol
+        (list suffix))
+       (cons
+        (values suffix))
+       (null
+        (values nil))))
+    (symbol
+     (etypecase suffix
+       (symbol
+        (list whence suffix))
+       (cons
+        (append (list whence) suffix))
+       (null
+        (list whence))))))
 
 
 (define-condition lambda-parser-condition (macroexpansion-condition)
@@ -334,14 +371,6 @@
                  parse-lambda-call-params))
 
 
-;; TBD; Revise NPARSE-FORMS-DECLARATIONS
-;;      --> WALK-FORMS-DECLARATIONS (FORMS CALLBACK)
-;;      & update UNPARSE-FTYPE-NAMED-FORMS (was PARSE-META lexically
-;;     scoped in DEFUN*) to provide a lexically scoped callback
-;;     function, pursuant to providing a declared-types map for
-;;     UNPARSE-NAMES-FTYPE
-
-
 (defun walk-forms-declarations (forms callback)
   ;; assumption: any docstring has been removed from FORMS
   ;;
@@ -363,20 +392,21 @@
       (t
        (values forms nil)))))
 
-(defun parse-lambda-call-params (llist &optional error-context)
+
+(defun parse-lambda-call-params (lambda-list &optional eval-context)
   ;; NB: This function's return value is used together with
   ;; the return value from PARSE-DECLARED-TYPES, for computing
-  ;; an FTYPE declaration in UNPARSE-NAMED-FTYPE
+  ;; an FTYPE declaration in UNPARSE-FTYPE-FUNCTION-DECLARATION-1
   ;;
   ;; This function, as such, provides a value for the
-  ;; LPARMS parameter to UNPARSE-NAMED-FTYPE
+  ;; LPARMS parameter to UNPARSE-FTYPE-FUNCTION-DECLARATION-1
   ;;
-  ;; Usage - Within UNPARSE-NAMED-FTYPE, this function's return
+  ;; Usage - Within UNPARSE-FTYPE-FUNCTION-DECLARATION-1, this function's return
   ;; value is processed within an iterative form, such that
   ;; will compute a type for each lambda parameter parsed
   ;; out by PARSE-LAMBDA-CALL-PARAMS. For any parameter not
   ;; given an explicit type in any declaration forms,
-  ;; UNPARSE-NAMED-FTYPE will provide a resonable default type -
+  ;; UNPARSE-FTYPE-FUNCTION-DECLARATION-1 will provide a resonable default type -
   ;; similarly, for the VALUES element in the resulting
   ;; FTYPE declaration.
   ;;
@@ -394,7 +424,7 @@
         ;; effective FTYPE declaration form.
         vars context)
     (declare (type package kwdpkg))
-    (dolist (expr llist vars)
+    (dolist (expr lambda-list vars)
       (etypecase expr
         (symbol
          (cond
@@ -460,8 +490,8 @@
                       :datum expr
                       ;; FIXME note that the CONTEXT (EVAL-CONTEXT)
                       ;; should be provided by any calling form
-                      :context error-context
-                      :lambda-list llist)))
+                      :context eval-context
+                      :lambda-list lambda-list)))
            ))))))
 
 
@@ -475,7 +505,6 @@
   ;; be, as by side effect, ignored in this portable
   ;; implementation.
 
-  ;; TBD: Return value for UNPARSE-NAMED-FTYPE DECLS
   (let (typed vdecl)
 
     ;; NB: This does not need to provide a full, compiler-
@@ -562,9 +591,8 @@
     (values typed vdecl)))
 
 
-(defun unparse-named-ftype (name params-call-form type-map values-decl)
-  ;; FIXME : NAME (update)
-
+(defun unparse-ftype-function-declaration-1 (params-call-form
+                                             type-map values-decl)
   (declare (type list type-map))
                                         ; FIXME Continue source review
   ;; NB vis a vis VALUES in DECLARE w/ CMUCL and SBCL,
@@ -640,27 +668,50 @@
                (t
                 (npushl type param-spec))))
            )))) ;; DOLIST
-    ;; Provide a default value for VALUES-DECL
-    (unless values-decl
-      (setq values-decl *default-ftype-values*))
     ;; return from the unparser
-
-    ;; FIXME: This is the only location where NAME is used here.
-    ;;
-    ;; Move this much into UNPARSE-FTYPE-NAMED-FORMS
-    (values `(ftype (function ,param-spec ,values-decl) ,name))))
-
+    (values `(function ,param-spec ,values-decl))))
 ;; --
 
-#+TBD
-(defun unparse-ftype-named-forms (name forms
-                                  &optional
-                                    (eval-context
-                                     (load-time-value
-                                      (make-symbol "unknown context") t)))
-  (
-  ))
 
+(defun unparse-ftype-function-declaration (lambda-list forms
+                                           &optional eval-context
+                                             environment)
+  ;; return an unadorned FUNCTION type declaration in a syntax as may
+  ;; be used for an FTYPE declaration, per LAMBDA-LIST and any
+  ;; declarations directly in FORMS
+  (let ((lparms (parse-lambda-call-params lambda-list eval-context))
+        type-map values-type)
+    (labels ((build-type-map (decl-rest)
+               (multiple-value-bind (map vdecl)
+                   (parse-declared-types decl-rest environment)
+                 (setq type-map
+                       (nconc type-map map))
+                 (when vdecl
+                   (setq values-type vdecl)))))
+      (walk-forms-declarations forms #'build-type-map)
+      (values
+       (unparse-ftype-function-declaration-1
+        lparms type-map (or values-type *default-ftype-values*))
+       ))))
+
+
+
+
+(defun unparse-ftype-named-declaration (name lambda-list forms
+                                        &optional eval-context
+                                          environment)
+  ;; NB: Generalized onto the LAMBDA case
+  ;;
+  ;; See also/TBD: LABELS*
+  (multiple-value-bind (forms docs)
+        (parse-named-forms-docs forms)
+      (declare (ignore docs)) ;; as though!
+      (multiple-value-bind (ftype-functype)
+          (unparse-ftype-function-declaration lambda-list forms
+                                              (eval-context-add-suffix
+                                               name eval-context)
+                                              environment)
+        (values `(ftype ,ftype-functype ,name)))))
 
 ;; --
 
@@ -675,33 +726,14 @@
   ;; Objects," for processing the LAMBDA form and any declarations
   ;; parsed from the provided FORMS.
 
-  (labels ((parse-meta (name llist forms)
-             (let ((lparms (parse-lambda-call-params llist
-                                                     (list 'defun* name)))
-                   type-map values-type)
-               (multiple-value-bind (forms docs)
-                   (parse-named-forms-docs forms)
-                 (declare (ignore docs)) ;; as if.
-                 (labels ((build-type-map (decl-rest)
-                            (multiple-value-bind (map vdecl)
-                                (parse-declared-types decl-rest env)
-                              (setq type-map
-                                    (nconc type-map map))
-                              (when vdecl
-                                (setq values-type vdecl)))))
-
-                   (walk-forms-declarations forms #'build-type-map)
-
-                   (multiple-value-bind (ftype)
-                       (unparse-named-ftype name lparms type-map values-type)
-                     (values ftype forms)))))))
-
-    (multiple-value-bind (ftype)
-        (parse-meta name lambda forms)
+    (let ((ftype
+           (unparse-ftype-named-declaration name lambda forms
+                                            (quote defun*)
+                                            env)))
       `(progn
          (declaim ,ftype)
          (defun ,name ,lambda ,@forms)
-         ))))
+         )))
 
 
 #+NIL
@@ -790,6 +822,9 @@
              (lambda-compile-condition-form c)))))
 
 ;; ----
+
+;; TBD: Use UNPARSE-FTYPE-FUNCTION-DECLARATION for producing a second return
+;; value in the macroexpansion of LAMBDA* - Refer to documentation, above.
 
 (defmacro lambda* (args &body body )
   ;; NB: This macro was going to be named MK-LAMBDA.
