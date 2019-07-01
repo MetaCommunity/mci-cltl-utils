@@ -19,6 +19,15 @@
 ;;
 ;; co spec.lisp
 
+;; NB: Development paused, while developing ltp-main:src/main/lsp/mt/
+;;     - guarding.lisp - WITH-WRITE-GUARD, OBJECT-POOL, GUARDED-FUNCALL
+;;     - defportable.lisp - DEFSECTION [TBD], DEFSIGNATURE, DEFIMPLEMENTATION
+;;
+;; NB: With regards to initfunction definition, LTP/COMMON:LAMBDA* avl.
+;;
+;; TBD: Docstrings w/i a TeX environment
+
+
 (defmacro do-cons ((first rest whence &optional return) &body body)
   ;; FIXME - move to ltp/common
   (with-symbols (dispatch %whence)

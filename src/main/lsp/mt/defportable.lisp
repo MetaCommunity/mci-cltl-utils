@@ -453,6 +453,13 @@ defun signature.~>~< Initial: ~S>~< Second: ~S~>"
 ;; - TBD impl-section+ forms to a feature-set, for purpose of sytems review
 
 
+#+TBD
+(defmacro defsection (name ....)
+  ;; vis a vis *CONTEXT*
+  ;;
+  ;; see also: Knuth's WEB
+  )
+
 
 (defmacro defsignature ((&optional (context *context))
                                expr)
