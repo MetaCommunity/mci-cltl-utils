@@ -15,8 +15,11 @@
 
  Design Notes
 
- - cf. FEATUREP
- - cf. ./guarding.lisp [MT]
+ Usage Cases - Synopsis
+ - cf. FEATUREP and ./guarding.lisp [MT] (Portability across CL implementations)
+ - CommonIDE asn1-proto.lisp - Local API (IR) and ASN.1 tools interop.
+ - CommonIDE Generalized Widgets - GLib, GDK, GTK+ (GNOME)
+ - CommonIDE Generalized Widgets - JNI in Dalvik/Art (Android)
 
  Design State - Synopsis: Early prototype, APIs
    - Meta-Object Signature
