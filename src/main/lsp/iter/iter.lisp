@@ -105,6 +105,32 @@
                              ;; except that the binding of ,%WHENCE may
                              ;; be ignored by the compiler, even then,
                              ;; in the macroexpansion.
+                             ;;
+                             ;; For purpoes of development in this
+                             ;; system, it might seem feasible to
+                             ;; orchestrate the production of the
+                             ;; evaluable form with a compiler
+                             ;; macro operating on the iterable
+                             ;; object itself, in production of the
+                             ;; macroexpansion to the compiler. However --
+                             ;; beyond any merely syntactic
+                             ;; characteristics of the whole form
+                             ;; provided ot the compiler macro -- the
+                             ;; implementation of such an approach may
+                             ;; serve to require an EVAL semantics on
+                             ;; the expression denoting the iterable
+                             ;; object - quite simply, evaluating it
+                             ;; independent of the environment finally
+                             ;; created by the compiler, moreover
+                             ;; independent of the enviornment in which
+                             ;; the form was initially conferred.
+                             ;;
+                             ;; Subsequently, perhaps the semantics of
+                             ;; CMUCL source tranform definitions may
+                             ;; seem somehow approachable for
+                             ;; consideration, alternate to any concerns
+                             ;; imposed by the creation of lexical
+                             ;; environments in the compiler itself.
                              (declare (type ,(symbol-value (quote ,%typ)) ,,s))
                              ,@,%forms
                              ))))))
