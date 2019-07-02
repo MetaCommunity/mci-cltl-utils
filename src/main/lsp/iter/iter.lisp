@@ -97,6 +97,14 @@
                               (,%len (length (the simple-vector ,%memb))))
                          (dotimes (,%n ,%len ,,%returnv)
                            (let ((,,%s (svref ,%memb ,%n)))
+                             ;; NB: An operation on the class of
+                             ;; ,%WHENCE could seem to serve to work
+                             ;; around the limitations of the
+                             ;; macroexpansion evaluation environment,
+                             ;; with the following DECLARE form --
+                             ;; except that the binding of ,%WHENCE may
+                             ;; be ignored by the compiler, even then,
+                             ;; in the macroexpansion.
                              (declare (type ,(symbol-value (quote ,%typ)) ,,s))
                              ,@,%forms
                              ))))))
