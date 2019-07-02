@@ -115,7 +115,7 @@
                              ;; macroexpansion to the compiler. However --
                              ;; beyond any merely syntactic
                              ;; characteristics of the whole form
-                             ;; provided ot the compiler macro -- the
+                             ;; provided to the compiler macro -- the
                              ;; implementation of such an approach may
                              ;; serve to require an EVAL semantics on
                              ;; the expression denoting the iterable
@@ -132,6 +132,8 @@
                              ;; limitations as would be imposed from the
                              ;; creation of lexical environments in the
                              ;; compiler itself.
+                             ;;
+                             ;; As it stands, this Lisp source code DNW:
                              (declare (type ,(symbol-value (quote ,%typ)) ,,s))
                              ,@,%forms
                              ))))))
