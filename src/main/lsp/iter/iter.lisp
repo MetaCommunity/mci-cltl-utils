@@ -87,8 +87,8 @@
             ;;
             ;; define-compiler-macro does not in itself provide any
             ;; workaround for the intrinsic quirks/limitations of the
-            ;; macroexpansion environment and subsequent breakage in
-            ;; source forms
+            ;; macroexpansion environment and subsequent breakage for
+            ;; some not-evaluated-for-value forms
             (,%typ (iterable-element-type ,%whence)))
        (macrolet ((,%do-main ((,%s ,%whence ,%returnv) ,%forms)
                     (with-symbols (%%whence %memb %len %n)
