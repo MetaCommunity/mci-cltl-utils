@@ -84,6 +84,11 @@
             ;; compile time in a lexically scoped environment,
             ;; for any implementation inserting null-lexenv anywhere
             ;; arbitrarily
+            ;;
+            ;; define-compiler-macro does not in itself provide any
+            ;; workaround for the intrinsic quirks/limitations of the
+            ;; macroexpansion environment and subsequent breakage in
+            ;; source forms
             (,%typ (iterable-element-type ,%whence)))
        (macrolet ((,%do-main ((,%s ,%whence ,%returnv) ,%forms)
                     (with-symbols (%%whence %memb %len %n)
@@ -98,22 +103,21 @@
          (,%do-main (,s ,%whence ,returnv) ,@forms)))
     ))
 
+
+
 (eval-when ()
 
   (setq *break-on-signals* t)
 
-;;(macroexpand (quote ;; useless
   (let ((iter (make-simple-vector-iterable
                '(1 2 3)
                :element-type #-NIL t #+NIL '(mod 4)))
         (call-reg))
-;(macroexpand (quote ;; useless
+;(macroexpand (quote
     (do-simple-vector-iterable (%elt iter (values call-reg t))
       (npushl (expt %elt 2) call-reg))
 ;    ))
     )
-
-;; ))
 
 )
 
