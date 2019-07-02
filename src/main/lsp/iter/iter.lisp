@@ -128,9 +128,10 @@
                              ;; Subsequently, perhaps the semantics of
                              ;; CMUCL source tranform definitions may
                              ;; seem somehow approachable for
-                             ;; consideration, alternate to any concerns
-                             ;; imposed by the creation of lexical
-                             ;; environments in the compiler itself.
+                             ;; consideration, alternate to any
+                             ;; limitations as would be imposed from the
+                             ;; creation of lexical environments in the
+                             ;; compiler itself.
                              (declare (type ,(symbol-value (quote ,%typ)) ,,s))
                              ,@,%forms
                              ))))))
