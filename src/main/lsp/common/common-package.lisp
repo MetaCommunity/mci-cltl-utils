@@ -79,6 +79,8 @@
    #:defun*
    ;; #:labels*
 
+   #:do-mapped
+
    #:push-last
    #:nappend
    #:npushl

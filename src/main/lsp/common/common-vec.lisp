@@ -42,6 +42,7 @@
 
 
 (defmacro do-vector ((elt v &optional return) &body body)
+  ;; FIXME/DEPRECATED - See DO-MAPPED. common-seq.lisp
   (with-symbols (%v len n)
     `(let* ((,%v ,v)
 	    (,len (length ,%v)))

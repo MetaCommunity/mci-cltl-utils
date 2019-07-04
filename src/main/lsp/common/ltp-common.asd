@@ -83,6 +83,8 @@
                        "common-sym" ;; SYMBOL-STATUS
                        ))
 
+   (:file "common-seq"
+          :depends-on ("common-macro"))
 
    (:file "common-list"
           ;; NB was common-seq.lisp, common-vec.lisp, common-string.lisp
