@@ -42,16 +42,8 @@
 
 
 (defmacro do-vector ((elt v &optional return) &body body)
-  ;; FIXME/DEPRECATED - See DO-MAPPED. common-seq.lisp
-  (with-symbols (%v len n)
-    `(let* ((,%v ,v)
-	    (,len (length ,%v)))
-       (declare (type vector ,%v)
-		(type array-length ,len))
-       (dotimes (,n ,len ,return)
-	 (declare (type array-dim ,n))
-	 (let ((,elt (aref ,%v ,n)))
-	   ,@body)))))
+  ;; NB DEPRECATED - See DO-MAPPED in common-seq.lisp
+  `(do-mapped (,elt ,v ,return) ,@body))
 
 
 #-(and)

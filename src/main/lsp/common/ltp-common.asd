@@ -90,7 +90,10 @@
           ;; NB was common-seq.lisp, common-vec.lisp, common-string.lisp
 	  :depends-on ("common-macro"))
    (:file "common-vec"
-	  :depends-on ("common-macro" "common-lambda"))
+	  :depends-on ("common-macro"
+                       "common-lambda"
+                       "common-seq" ;; NB DO-MAPPED reimpl of DO-VECTOR
+                       ))
    (:file "common-string"
           :depends-on ("common-macro" "common-type" "common-misc"
                                       "common-lambda"
