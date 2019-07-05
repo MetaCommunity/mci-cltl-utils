@@ -79,6 +79,7 @@
    #:defun*
    ;; #:labels*
 
+   #:do-map
    #:do-mapped
 
    #:push-last
