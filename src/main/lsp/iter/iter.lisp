@@ -17,12 +17,15 @@
 
 (in-package #:ltp/common/iter)
 
+;; NB: Initial prototype - structure-object encapsulation for iterable storage
+
 (defstruct (iterable
              (:constructor))
   (element-type
    t
    :type type-designator
    :read-only t))
+
 
 (defstruct (sequence-iterable
              (:include iterable)
@@ -32,7 +35,6 @@
    :type sequence))
 
 ;; DNW ....
-
 (defstruct (vector-iterable
              (:include sequence-iterable)
              (:constructor))
@@ -60,6 +62,8 @@
                :initial-contents members)))
 
 ;; --------------------
+
+;; NB: Initial prototype for "iterable macros"
 
 (defmacro do-simple-vector-iterable ((s whence &optional returnv) &body forms)
   ;; NB: This simple protocol may not provide support for iterable type
@@ -222,6 +226,8 @@
 
 ;; ------------------------------------------------------------
 
+;; NB: Initial prototype - standard-object encapsulation for iterable storage
+
 (defclass iterable-class (standard-class)
   ((member-element-type
     :type type-designator
@@ -281,12 +287,25 @@
 
 
 
-;; TBD
+;; TBD - Storage Protocol & ITERABLE
+;;
 ;; ENSURE-STORAGE-USING-CLASS (CLASS ITERABLE &OPTIONAL INITIAL-CONTENTS)
 ;; SHARED-INITIALIZE (ITERABLE T &REST INITARGS &KEY INITIAL-CONTENTS &ALLOW-OTHER-KEY
 ;;
 ;; [Re]Design LTP-Main ENUM onto ITERABLE-CLASS, ITERABLE-OBJECT
 ;; adding functions for storage onto symbolic enumeration member objects
+
+;; TBD: HASHED-VECTOR-ITERABLE
+;; NB: Onto SXHASH => NUMBER
+;;
+;; TBD: "Template-like" support for specifying "Where the SXHASH key is stored",
+;;      in extensions
+;;
+;; General usage case: Hash-Table-Like storage for large sets of
+;; similarly typed values, indexed onto the SXHASH code computed for one
+;; or more fields of each such value.
+;;
+;; See also: librdf; libxml2 XML Schema Datatypes support; ....
 
 #+ITERABLE-MAP-FUNCTION
 (defgeneric ensure-iterable-map-function (return-type iterable)
@@ -296,6 +315,8 @@
   ;; map function
   ;;    NB: Revise the immediate API => MAP-ITERABLE-STATIC, MAP-ITERABLE-DYNAMIC
   ;;        referring to annotations, subsq.
+  ;;    - ENSURE-ITERABLE-STATIC-MAP-FUNCTION
+  ;;    - ENSURE-ITERABLE-DYNAMIC-MAP-FUNCTION
   ;;
   ;; Note that any map-function being called exactly once may use a
   ;; static policy - it not differing substantially then, to the
@@ -309,13 +330,13 @@
 
     ;; TBD: Moving the following into a conventional function, e.g
     ;;
-    ;; ENSURE-GENERIC-ITERABLE-STATIC-MAP-FUNCTION
+    ;; ENSURE-ITERABLE-STATIC-MAP-FUNCTION
     ;; such that may be cached per each instance, under its instance
     ;; values and class state at the time of the function's creation
     ;;
     ;; juxtaposed to a conventional function, e.g
     ;;
-    ;; ENSURE-GENERIC-ITERABLE-DYNAMIC-MAP-FUNCTION
+    ;; ENSURE-ITERABLE-DYNAMIC-MAP-FUNCTION
     ;; such that may be cached per each class, under that class' state at
     ;; the time of the function's creation
     ;;
