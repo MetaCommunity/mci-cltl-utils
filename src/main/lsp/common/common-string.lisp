@@ -146,6 +146,12 @@ contents of STRING."
 ;; => "a", "", 1
 ;; (split-string-1 #\. (simplify-string "ab"))
 ;; => "ab", NIL, NIL
+;;
+;; (split-string-1 #\. (simplify-string "a.b.c") :start 2)
+;; => "a.b", "c", 3
+;; (split-string-1 #\. "a.b.c" :start 2)
+;; => "a.b", "c", 3
+
 
 (defun split-string (char str &key (start 0)  end
                            from-end  key
