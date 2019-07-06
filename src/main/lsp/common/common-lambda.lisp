@@ -869,7 +869,7 @@
            (unparse-ftype-function-declaration args body 'lambda* env)))
       `(let ((,%form (quote (lambda ,args ,@body)))
              ,%warnings ,%errors)
-         (handler-bind ((warning #'(lambda (c) (npushl c ,%warnings)))/
+         (handler-bind ((warning #'(lambda (c) (npushl c ,%warnings)))
                         (error #'(lambda (c) (npushl c ,%errors))))
            (let ((,%fn (coerce ,%form 'function))
                  (,%functype ,(list 'quote functype)))
@@ -928,3 +928,56 @@
   ;; ^ error outside of the LAMBDA* eval
 
   )
+
+;; --
+
+;; TBD - cf. LAMBDA* => COMPILE
+
+#+DNW
+(defmacro with-encapsulated-conditions ((&rest types) &body forms)
+  ;; FIXME
+  ;;
+  ;; TBD - Wrapping for *BREAK-ON-SIGNALS* and *DEBUGGER-HOOK*
+  (with-symbols (register-condition c whence)
+    (let ((tabl (mapcar #'(lambda (typ)
+                            (declare (type symbol typ))
+                            (cons typ
+                                  (make-symbol
+                                   (concatenate 'simple-string
+                                                (symbol-name typ) "-"
+                                                (mk-lf
+                                                 (symbol-name '#:storage))))))
+                        types)))
+      `(let ,(mapcar #'cdr tabl)
+         (labels ((,register-condition (,c ,whence)
+                    (npushl ,c ,whence)))
+           (let (#+NIL (*break-on-signals* (quote (or ,@types)))
+                       )
+             (handler-bind ,(mapcar #'(lambda (spec)
+                                        (destructuring-bind (typ . storage) spec
+                                          `(,typ (lambda (,c)
+                                                   (,register-condition ,c ,storage)
+                                                   (continue ,c)))))
+                                    tabl)
+               ;; TBD - Wrapped/impl-specific binding for *DEBUGGER-HOOK*
+               ;; so as to capture all implementation-wrapped conditions
+               ;; under *BREAK-ON-SIGNALS*
+               (values
+                (multiple-value-list (progn ,@forms))
+                ,@(mapcar #'cdr tabl))
+               )))))))
+
+(eval-when ()
+
+(macroexpand-1 (quote
+(with-encapsulated-conditions (warning error)
+  ;; ^ DNW insofar as capturing the conditions when evaluating the following:
+  (lambda* () (frob #.(make-symbol "Unbound"))))
+))
+
+
+(with-encapsulated-conditions (warning error)
+  ;; ^ Also DNW insofar as capturing the conditions when evaluating:
+  (warn "Frob") (cerror "Frob-Err" nil))
+
+)
