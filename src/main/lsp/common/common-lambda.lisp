@@ -1098,13 +1098,16 @@
 
 (macroexpand-1 (quote
 
-(with-first-condition (warning error)
-  (lambda* () (frob #.(make-symbol "Unbound"))))
+(with-first-condition (error)
+  (funcall (lambda* () (frob #.(make-symbol "Unbound")))))
 
 ))
 
 (with-first-condition (warning error)
   (funcall (lambda* () unbound-symbol (+ 1 3))))
+
+(with-first-condition (error)
+  (funcall (compile nil (lambda* () (frob #.(make-symbol "Unbound"))))))
 
 
 (with-first-condition (error)
