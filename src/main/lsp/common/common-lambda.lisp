@@ -813,23 +813,26 @@
 
 ;; ----
 
-(define-condition compile-condition ()
-  ;; TBD: Portable "In-what-section" declaration
+(define-condition encapsulated-condition ()
+  ;; NB: This condition type may seem vaguely analogous, in application
+  ;; below, towards how some implementations may interact with the
+  ;; debugger when due to *BREAK-ON-SIGNALS*
   ((condition
     :initarg :condition
-    ;; NB: This accessor represents a prototype and, as such, is not
-    ;; presently exported from #:LTP/COMMON
-    :reader compile-condition-condition)))
+    :reader encapsulated-condition-condition)))
 
-(define-condition lambda-compile-condition (compile-condition)
+
+(define-condition compile-condition ()
+  ;; TBD: Portable, nested "In-what-section" declarations - the immediate
+  ;; section being represented, below, with the lambda form itself
+  ())
+
+(define-condition lambda-compile-condition (encapsulated-condition
+                                            compile-condition)
   ((form
     :initarg :form
     :initform nil
     :reader lambda-compile-condition-form)))
-
-#+NIL ;; unused here
-(define-condition lambda-compile-warning  (warning compile-condition)
-  ())
 
 
 (define-condition lambda-compile-error (error lambda-compile-condition)
@@ -838,27 +841,22 @@
    (lambda (c s)
      (format s "~<Error when compiling lambda form~>~< ~S~>~2%~<~A~>"
              (lambda-compile-condition-form c)
-             (compile-condition-condition c)))))
+             ;; FIXME - This "Dumb Pretty Printing" approach does not
+             ;; make any use of system reflection information
+             (encapsulated-condition-condition c)))))
 
 (define-condition lambda-compile-warning (warning lambda-compile-condition)
   ()
-  ;; FIXME Unused Here
+  ;; FIXME Unused Here - To be considered for adoption in an IDE
   (:report
    (lambda (c s)
      (format s "~<Warning when compiling lambda form~>~< ~S~>~%~<~A~>"
              (lambda-compile-condition-form c)
-             (compile-condition-condition c)))))
+             (encapsulated-condition-condition c)))))
 
 ;; ----
 
-;; TBD: Use UNPARSE-FTYPE-FUNCTION-DECLARATION for producing a second return
-;; value in the macroexpansion of LAMBDA* - Refer to documentation, above.
-
-
 (defmacro lambda* (args &body body &environment env)
-  ;; NB: Reimplemented subsq,
-  ;; pursuant of availability of WITH-ENCAPSULATED-CONDITIONS
-
   ;; NB: This macro was going to be named MK-LAMBDA.
   ;;
   ;;     This macro has been named LAMBDA* mostly due to concerns
@@ -873,14 +871,15 @@
 
   ;; NB: Unlike the function, COMPILE, the third return value from the
   ;; macroespansion of this function will denote a function declaration,
-  ;; in a syntax similar onto FTYPE. That function declaratiion will
+  ;; in a syntax similar onto FTYPE. The function declaratiion will
   ;; have been derived from the lambda ARGS and any TYPE and VALUES
-  ;; declarations preceding evaluation forms in the lambda BODY
-  ;; forms. The function declaration, as such, is derived directly in
-  ;; the macro function itself.
+  ;; declarations as may be provided within an effective DECLARE prefix
+  ;; in the lambda BODY forms. The function declaration, as such, is
+  ;; derived directly in the macro function itself, namely from parsing
+  ;; any effective DECLARE prefix as may be provided in the BODY forms.
   ;;
-  ;; The same declaration will be used in a THE form effectively
-  ;; wrapping the form denoting the resulting lambda fujction, itself.
+  ;; This may be, in effect, similar to DEFUN* but implemented for
+  ;; definition of anonymous lambda functions.
 
   (with-symbols (%warnings #+NIL %errors %form %fn %functype)
     (let ((functype
@@ -902,16 +901,22 @@
                         ,%functype))
                (t (values (the ,functype ,%fn) nil ,%functype)))))))))
 
-;; ^ Operate similar to COMPILE, principally, for anonymous lambda forms
-;;   but without any mangling of the lexical environment in which the
-;;   function is produced. Thus, the HANDLER-BIND forms many generally
-;;   be accessible, at least for WARNING.
+;; Additional Remarks - LAMBDA* Design and Implementation
+;;
+;;   This macro, in evaluation, operates in a manner generally similar
+;;   to COMPILE, for anonymous lambda forms, but without any direct
+;;   mangling of the lexical environment in which the function is
+;;   produced. Thus, the HANDLER-BIND forms many generally be accessible
+;;   during the effective compilation of the lambda form, namely in the
+;;   evaluation of (COERCE FORM 'FUNCTION)
 ;;
 ;;   Furthermore, this ensures that all warnings will be emitted in the
-;;   second return value.
+;;   second return value. In this revision, it does not in itself muffle
+;;   those informative warnings.
 ;;
 ;;   Rather than using COMPILE, this approach does not require special
-;;   binding onto *BREAK-ON-SIGNALS* for some implementations.FD
+;;   binding onto *BREAK-ON-SIGNALS* to capture conditions, namely
+;;   warnings, during the effective compilation of the lambda form.
 ;;
 ;;   COMPILE itself may inject a null lexical environment, even when
 ;;   compiling anonymous lambda forms, on some implementations. This may
@@ -948,7 +953,25 @@
 
   )
 
-;; --
+
+;; ----------------------------------------
+
+;; NB: The following forms represent additional prototypes, momentarily
+;; considered for possible reimplementation of the original LAMBDA*
+;; definition.
+;;
+;; Pursuant of the updated behavior for LAMBDA*, insofar as signaling an
+;; error of type LAMBDA-COMPILE-ERROR directly from within the ERROR
+;; handler in the LAMBDA* macroexpansion, the following prototypes may
+;; have no further effective relevance to the definition of LAMBDA*
+;;
+;; It may seem that at most one ERROR may be captured, by any of the
+;; subsequent approaches. Thus, the LAMBDA* definition has been updated
+;; to signal a LAMBDA-COMPILE-ERROR directly, when an error is produced
+;; during (COERCE FORM 'FUNCTION)
+;;
+;; FIXME: Move the following onto ltp-main:src/proto/ pursunt of any
+;; further systems protyping as may developed here
 
 ;; TBD - cf. LAMBDA* => COMPILE
 
