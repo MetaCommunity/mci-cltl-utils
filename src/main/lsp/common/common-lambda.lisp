@@ -1013,15 +1013,15 @@
 
 
 (with-encapsulated-conditions (warning error)
-  ;; ^ DNW insofar as capturing the CERROR after interactive 'continue' :
+  ;; ^ Works OK, in some forms, insofar as capturing the CERROR after
+  ;; interactive 'continue'. If the condition is not produced with
+  ;; MAKE-CONDITION, may not be able to capture the error in this form
   (warn "FROB")
-  ;; FIXME - the following CERROR call may be evaluated twice, seen in:
-  ;;  - CCL w/ SLIME inline eval
-  ;;  - CCL w/ SLIME REPL
-  ;;  - SBCL, similarly
-  (cerror "FROB" (make-condition 'condition))
+  (cerror "Ignore" (make-condition 'simple-error :format-control "Thunk"))
   12332
   )
+;; ^ may not work out w/ SLIME "inline eval" in some configurations
+;; ^ may produce two CERROR when evaluated from REPL
 
 )
 
@@ -1059,3 +1059,46 @@
 ;;;;
 ;;
 ;; (lambda* (&key ((((unreachable))))  (funcall #:fail)))
+
+;; --------------------
+
+#+TBD_2
+(defmacro with-first-condition ((&rest types) &body forms)
+  ;; NB: This "Sort of works out," but does not allow - in this
+  ;; definition - differentiation of a return value from THROW within
+  ;; the handler bindings, or a normal return from FORMS
+  (with-symbols (tag c)
+    `(catch (quote ,tag)
+       (handler-bind ,(mapcar #'(lambda (typ)
+                                  `(,typ (lambda (,c) (throw (quote ,tag) ,c))))
+                              types)
+         ;; TBD - Wrapped/impl-specific binding for *DEBUGGER-HOOK*
+         ;; so as to capture all implementation-wrapped conditions
+         ;; under *BREAK-ON-SIGNALS*
+         ,@forms
+         ))))
+
+
+#+NIL
+(eval-when ()
+
+(macroexpand-1 (quote
+
+(with-first-condition (warning error)
+  (lambda* () (frob #.(make-symbol "Unbound"))))
+
+))
+
+(with-first-condition (warning error)
+  (funcall (lambda* () unbound-symbol (+ 1 3))))
+
+
+(with-first-condition (error)
+  (cerror "Ignore" (make-condition 'simple-error :format-control "Thunk"))
+  12332
+  )
+
+(with-first-condition (warning error)
+  (funcall (lambda* () (+ 1 3))))
+
+)
