@@ -938,7 +938,7 @@
   ;; FIXME
   ;;
   ;; TBD - Wrapping for *BREAK-ON-SIGNALS* and *DEBUGGER-HOOK*
-  (with-symbols (register-condition c whence restart)
+  (with-symbols (register-condition c whence restart values)
     (let ((tabl (mapcar #'(lambda (typ)
                             (declare (type symbol typ))
                             (cons typ
@@ -958,6 +958,7 @@
                     (unless (find ,c (the (array t (*)) ,whence) :test #'eq)
                       (vector-push-extend ,c ,whence))))
            (let (#+NIL (*break-on-signals* (quote (or ,@types)))
+                       ,values
                        )
              (handler-bind ,(mapcar #'(lambda (spec)
                                         (destructuring-bind (typ . storage) spec
@@ -971,8 +972,9 @@
                ;; TBD - Wrapped/impl-specific binding for *DEBUGGER-HOOK*
                ;; so as to capture all implementation-wrapped conditions
                ;; under *BREAK-ON-SIGNALS*
-               (progn ,@forms)
-               (values ,@(mapcar
+               (setq ,values (multiple-value-list (progn ,@forms)))
+               (values ,values
+                       ,@(mapcar
                           #'(lambda (spec)
                               (destructuring-bind (typ . storage) spec
                                 (declare (ignore typ))
@@ -992,6 +994,7 @@
 ;;   when eval w/ SBCL 1.4.16.debian, SLIME/Swank 4.19.0-2-amd64, Emacs 26.1
 ;;
 ;; It "Works-Out OK" when input directly to the REPL however ....
+;; .. albeit, while the wrapped comditions are fairly noisy there.
 
 ))
 
@@ -1005,6 +1008,9 @@
 
 (with-encapsulated-conditions (warning error)
   ;; ^ DNW insofar as capturing the CERROR after interactive 'continue' :
-  (warn "FROB") (cerror "FROB" (make-condition 'condition)))
+  (warn "FROB")
+  (cerror "FROB" (make-condition 'condition))
+  12332
+  )
 
 )
