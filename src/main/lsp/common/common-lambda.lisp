@@ -910,7 +910,7 @@
   ;; FIXME - this source system needs an update for hacking onto Emacs font-lock
 
   (lambda* () unbound-symbol)
-  ;; ^ warning returned
+  ;; ^ warning returned - in duplicate, under the redefined LAMBDA* (TBD/FIXME)
 
   (lambda* #:fail)
   ;; ^ NB: Even here, the error may not get caught by the HANDLER-BIND w/ SBCL
@@ -977,13 +977,15 @@
                ;; so as to capture all implementation-wrapped conditions
                ;; under *BREAK-ON-SIGNALS*
                (setq ,values (multiple-value-list (progn ,@forms)))
-               (values ,values
-                       ,@(mapcar
-                          #'(lambda (spec)
-                              (destructuring-bind (typ . storage) spec
-                                (declare (ignore typ))
-                                `(coerce ,storage 'list)))
-                        tabl))
+               (values-list
+                (append (multiple-value-list (progn ,@forms))
+                        (list
+                         ,@(mapcar
+                            #'(lambda (spec)
+                                (destructuring-bind (typ . storage) spec
+                                  (declare (ignore typ))
+                                  `(coerce ,storage 'list)))
+                            tabl))))
                )))))))
 
 #+NIL
@@ -1013,6 +1015,10 @@
 (with-encapsulated-conditions (warning error)
   ;; ^ DNW insofar as capturing the CERROR after interactive 'continue' :
   (warn "FROB")
+  ;; FIXME - the following CERROR call may be evaluated twice, seen in:
+  ;;  - CCL w/ SLIME inline eval
+  ;;  - CCL w/ SLIME REPL
+  ;;  - SBCL, similarly
   (cerror "FROB" (make-condition 'condition))
   12332
   )
@@ -1029,7 +1035,12 @@
 
   ;; FIXME -
   ;; - Retain documentation from the original LAMBDA* definition
-  ;; - Revise the return semantics of WITH-ENCAPSULATED-CONDITIONS - "MV-APPEND"
+  ;; - Revise return form of WITH-ENCAPSULATED-CONDITIONS -> "MV-APPEND" [DONE]
+  ;; - Note that the implementation may return effective duplicates of
+  ;;   conditions produced in REPL evaluation of some calls to this
+  ;;   redefined LAMBDA* - TBD, possible casual correlation due to
+  ;;   inline compilation in the (COERCE LIST 'FUNCTION) call
+
   (with-symbols (%form %fn %functype)
     (let ((functype
            (unparse-ftype-function-declaration args body 'lambda* env)))
@@ -1039,7 +1050,12 @@
                   (,%functype ,(list 'quote functype)))
              (values (the ,functype ,%fn) ,%functype)))))))
 
-;;   (funcall (car (lambda* () (declare (values (member 4))) (+ 1 3))))
+;;   (funcall (lambda* () (declare (values (member 4))) (+ 1 3)))
 
-;;;; Note that this may be handled more effectively, in the redefinition:
+;;
+;;;;
+;;;; Note that this may be handled more effectively, in the LAMBDA*
+;;;; redefinition ... under some implementations [CCL]
+;;;;
+;;
 ;; (lambda* (&key ((((unreachable))))  (funcall #:fail)))
