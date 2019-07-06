@@ -814,8 +814,12 @@
 ;; ----
 
 (define-condition compile-condition ()
-  ;; FIXME: Portable "In-what-section" declaration
-  ())
+  ;; TBD: Portable "In-what-section" declaration
+  ((condition
+    :initarg :condition
+    ;; NB: This accessor represents a prototype and, as such, is not
+    ;; presently exported from #:LTP/COMMON
+    :reader compile-condition-condition)))
 
 (define-condition lambda-compile-condition (compile-condition)
   ((form
@@ -832,8 +836,18 @@
   ()
   (:report
    (lambda (c s)
-     (format s "~<Error when compiling lambda form~>~< ~S~>"
-             (lambda-compile-condition-form c)))))
+     (format s "~<Error when compiling lambda form~>~< ~S~>~2%~<~A~>"
+             (lambda-compile-condition-form c)
+             (compile-condition-condition c)))))
+
+(define-condition lambda-compile-warning (warning lambda-compile-condition)
+  ()
+  ;; FIXME Unused Here
+  (:report
+   (lambda (c s)
+     (format s "~<Warning when compiling lambda form~>~< ~S~>~%~<~A~>"
+             (lambda-compile-condition-form c)
+             (compile-condition-condition c)))))
 
 ;; ----
 
@@ -868,23 +882,24 @@
   ;; The same declaration will be used in a THE form effectively
   ;; wrapping the form denoting the resulting lambda fujction, itself.
 
-  (with-symbols (%warnings %errors %form %fn %functype)
+  (with-symbols (%warnings #+NIL %errors %form %fn %functype)
     (let ((functype
            (unparse-ftype-function-declaration args body 'lambda* env)))
       `(let ((,%form (quote (lambda ,args ,@body)))
-             ,%warnings ,%errors)
-         (handler-bind ((warning #'(lambda (c) (npushl c ,%warnings)))
-                        (error #'(lambda (c) (npushl c ,%errors))))
+             ,%warnings #+NIL ,%errors)
+         (handler-bind ((warning #'(lambda (c)
+                                     (npushl c ,%warnings)
+                                     #+NIL (muffle-warning c)))
+                        (error #'(lambda (c)
+                                   (error 'lambda-compile-error
+                                          :condition c
+                                          :form ,%form))))
            (let ((,%fn (coerce ,%form 'function))
                  (,%functype ,(list 'quote functype)))
              (cond
-               (,%errors
-                ;; NB: This may not ever be reached, in
-                ;; some implementations.
-                (error 'lambda-compile-error
-                       :form ,%form))
-               (,%warnings (values (the ,functype ,%fn) ,%warnings
-                                   ,%functype))
+               (,%warnings
+                (values (the ,functype ,%fn) ,%warnings
+                        ,%functype))
                (t (values (the ,functype ,%fn) nil ,%functype)))))))))
 
 ;; ^ Operate similar to COMPILE, principally, for anonymous lambda forms
@@ -896,7 +911,7 @@
 ;;   second return value.
 ;;
 ;;   Rather than using COMPILE, this approach does not require special
-;;   binding onto *BREAK-ON-SIGNALS* for some implementations.
+;;   binding onto *BREAK-ON-SIGNALS* for some implementations.FD
 ;;
 ;;   COMPILE itself may inject a null lexical environment, even when
 ;;   compiling anonymous lambda forms, on some implementations. This may
