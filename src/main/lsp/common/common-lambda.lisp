@@ -840,7 +840,11 @@
 ;; TBD: Use UNPARSE-FTYPE-FUNCTION-DECLARATION for producing a second return
 ;; value in the macroexpansion of LAMBDA* - Refer to documentation, above.
 
+
 (defmacro lambda* (args &body body &environment env)
+  ;; NB: Reimplemented subsq,
+  ;; pursuant of availability of WITH-ENCAPSULATED-CONDITIONS
+
   ;; NB: This macro was going to be named MK-LAMBDA.
   ;;
   ;;     This macro has been named LAMBDA* mostly due to concerns
@@ -933,7 +937,7 @@
 
 ;; TBD - cf. LAMBDA* => COMPILE
 
-#+DNW
+#+TBD
 (defmacro with-encapsulated-conditions ((&rest types) &body forms)
   ;; FIXME
   ;;
@@ -967,7 +971,7 @@
                                                    (let ((,restart
                                                           (find-restart 'continue ,c)))
                                                      (when ,restart
-                                                       (invoke-restart ,restart ,c)))))))
+                                                       (invoke-restart ,restart #+NIL ,c)))))))
                                     tabl)
                ;; TBD - Wrapped/impl-specific binding for *DEBUGGER-HOOK*
                ;; so as to capture all implementation-wrapped conditions
@@ -1014,3 +1018,28 @@
   )
 
 )
+
+
+;; --
+
+#+TBD
+(defmacro lambda* (args &body body &environment env)
+  ;; Redefinition of LAMBDA*
+  ;; subsq. of the availability of WITH-ENCAPSULATED-CONDITIONS
+
+  ;; FIXME -
+  ;; - Retain documentation from the original LAMBDA* definition
+  ;; - Revise the return semantics of WITH-ENCAPSULATED-CONDITIONS - "MV-APPEND"
+  (with-symbols (%form %fn %functype)
+    (let ((functype
+           (unparse-ftype-function-declaration args body 'lambda* env)))
+      `(let ((,%form (quote (lambda ,args ,@body))))
+         (with-encapsulated-conditions (warning error)
+           (let* ((,%fn (coerce ,%form 'function))
+                  (,%functype ,(list 'quote functype)))
+             (values (the ,functype ,%fn) ,%functype)))))))
+
+;;   (funcall (car (lambda* () (declare (values (member 4))) (+ 1 3))))
+
+;;;; Note that this may be handled more effectively, in the redefinition:
+;; (lambda* (&key ((((unreachable))))  (funcall #:fail)))
