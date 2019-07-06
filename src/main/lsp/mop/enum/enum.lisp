@@ -1,6 +1,10 @@
 
 (in-package #:ltp/common)
 
+;; NB: Concerning development of the storage protocol
+;;     and subsequent applications, refer to
+;;     ltp-main:src/main/lsp/stor/README.md
+
 (defpackage #:ltp/common/mop/enum
   (:use #:ltp/common/singleton
         #:ltp/common/mop

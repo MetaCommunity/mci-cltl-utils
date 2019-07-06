@@ -11,6 +11,9 @@
 ;;
 ;;------------------------------------------------------------------------------
 
+;; NB: Concerning applications, refer to
+;;     ltp-main:src/main/lsp/stor/README.md
+
 ;; Ed. NB: The Initial protoype for this implementation has been
 ;;         developed, as though singularly, onto SBCL SB-THREAD.
 ;;

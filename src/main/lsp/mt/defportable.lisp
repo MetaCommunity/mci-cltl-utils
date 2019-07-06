@@ -15,6 +15,9 @@
 
  Design Notes
 
+ Concerning applications, refer to
+ ltp-main:src/main/lsp/stor/README.md
+
  Usage Cases - Synopsis
  - cf. FEATUREP and ./guarding.lisp [MT] (Portability across CL implementations)
  - CommonIDE asn1-proto.lisp - Local API (IR) and ASN.1 tools interop.

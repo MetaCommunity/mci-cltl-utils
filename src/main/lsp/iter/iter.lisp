@@ -15,6 +15,11 @@
   (:use #:ltp/common/mop #:ltp/common #:cl))
 
 
+;; NB: Towards further formalization in this API design,
+;;     furthermore with regards to storage object initialization,
+;;     refer to ltp-main:src/main/lsp/stor/README.md
+
+
 (in-package #:ltp/common/iter)
 
 ;; NB: Initial prototype - structure-object encapsulation for iterable storage
@@ -240,6 +245,7 @@
 
 (defclass sequence-iterable-object (iterable-object)
   ((members
+    ;; FIXME Rename => storage
     :initarg :members
     :type sequence)))
 
@@ -258,11 +264,7 @@
 (defclass simple-vector-iterable-object (vector-iterable-object)
   ((members
     ;; :access (:read :bind :unbind)
-    ;; TD (Trivial Slot Access Protocol)
-    ;; SLOT-VALUE-READABLE-P
-    ;; SLOT-VALUE-WRITABLE-P
-    ;; SLOT-VALUE-BINDABLE-P
-    ;; SLOT-VALUE-UNBINDABLE-P
+    ;; ^ NB: see ltp-main:src/main/lsp/base-class/README.md
     :type (simple-array * (*)))))
 
 (defclass list-iterable-object (sequence-iterable-object)
@@ -279,9 +281,13 @@
     (let* ((len (length members))
            (memb (make-array len
                              :element-kind
+                             ;; FIXME: This API needs to be well documented:
                              (storage-element-type (class-of kind))
-                             :initial-contents members))
-      ;; ... trivial
+                             :initial-contents members)))
+
+      ;; NB: This uses any provided MEMBERS sequence as a manner of an
+      ;; elements signature, when producing the actual storage vector
+      ;; for the iterable
       ))
   )
 

@@ -2,6 +2,11 @@ Base Class Definition - Lisp Tools Project, Thinkum Labs
 ========================================================
 
 
+## See Also
+
+* Towards application support, _Storage Definitions_
+    * `ltp-main:src/main/lsp/stor/README.md`
+
 ## Base Class Implementation Support - Design Documentation
 
 **General Considerations**
