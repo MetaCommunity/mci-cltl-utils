@@ -1064,19 +1064,33 @@
 
 #+TBD_2
 (defmacro with-first-condition ((&rest types) &body forms)
-  ;; NB: This "Sort of works out," but does not allow - in this
-  ;; definition - differentiation of a return value from THROW within
-  ;; the handler bindings, or a normal return from FORMS
-  (with-symbols (tag c)
-    `(catch (quote ,tag)
-       (handler-bind ,(mapcar #'(lambda (typ)
-                                  `(,typ (lambda (,c) (throw (quote ,tag) ,c))))
-                              types)
-         ;; TBD - Wrapped/impl-specific binding for *DEBUGGER-HOOK*
+  ;; NB: This "Sort of works out", and it prevents effective duplication
+  ;; of conditions during eval, but only captures one condition at a
+  ;; time
+  (with-symbols (tag cdn c mvlist)
+    `(let (,cdn)
+       (catch (quote ,tag)
+         (handler-bind ,(mapcar #'(lambda (typ)
+                                  `(,typ (lambda (,c)
+                                           (setq ,cdn ,c)
+                                           (throw (quote ,tag) ,c))))
+                                types)
+           ;; TBD - Wrapped/impl-specific binding for *DEBUGGER-HOOK*
          ;; so as to capture all implementation-wrapped conditions
          ;; under *BREAK-ON-SIGNALS*
-         ,@forms
-         ))))
+         (setq ,mvlist (multiple-value-list (progn ,@forms)))
+         ))
+       (cond
+         ;; NB: This return value semantics may not serve to make the
+         ;; return-value form completely unambiguous, for some possible
+         ;; FORMS that return multiple values. At least, it may provide
+         ;; a rudimentary syntactic distinction, mostly meaningful for
+         ;; any FORMS that would return only one value.
+         ;;
+         ;; [Prototype]
+         ;; [Indemnification Clause Here]
+         (,cdn (values nil ,cdn))
+         (t (values-list ,mvlist))))))
 
 
 #+NIL
