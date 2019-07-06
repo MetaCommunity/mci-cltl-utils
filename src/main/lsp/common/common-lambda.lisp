@@ -938,7 +938,7 @@
   ;; FIXME
   ;;
   ;; TBD - Wrapping for *BREAK-ON-SIGNALS* and *DEBUGGER-HOOK*
-  (with-symbols (register-condition c whence)
+  (with-symbols (register-condition c whence restart)
     (let ((tabl (mapcar #'(lambda (typ)
                             (declare (type symbol typ))
                             (cons typ
@@ -955,14 +955,18 @@
                                                   :adjustable t))))
                          tabl)
          (labels ((,register-condition (,c ,whence)
-                    (vector-push-extend ,c ,whence)))
+                    (unless (find ,c (the (array t (*)) ,whence) :test #'eq)
+                      (vector-push-extend ,c ,whence))))
            (let (#+NIL (*break-on-signals* (quote (or ,@types)))
                        )
              (handler-bind ,(mapcar #'(lambda (spec)
                                         (destructuring-bind (typ . storage) spec
                                           `(,typ (lambda (,c)
                                                    (,register-condition ,c ,storage)
-                                                   (continue ,c)))))
+                                                   (let ((,restart
+                                                          (find-restart 'continue ,c)))
+                                                     (when ,restart
+                                                       (invoke-restart ,restart ,c)))))))
                                     tabl)
                ;; TBD - Wrapped/impl-specific binding for *DEBUGGER-HOOK*
                ;; so as to capture all implementation-wrapped conditions
@@ -990,6 +994,13 @@
 ;; It "Works-Out OK" when input directly to the REPL however ....
 
 ))
+
+#+FIXME
+(with-encapsulated-conditions (warning error)
+  ;; FIXME - TBD (SBCL)
+  ;;
+  ;; DNW - CCL - TBD/FIXME - Errs but the error is not caught
+  (funcall (lambda* () unbound-symbol (+ 1 3))))
 
 
 (with-encapsulated-conditions (warning error)
