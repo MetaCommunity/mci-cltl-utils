@@ -104,10 +104,13 @@
    #:featurep
    #:mk-lf
 
+   #:encapsulated-condition
+   #:encapsulated-condition-condition
    #:compile-condition
    #:lambda-compile-condition
    #:lambda-compile-condition-form
    #:lambda-compile-error
+   #:lambda-compile-warning
    #:lambda*
 
    ;; FIXME: Move the following to another system - ltp-common-parse e.g
