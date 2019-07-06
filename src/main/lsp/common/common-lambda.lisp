@@ -948,9 +948,14 @@
                                                 (mk-lf
                                                  (symbol-name '#:storage))))))
                         types)))
-      `(let ,(mapcar #'cdr tabl)
+      `(let ,(mapcar #'(lambda (spec)
+                         (destructuring-bind (typ . storage) spec
+                           (declare (ignore typ))
+                           `(,storage (make-array 0 :fill-pointer 0
+                                                  :adjustable t))))
+                         tabl)
          (labels ((,register-condition (,c ,whence)
-                    (npushl ,c ,whence)))
+                    (vector-push-extend ,c ,whence)))
            (let (#+NIL (*break-on-signals* (quote (or ,@types)))
                        )
              (handler-bind ,(mapcar #'(lambda (spec)
@@ -962,22 +967,33 @@
                ;; TBD - Wrapped/impl-specific binding for *DEBUGGER-HOOK*
                ;; so as to capture all implementation-wrapped conditions
                ;; under *BREAK-ON-SIGNALS*
-               (values
-                (multiple-value-list (progn ,@forms))
-                ,@(mapcar #'cdr tabl))
+               (progn ,@forms)
+               (values ,@(mapcar
+                          #'(lambda (spec)
+                              (destructuring-bind (typ . storage) spec
+                                (declare (ignore typ))
+                                `(coerce ,storage 'list)))
+                        tabl))
                )))))))
 
+#+NIL
 (eval-when ()
 
 (macroexpand-1 (quote
+
 (with-encapsulated-conditions (warning error)
-  ;; ^ DNW insofar as capturing the conditions when evaluating the following:
   (lambda* () (frob #.(make-symbol "Unbound"))))
+
+;; ^ TBD "Quirks" - No minibuffer display or Emacs *Messages* buffer I/O (??)
+;;   when eval w/ SBCL 1.4.16.debian, SLIME/Swank 4.19.0-2-amd64, Emacs 26.1
+;;
+;; It "Works-Out OK" when input directly to the REPL however ....
+
 ))
 
 
 (with-encapsulated-conditions (warning error)
-  ;; ^ Also DNW insofar as capturing the conditions when evaluating:
-  (warn "Frob") (cerror "Frob-Err" nil))
+  ;; ^ DNW insofar as capturing the CERROR after interactive 'continue' :
+  (warn "FROB") (cerror "FROB" (make-condition 'condition)))
 
 )
