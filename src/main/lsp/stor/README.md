@@ -82,8 +82,9 @@ _program_ and _application_. In the sense as developed here, a _program_
 may be defined in a manner such that: A _program_ interoperates with a
 Common Lisp _implementation_, in any manner as may be generally
 extensional to the Common Lisp programming language. A _program_ may
-interoperate, furthermore, with any zero or more systems, such as as may
-be denoted _external to the implementation environment_.
+interoperate, furthermore, with any zero or more systems, such as may
+be denoted _external to the implementation environment_, in any single
+Common Lisp implementation.
 
 In this sense, a _program_ may serve to provide support for an
 _application_, while an _application_ would represent the principally
