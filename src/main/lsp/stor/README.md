@@ -69,10 +69,25 @@ manner, below.
 
 * This section of the article endeavors to address concerns with regards
   to _allocation and object initialization for purposes of program
-  access_. This does not address any concerns with regards to
-  initialization for applications, whether within or external to a
-  Common Lisp implementation environment.
+  access_ onto arbitrary _objects_. This may not, in itself, serve to
+  address all concerns with regards to object initialization for
+  _application access_, whether for objects defined as principally
+  _within_ or _external to_ a Common Lisp implementation environment.
 
+
+**Ed. NB: Towards Some Formalism - Program and Application**
+
+This article, in a manner, develops a concept of a general dichotomy of
+_program_ and _application_. In the sense as developed here, a _program_
+may be defined in a manner such that: A _program_ interoperates with a
+Common Lisp _implementation_, in any manner as may be generally
+extensional to the Common Lisp programming language. A _program_ may
+interoperate, furthermore, with any zero or more systems, such as as may
+be denoted _external to the implementation environment_.
+
+In this sense, a _program_ may serve to provide support for an
+_application_, while an _application_ would represent the principally
+"User-Visible" features of a software system.
 
 
 ### Initialization of Storage Objects for Common Lisp Applications
@@ -346,5 +361,7 @@ article.
  -->
 <!--  LocalWords:  Deallocated deallocated deallocation STOR SBCL
  -->
-<!--  LocalWords:  unreferenced interoperation runtime
+<!--  LocalWords:  unreferenced interoperation runtime interoperates
+ -->
+<!--  LocalWords:  interoperate
  -->
