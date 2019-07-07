@@ -176,15 +176,15 @@ Lisp programming language. Some general considerations, as such:
 
 ### Prototype Systems
 
-* `ITERABLE-CLASS`, `ITERABLE-OBJECT`, and `MAP-ITERABLE` Accessors
+* `ITERABLE-CLASS`, `ITERABLE-OBJECT`; `MAP-ITERABLE` Accessors
     * `ltp-main:src/main/lsp/iter/iter.lisp`
 
-* `ENUM`, `DYNAMIC-ENUM`, `STATIC-ENUM`, and `ENUM-MEMBERS` Accessors
+* `ENUM`, `DYNAMIC-ENUM`, `STATIC-ENUM`; `ENUM-MEMBERS` Accessors
     * `ltp-main:src/main/lsp/mop/enum/enum.lisp`
 
 #### Support Systems
 
-* `WITH-WRITE-GUARD`, `GUARDED-FUNCALL`
+* `WITH-WRITE-GUARD`; `GUARDED-FUNCALL`
     * `ltp-main:src/main/lsp/mt/guarding.lisp`
 
 * `DEFSIGNATURE` and `DEFIMPLEMENTATION`
