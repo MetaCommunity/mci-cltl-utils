@@ -1,9 +1,23 @@
 Storage Definitions - Lisp Tools Project, Thinkum Labs
 ======================================================
 
-## Overview - Design of a Storage Definition System
+## Overview - Design of a Storage Definition System in Common Lisp
+
+The Storage Definition System [STOR] may endeavor to address a number of
+complimentary concerns. These concerns are addressed, in an abbreviated
+manner, below.
 
 **General Considerations**
+
+* Memory Allocation and Object Initialization in Common Lisp Programs
+* Initialization of Storage Objects for Common Lisp Applications
+* Static Allocation and Access in Common Lisp Programs
+* Concurrent Access to Objects and Generalized Bindings
+* Portability for Interactive and Non-Interactive Applications
+
+
+
+### Memory Allocation and Object Initialization in Common Lisp Programs
 
 * For representation of _internal objects_ in a Lisp programming
   environment, initial _allocation_ and subsequent _initialization_ of
@@ -22,11 +36,51 @@ Storage Definitions - Lisp Tools Project, Thinkum Labs
       during _allocation_ and _initialization_ of the memory resource
       representing the object.
 
+#### Remarks - Relevance With Regards to External Objects
+
+* It may be assumed --  if only for purpose of convenience -- that any
+  implementation-specific procedures for object allocation and object
+  initialization -- as for purposes of object access within Common Lisp
+  programs -- may be handled in a manner by-in-large opaque to the
+  program.
+
+* For any object initialized in a manner principally external to the
+  Common Lisp implementation environment -- such as in any applications
+  of external bytecode libraries, onto any foreign functions interface,
+  such as may be available in a Common Lisp implementation -- the
+  concerns of object allocation and object initialization may need to be
+  addressed directly by the program.
+
+* Furthermore, while it may be assumed that any Common Lisp
+  implementation may provide a system for determining when a "Lisp
+  Object," broadly, is unreferenced and may be deallocated within
+  garbage collection, and while this system may typically operate in a
+  manner generally opaque to Common Lisp applications,  but such
+  concerns may may need to be addressed directly by the program, for any
+  program operating onto external bytecode libraries within a software
+  host environment.
+
+* **Ed. NB:** In a regard, the _convenience_ of such generally opaque
+  procedures for memory allocation, object initialization, object
+  reference counting and garbage collection may not seem _as convenient_,
+  when those procedures must be addressed for interoperation with other
+  programming systems. In any regard, such procedures must be addressed
+  in an implementation-specific manner.
+
+* This section of the article endeavors to address concerns with regards
+  to _allocation and object initialization for purposes of program
+  access_. This does not address any concerns with regards to
+  initialization for applications, whether within or external to a
+  Common Lisp implementation environment.
+
+
+
+### Initialization of Storage Objects for Common Lisp Applications
 
 * An _object_ may not, in all instances, be assumed to have been fully
-  initialized from the perspective of a software program, even if fully
-  initialized from the perspective of memory allocation for storage of
-  the object, in the implementation.
+  initialized from the perspective of a software application, even if
+  fully initialized from the perspective of memory allocation for
+  storage, in an implementation.
 
     * Usage Case: `MAKE-ARRAY`, in which the `:INITIAL-CONTENTS`
       keyword parameter provides a manner of access towards
@@ -41,7 +95,9 @@ Storage Definitions - Lisp Tools Project, Thinkum Labs
 
     * Usage Case: `CONS`, in which the `CAR` and the `CDR` of each _cons
       cell_ may be initialized directly in the call to `CONS` -- however
-      the resulting `CONS` object may be subsequently applied.
+      the resulting `CONS` object may subsequently be applied, whether
+      in effect applied as a generally read-only storage or
+      destructively modified in any subsequent procedure.
 
     * Usage Case: `MAKE-HASH-TABLE`, in which the generally _program-visible_
       storage of the object -- a _hash table_ -- has been **initialized
@@ -50,6 +106,20 @@ Storage Definitions - Lisp Tools Project, Thinkum Labs
       subsequently **initialized for purpose of application**, by any
       portable or other approach, within the program.
 
+#### Remarks - Towards Application Support
+
+* An application may provide -- from the perspective of an application
+  user -- any principally opaque method for initializing any storage
+  objects, such that may be accessed by the application.
+
+* For purposes of application development onto arbitrary data storage
+  methodologies, such that may be assumed to entail at least a _local
+  storage_ if not furthermore a complimentary _external storage_ for
+  program objects, an application system may endeavor to provide some
+  general development support.
+
+
+### Static Allocation and Access in Common Lisp Programs
 
 * Common Lisp -- in the pedagogic CLtL2/ANSI CL -- provides a limited
   support for portable _static allocation_ of objects.
@@ -66,9 +136,9 @@ Storage Definitions - Lisp Tools Project, Thinkum Labs
 
     * A Generally "Special Allocation" may be used by an implementation,
       for some objects declared `DYNAMIC-EXTENT`. This may or may not
-      entail a static allocation, in the closure for the binding
-      declared _dynamic extent_, such as  _vis a vis_ implementation for
-      _stack space_ access. See also, SBCL; `alloca(3)` [BSD]
+      entail a static, ephemeral allocation, in the closure for the
+      binding declared _dynamic extent_, such as  _vis a vis_
+      implementation _stack space_ access. See also, SBCL; `alloca(3)`[BSD]
 
     * An implementation may, at times, detect and emit an _error
       condition_ when constant data is accessed with a "write"
@@ -91,7 +161,7 @@ Storage Definitions - Lisp Tools Project, Thinkum Labs
       within any platform-specific limitations, for call-specific forms
       produced by a C compiler.
 
-**Concerning Static Methods of Object Access**
+#### Remarks - Concerning Static Methods of Object Access
 
 Regardless of how an _object_ is allocated within a program's memory
 space, there may be circumstances in which the _object_ can be accessed
@@ -99,6 +169,21 @@ in principally a static manner of access -- furthermore, in a manner
 localized to the object itself, rather than _per se_ generalized to the
 class of the object.
 
+#### Remarks - Towards Analogy for Other Software Programming Systems
+
+One might observe some general analogies towards software programming
+systems other than those implemented in Common Lisp, such as with
+regards to:
+
+* Storage and access for static data, in bytecode files and in procedural
+  runtime environments
+
+* Storage and reference for generally symbolic binding information
+
+* Storage and access for objects representing functional operations
+
+
+### Concurrent Access to Objects and Generalized Bindings
 
 * **Concerning Concurrency**
 
@@ -128,7 +213,12 @@ class of the object.
 
         * [...]
 
-----
+#### Remarks - Concurrent Access for Objects and Bindings
+
+**Ed. NB:** Clearly, this topic needs further development.
+
+
+### Portability for Interactive and Non-Interactive Applications
 
 Common Lisp, in a manner as may be considered unique among other systems
 programming languages, provides a broad manner of support for usage
@@ -254,5 +344,7 @@ article.
  -->
 <!--  LocalWords:  Accessors FUNCALL DEFSIGNATURE DEFIMPLEMENTATION
  -->
-<!--  LocalWords:  Deallocated deallocated deallocation
+<!--  LocalWords:  Deallocated deallocated deallocation STOR SBCL
+ -->
+<!--  LocalWords:  unreferenced interoperation runtime
  -->
