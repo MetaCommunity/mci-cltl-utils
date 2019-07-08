@@ -441,8 +441,11 @@ article.
 
 ### `DEFCLASS` like `DEFSTRUCT` - Some General Considerations
 
-**Ed. NB:** Juxtaposed to any discussions, per se, about _`DEFSTRUCT`
-like `DEFCLASS`_, cf. proceedings of X3J13.
+**Ed. NB:** Juxtaposed to any discussions, _per se_, in proceedings of
+X3J13, the following discussion endeavors to develop an analogy to
+`DEFSTRUCT` for application in Common Lisp `STANDARD-CLASS` definitions
+such that may be, _per se_ accessed via MOP.
+
 
 #### Remarks - On Reviewing `CL:DEFSTRUCT`
 
@@ -497,7 +500,10 @@ characteristics of any one Common Lisp implementation.
 
 ### Generalized Binding State for Slot Definitions - Accessors
 
-A naive model, with some description:
+A naive model, with some description, towards a portable methodology
+generally analogous to _read only_ slot values for _standard objects_,
+however in analogy to definitions of _structure objects_ with
+`CL:DEFSTRUCT`
 
 * `SLOT-VALUE-READABLE-P` (NB: May be removed subsequently, if
   equivalent functionality is available via `SLOT-BOUNDP` and
