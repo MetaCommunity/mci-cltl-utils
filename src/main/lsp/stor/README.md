@@ -11,11 +11,17 @@ manner, below.
 
 * Memory Allocation and Object Initialization in Common Lisp Programs
 * Initialization of Storage Objects for Common Lisp Applications
-* Static Allocation and Access in Common Lisp Programs
+* Static Allocation and Static Access in Common Lisp Programs
 * Concurrent Access to Objects and Generalized Bindings
 * Portability for Interactive and Non-Interactive Applications
+* Class Specialization for Selection of Slot Definition Class, Given
+  Multiple Available Slot Definition Protocols (**TBD**) - Procedures
+  for Direct Slot Definitions and Effective Slot Definitions, onto MOP;
+  Inheritance and shadowing for slot values, at initialization, across
+  class superclass relations; Naming, Definition, Selection, and
+  Inheritance for Slot Definition Protocols
 
-
+----
 
 ### Memory Allocation and Object Initialization in Common Lisp Programs
 
@@ -36,7 +42,7 @@ manner, below.
       during _allocation_ and _initialization_ of the memory resource
       representing the object.
 
-#### Remarks - Relevance With Regards to External Objects
+#### Remarks - Concerning Relevance With Regards to External Objects
 
 * It may be assumed --  if only for purpose of convenience -- that any
   implementation-specific procedures for object allocation and object
@@ -75,7 +81,7 @@ manner, below.
   _within_ or _external to_ a Common Lisp implementation environment.
 
 
-**Ed. NB: Towards Some Formalism - Program and Application**
+#### Remarks - Towards Some Formalism - Program and Application
 
 This article, in a manner, develops a concept of a general dichotomy of
 _program_ and _application_. In the sense as developed here, a _program_
@@ -90,6 +96,80 @@ In this sense, a _program_ may serve to provide support for an
 _application_, while an _application_ would represent the principally
 "User-Visible" features of a software system.
 
+#### Remarks - Strongly Typed Implementations and Portable Programs
+
+The Common Lisp programming language may be considered as supporting a
+manner of general _weak typing_ in program definition. Regardless, the
+Common Lisp language provides a comprehensive type system for
+representation of scalar values, sequences, structured objects, and some
+_control flow_ forms (e.g Restarts, Conditions, Tags, and Blocks) in
+Common Lisp programs.
+
+In a compiled Common Lisp program, regardless of any _weak typing_ in
+the definition of the program's source form, the Common Lisp
+implementation may be assumed to provide - in many regards - a _strongly
+typed_ implementation of the compiled program.
+
+In some implementations, such as CMUCL, the _strongly typed
+implementation_ may be accompanied moreover with a comprehensive system
+for _type inference_ and _call-form optimization_ in the compiled
+program, however complimentary to any _bytecode encoding_ of the
+compiled program, _vis a vis_ implementation "FASL Files".
+
+**Aside: Concerning Reuse of Compiled "FASL Files" Forms of a Program**
+Although the "FASL files" of a _compiled program_ may not be assumed to
+be -- _per se_ -- _as portable as_ the program's source form, but --
+assuming some limitations in an application of the Common Lisp language,
+_per se_, and assuming any formal system for software accession, per
+formal terms of software licensing restrictions, institutionally -- the
+compiled "FASL files" form of a Common Lisp program _may be_ reusable in
+_equivalent implementations_.
+
+Towards interoperability with other programming systems, assuming a
+general workflow for Common Lisp programming: Although such a workflow
+may not seem to resemble -- in too many formal regards -- a general
+workflow for programming with any other high-level language, yet some
+general analogies may be developed towards applications of other
+high-level languages, in juxtaposition to Common Lisp -- such as with
+regards to:
+- general _data flow_ for compilation, in producing any interpreted or
+  compiled forms of a single _source form_
+- strong typing in the compiled implementation of a software program,
+  whether the type of a value is arrived at through type inference or
+  user-declared type information, or both
+- even as with regards to structures of _call forms_, in declarative
+  _source forms_ and compiled _instruction forms_ of a program,
+  singularly and in juxtaposition to any other programming languages.
+
+Notwithstanding any _per se_ convenience of a _weakly typed_
+programming style, in Common Lisp, but -- for some purposes of portable
+application development with Common Lisp -- any number of _implementation
+concerns_ -- such as may be reasonably entailed with definitions of an
+object's _type_ -- may be considered to be quite program-visible. This
+may be assumed to be _particularly so_,  in any programs interacting
+with environments principally external to the programming environment
+provided of any single Common Lisp implementation.
+
+Insofar as that the Common Lisp programming language may be considered to
+represent a generalized, vendor-neutral Lisp programming language, the
+Common Lisp programming language may be applied -- similarly -- as in
+definitions of portable programs, for any one or more Common Lisp
+implementation. Insofar as that any single Common Lisp implementation
+may provide, moreover, an interface for any implementation-specific
+procedures that may be handled whatsoever _opaquely_, in the
+implementation, any single Common Lisp application may endeavor to
+support these implementation-specific features -- even insofar as with
+regards to procedures for programmed reflection and inference onto the
+implementation of the Common Lisp type system, if not expressly as with
+regards to procedures for object allocation, initialization, storage,
+reference counting, and deallocation -- in a portable manner.
+
+**Ed. NB:** In a manner of phrasing, this may be the considered to
+entail an approach of _programming without vendor-provided bubble-wrap._
+As such, clearly, all licensing terms should be assumed to apply, as
+with regards to indemnification and furthermore.
+
+----
 
 ### Initialization of Storage Objects for Common Lisp Applications
 
@@ -134,6 +214,7 @@ _application_, while an _application_ would represent the principally
   program objects, an application system may endeavor to provide some
   general development support.
 
+----
 
 ### Static Allocation and Access in Common Lisp Programs
 
@@ -198,6 +279,7 @@ regards to:
 
 * Storage and access for objects representing functional operations
 
+----
 
 ### Concurrent Access to Objects and Generalized Bindings
 
@@ -233,6 +315,7 @@ regards to:
 
 **Ed. NB:** Clearly, this topic needs further development.
 
+----
 
 ### Portability for Interactive and Non-Interactive Applications
 
@@ -307,7 +390,7 @@ Generalized Descriptions of _Storage State_ in Object Storage:
 * Declared for Purpose of Programmed Analysis
 * Initialized for Purpose of Availability
 * Initialized for Purpose of Application
-* Deallocated
+* Deallocated for Purposes of Availability or Application
 
 These terms are approximately described in the previous text of this
 article.
@@ -352,17 +435,200 @@ article.
   be initialized with a procedure generalized to the class of the
   object.
 
+----
+
+## Additional Remarks
+
+### `DEFCLASS` like `DEFSTRUCT` - Some General Considerations
+
+**Ed. NB:** Juxtaposed to any discussions, per se, about _`DEFSTRUCT`
+like `DEFCLASS`_, cf. proceedings of X3J13.
+
+#### Remarks - On Reviewing `CL:DEFSTRUCT`
+
+The original Common Lisp `DEFSTRUCT` provides, in a manner of a _macro
+call form_, a methodology for definition of arbitrary _structured
+objects_ in Common Lisp programs.
+
+Consequent of the evaluation of a `CL:DEFSTRUCT` macro call form, the
+definition of each such _structured object_ may be assumed to be
+accompanied -- in effect -- with a number of complimentary _functional
+definitions_, each closed onto a single definition of each such
+_structured object_.
+
+* **Constructor Definition** (Optional; Lambda List Syntax, in effect,
+  constrained onto Structure Slot Names)
+* **Accessor Definition** (For all slots, whether defined directly in a
+  single structure class, or inherited from a single structure superclass)
+* **Type Predicate Definition** (Juxtaposed to implementation-specific
+  support for _type system_ reflection, in compiled programs)
+* Intrinsically, _Slot Initform Definition_, in the definition of each
+  _structure class_ itself.
+
+**Ed. NB:** Corresponding with these functional definitions: FTYPE
+declarations as - in some regards - effectively constant ...although an
+FTYPE declaration may be modified at runtime, in Common Lisp,
+theoretically for any function (however an FTYPE declaration for may be
+ephemerally guarded for "Locked Packages," in some implementations
+... "This language," by in large, lacking any comprehensive,
+standardized access controls in programs.)
+
+Furthermore, `DEFSTRUCT` provides a particular _feature_ for definition
+of structure slots, such that may not be available elsewhere in the
+primary language definition of Common Lisp. Specifically, there is the
+`:READ-ONLY` initialization argument for structure slot definitions.
+
+
+#### Synopsis - `DEFCLASS` like `DEFSTRUCT`
+
+Concerning the functional forms -- for purposes of modularity and
+generally, convenience in program definitions -- and considering the
+singular `:READ-ONLY` initialization argument for structure slot
+definitions, it may be useful to define a framework for providing
+something functionally analogous to `DEFCLASS` but with a semantics
+generally similar to `DEFSTRUCT`, in an implementation.
+
+Insofar as that such an implementation may developed, in a manner,
+portable onto Common Lisp Object System (CLOS) implementations per AMOP
+-- _vis a vis_ PCL, e.g --the general `DEFCLASS` like `DEFSTRUCT`
+implementation may need not be defined to be singularly dependent on the
+characteristics of any one Common Lisp implementation.
+
+
+### Generalized Binding State for Slot Definitions - Accessors
+
+A naive model, with some description:
+
+* `SLOT-VALUE-READABLE-P` (NB: May be removed subsequently, if
+  equivalent functionality is available via `SLOT-BOUNDP` and
+  `SLOT-BOUNDP-USING-CLASS`)
+
+* `SLOT-VALUE-WRITABLE-P`
+* `SLOT-VALUE-BINDABLE-P`
+* `SLOT-VALUE-UNBINDABLE-P`
+
+**Ed. NB:** Those may be implemented as to operate on the existing
+binding state of an object and on the slot definition metaobject
+representing the accessed slot, in the object's class -- rather than,
+_per se_, defined as accessors onto the slot definition metaobject, in
+itself.
+
+For application onto slot definitions, as though trivially, a similar
+set of accessors may be defined:
+
+* `SLOT-DEFINED-READABLE-P` (NB: May be removed, subsequently)
+* `SLOT-DEFINED-WRITABLE-P`
+* `SLOT-DEFINED-BINDABLE-P`
+* `SLOT-DEFINED-UNBINDABLE-P`
+
+Towards a syntax, e.g for direct slot definitions:
+
+> `:write (:bind :unbind :update)`
+
+... in effect, towards a manner of "Equivalent Functionality" onto CLOS
+
+
+> `:write (:bind :unbind)`
+
+... in effect, not permitting change to any slot's binding, without
+initial unbinding of the slot. **Ed. NB:** This may serve to illustrate
+the meaning of the `:bind` `:unbind` specifiers, though it may not, in
+itself, be very useful for applications.
+
+
+> `:write (:bind)`
+
+... in effect, not permitting any change to a bound slot's binding,
+anywhere within this normal functional protocol. **Ed. NB:** See
+precautions, denoted below.
+
+> `:write (:unbind)`
+
+... in effect. unusable, as it may be interpreted as not permitting
+a slot to be initially bound.
+
+
+Alternately, the implementation may support two slot definition
+initialization arguments, for direct slot definitions:
+* `:unbind-p`
+* `:write-p`
+
+**If assuming that any unbound slot can always be bound for purposes
+of slot value storage,** the "Previous binding state" of a slot may need
+not be accessed, in any such implementation. Furthermore, those two
+initialization arguments may then be sufficient for specifying the
+controls on a slot's binding state, in a manner generally analogous to
+the `DEFSTRUCT` slot option, `:READ-ONLY`
+
+Yet another alternate syntax might be considered, in which "Read" access
+must be explicitly declared for a slot's value. Such a syntax might be
+considered as representing a complete syntax onto possible slot-value
+access procedures. However, considering the following, it may not
+serve to provide a completely usable syntax.
+
+> `:access (:read :bind :unbind)`
+> `:access (:read :bind)`
+> `:access (:read :unbind)`
+
+... each of these being, in effect, interpreted in a manner similar to
+each analogous expression in the `:write` syntax, described above.
+
+> `:access (:bind)`
+
+... in effect unusable, as it may be interpreted as not permitting
+reading of a slot's bound value. Thus, this overall `:access` syntax may
+be considered as providing a limitation.
+
+**Ed. NB: The Non-Exclusive Nature of Portable Slot Access Controls Onto MOP**
+
+In any regard, the definition of MOP's `STANDARD-INSTANCE-ACCESS`
+function should be considered, for each implementation providing a
+normal implementation-specific _location_ syntax, correlated with that
+function as _per se_ usable for the function's second argument.  To this
+effect, the common utility of PCL may bear some further consideration,
+as towards portability in implementations having adopted PCL.
+
+Considering the availability of the function, `STANDARD-INSTANCE-ACCESS`,
+in implementations of MOP, it should not be assumed that a slot
+definition protocol providing any extensional limitations for slot value
+access -- in extension onto MOP, whatsoever portably -- may not be
+providing, in the same, an altogether _exclusive limitation_ for slot
+value access, within implementations.
+
+Theoretically, an application may be created as as to subvert some
+intermediate slot value access controls onto MOP, simply by calling that
+function, directly, for any -- in effect -- access-controlled
+slot. While this, in itself, may not require any odd register access or
+mangling for bytecode object forms, it should be considered as a
+potential exploit for any such informal slot access control methodology
+onto MOP.
+
+In a manner, it may be assumed, "The behaviors are undefined," if such
+limitations would not be denoted in the systems documentation, and
+furthermore addressed in applications.
+
+Any discussion of formalized "Trust" for information systems would be
+beyond the scope of this article.
+
+Any discussion of formal methodologies for data system access controls,
+within operating system environments and _userspace_ application
+environments, similarly, would be beyond the scope of this article.
+
 <!--  LocalWords:  Thinkum bitwise metaobject vis CDR CLtL DEFCONSTANT
  -->
 <!--  LocalWords:  constantp APIs alloca se bytecode determinancy CLOS
  -->
-<!--  LocalWords:  interprocess Deallocation syscalls ITERABLE ENUM
+<!--  LocalWords:  interprocess Deallocation syscalls ITERABLE ENUM PCL
  -->
-<!--  LocalWords:  Accessors FUNCALL DEFSIGNATURE DEFIMPLEMENTATION
+<!--  LocalWords:  Accessors FUNCALL DEFSIGNATURE DEFIMPLEMENTATION TBD
  -->
-<!--  LocalWords:  Deallocated deallocated deallocation STOR SBCL
+<!--  LocalWords:  Deallocated deallocated deallocation STOR SBCL CMUCL
  -->
 <!--  LocalWords:  unreferenced interoperation runtime interoperates
  -->
-<!--  LocalWords:  interoperate
+<!--  LocalWords:  interoperate FASL DEFCLASS DEFSTRUCT Accessor FTYPE
+ -->
+<!--  LocalWords:  superclass Initform modularity AMOP BINDABLE BOUNDP
+ -->
+<!--  LocalWords:  UNBINDABLE accessors MOP's portably userspace
  -->
