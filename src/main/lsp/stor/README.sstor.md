@@ -31,7 +31,7 @@
   implemented with an effective subtype of Common Lisp `SIMPLE-ARRAY`.
 
 * Provides API definitions and extensible protocol classes for static and
-  dynamic enum containers, interoperable with CLOS
+  dynamic enum containers, interoperable with CLOS (does not use DEFSTRUCT)
 
 * Approximately synonymous concepts: Object name; Object key; Object
   descriptor
