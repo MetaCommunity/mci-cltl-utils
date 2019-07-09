@@ -366,7 +366,7 @@ Lisp programming language. Some general considerations, as such:
 ### Prototype Systems
 
 * `ITERABLE-CLASS`, `ITERABLE-OBJECT`; `MAP-ITERABLE` Accessors
-    * `ltp-main:src/main/lsp/iter/iter.lisp`
+    * `ltp-main:src/main/lsp/stor/iter.lisp`
 
 * `ENUM`, `DYNAMIC-ENUM`, `STATIC-ENUM`; `ENUM-MEMBERS` Accessors
     * `ltp-main:src/main/lsp/mop/enum/enum.lisp`
