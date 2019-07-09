@@ -24,11 +24,11 @@
 
 ### Enum Objects - Notes
 
-* Juxtaposed to some hash table implementations, this implementation
-  utilizes a single storage vector for each enumeration (enum)
-  container. In some further details, the storage vector may be
-  implemented as a Common Lisp adjustable array, in a fairly simple
-  methodology for local object storage.
+* This implementation utilizes a single storage vector for each
+  enumeration (enum) container. For applications in dynamic storage, the
+  storage vector may be implemented as a Common Lisp adjustable
+  array. For applications in static storage, the storage vector may be
+  implemented with an effective subtype of Common Lisp `SIMPLE-ARRAY`.
 
 * Provides API definitions and extensible protocol classes for static and
   dynamic enum containers, interoperable with CLOS
