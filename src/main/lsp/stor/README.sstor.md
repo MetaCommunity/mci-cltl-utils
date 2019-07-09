@@ -195,10 +195,7 @@
 
 <!-- LocalWords: APIs ASN CGIF CLIF CLOS DOM enum LTP MOF Metaclass OCL -->
 <!-- LocalWords: OMG Simula TBD UML XMI enum interoperable interoperate -->
-<!-- LocalWords: modl namespace sstor --> RDF Redland librdf rasqal CRM
-<!--  LocalWords:  libxml Knowledgebase deallocation RUNTIME Runtime
- -->
-<!--  LocalWords:  Embeddded ODBC filesystem knowledgebases Hyperref
- -->
-<!--  LocalWords:  BibTeX FRBR CIDOC Zotero KRB INET sqlite vis DEVO
- -->
+<!-- LocalWords: modl namespace sstor RDF Redland librdf rasqal CRM -->
+<!-- LocalWords:  libxml Knowledgebase deallocation RUNTIME Runtime -->
+<!-- LocalWords:  Embeddded ODBC filesystem knowledgebases Hyperref -->
+<!-- LocalWords:  BibTeX FRBR CIDOC Zotero KRB INET sqlite vis DEVO -->
