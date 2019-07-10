@@ -1,4 +1,4 @@
-;; ltp-sstor-fder.asd - Function Definitions after DEFSTRUCT          -*-lisp-*-
+;; ltp-sbase-class-fdef.asd - Function Definitions after DEFSTRUCT    -*-lisp-*-
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2019 Sean Champ and others. All rights reserved.
@@ -22,14 +22,14 @@
 (in-package #:ltp-common-system)
 
 
-(defsystem #:ltp-stor-fdef
+(defsystem #:ltp-base-class-fdef
   :license "spdx:EPL-1.0"
 
   :depends-on (#:ltp-common-mop
                #:ltp-common)
 
   :components
-  (:file "fdef-packge")
+  (:file "fdef-package")
   (:file "fdef-acc"
-         :depends-on ("fdef-packge"))
+         :depends-on ("fdef-package"))
   )

@@ -1,4 +1,4 @@
-;; fdef-acc.lisp - Accessor Fundtion Definition for ltp-stor-fdef system
+;; fdef-acc.lisp - Accessor Fundtion Definition for ltp-base-class-fdef system
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2019 Sean Champ and others. All rights reserved.
@@ -94,7 +94,7 @@
 ;; of a class' defintion as other than a forward-referenced class.
 ;;
 ;; Some extensions onto STANDARD-CLASS moreover may be defined as to
-;; require that a class will not be redefined once it is finalizeed.
+;; require that a class will not be redefined once it is finalized.
 ;;
 ;; In such extensions, ENSURE-CLASS-FINALIZED may be -- in effect --
 ;; redundant.

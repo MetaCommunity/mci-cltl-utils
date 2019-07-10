@@ -1,4 +1,4 @@
-; fdef-packge.lisp - Package Definition for ltp-stor-fdef system
+;; fdef-package.lisp - Package Definition for ltp-stor-fdef system
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2019 Sean Champ and others. All rights reserved.
