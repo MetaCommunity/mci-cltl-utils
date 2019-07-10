@@ -1,4 +1,4 @@
-;; fdef-acc.lisp - Accessor Fundtion Definition for ltp-base-class-fdef system
+;; acc-gen.lisp - Accessor Function Definition for ltp-base-class-fdef system
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2019 Sean Champ and others. All rights reserved.

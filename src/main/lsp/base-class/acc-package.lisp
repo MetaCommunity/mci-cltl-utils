@@ -1,4 +1,4 @@
-;; fdef-package.lisp - Package Definition for ltp-stor-fdef system
+;; acc-package.lisp - Package Definition for ltp-base-class-acc system
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2019 Sean Champ and others. All rights reserved.

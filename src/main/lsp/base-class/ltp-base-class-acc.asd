@@ -22,14 +22,14 @@
 (in-package #:ltp-common-system)
 
 
-(defsystem #:ltp-base-class-fdef
+(defsystem #:ltp-base-class-acc
   :license "spdx:EPL-1.0"
 
   :depends-on (#:ltp-common-mop
                #:ltp-common)
 
   :components
-  (:file "fdef-package")
-  (:file "fdef-acc"
-         :depends-on ("fdef-package"))
+  (:file "acc-package")
+  (:file "acc-gen"
+         :depends-on ("acc-package"))
   )
