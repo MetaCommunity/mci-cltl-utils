@@ -14,7 +14,7 @@
 (in-package #:cl-user)
 
 (defpackage #:ltp/base-class/accessor
-  (:nicknames #:ltp.stor.fdef)
+  (:nicknames #:ltp.base-class.accessor)
   (:use #:ltp/common/mop #:ltp/common #:cl)
   (:export
    ))
