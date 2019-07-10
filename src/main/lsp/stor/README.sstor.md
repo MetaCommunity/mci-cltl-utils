@@ -99,8 +99,44 @@
           application, in a manner principally extensional to any
           program-level initialization for storage objects.
 
+            * Syntax:
+
+                * INITIALIZE-STORAGE DATUM STORAGE => STORAGE
+
+                * ENSURE-STORAGE DATUM STORAGE => STORAGE, ACTION-P
+
+                * STORAGE: The storage object, whether or not
+                  initialized
+
+                * ACTION-P: A boolean value, true if the storage object
+                  was initialized in this procedure
+
+            * Remarks
+
+                * ENSURE-STORAGE must check whether or not the storage
+                  object is already initialized.
+
+                * If the storage object is already initialized and DATUM
+                  is non-nil, ENSURE-STORAGE may produce a warning
+                  indicating that the provided DATUM is ignored.
+
+                * INITIALIZE-STORAGE may or may not check whether the
+                  storage object is already initialized. This behavior
+                  should be specified unambiguously, in applications.
+
+                * INITIALIZE-STORAGE may or may not produce an error if
+                  the storage object is already initialized. If
+                  producing an error, the condition type of the error
+                  should be specified unambiguously, in applications.
+
         * CLOSE-STORAGE - Generalized functional protocol for management
           of _reference deallocation_ in storage objects.
+
+            * Remarks
+
+                * If the storage object is already _closed_ for purposes
+                  of application, CLOSE-STORAGE may produce a warning
+                  indicating that the storage object is already closed.
 
     * Protocol Class Definitions may include:
 
