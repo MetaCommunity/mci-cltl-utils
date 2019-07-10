@@ -190,8 +190,168 @@
   )
 
 
-(defgeneric write-accessor-for (slot class stream)
-  )
+;; ----
+;;
+;; Generalized unparser functions
+;;
+
+(declaim (inline princ-symbol
+                 princ-space))
+
+(defun* princ-symbol (s stream &optional pkg-p)
+  ;; NB: If S is a string, it's assumed that any character in S such
+  ;; that may be "Special" for a symbol name will have already been
+  ;; escaped by the calling procedure.
+  ;;
+  ;; NB: This function will not perform any name mangling, vis a vis
+  ;; character case.
+  ;;
+  ;; NB: When PKG-P
+  ;;  - This function will not access any packgage nicknames
+  ;;  - This function will not assume that any symbol is exported
+  ;;
+  (declare (type (or symbol string) s) (type stream stream)
+           (values stream &optional))
+  (macrolet ((the-string (expr)
+               (with-symbols (%expr)
+                 `(let ((,%expr ,expr))
+                    (etypecase ,%expr
+                      (symbol (symbol-name ,%expr))
+                      (string ,%expr)))))
+             (the-pkg-string (expr)
+               (with-symbols (%expr)
+                 `(let ((,%expr ,expr))
+                    (etypecase ,%expr
+                      (symbol (package-name (symbol-package ,%expr)))
+                      (t (package-name *package*)))))))
+    (when  pkg-p
+      (princ (the-pkg-string s) stream)
+      (write-char #\: stream) (write-char #\: stream))
+    (princ (the-string s) stream)
+    (values stream)))
+
+;; (with-output-to-string (s) (princ-symbol 'frob s))
+;; => "FROB"
+
+;; (with-output-to-string (s) (princ-symbol 'lambda s t))
+;; => "COMMON-LISP::LAMBDA"
+
+
+(defun* princ-space (stream)
+  (declare (type stream stream)
+           (values stream &optional))
+  (write-char #\Space stream)
+  (values stream))
+
+;; ----
+
+;; FIXME - the name element, "Accessor," while it may be suitable in a
+;; generalized regard, is too generic for denoting one of either a slot
+;; value writer or slot value reader.
+
+(defgeneric compute-reader-name (slot class)
+  (:method ((slot standard-effective-slot-definition)
+            (class standard-class))
+    ;; Default method e.g for any class for which it would not be
+    ;; assumed that any analogy to a DEFSTRUCT :CONC-NAME would be
+    ;; available.
+    (let ((sl-name (slot-definition-name slot))
+          (typ-name (class-name class)))
+      (concatenate 'simple-string (symbol-name typ-name)
+                   "-" (symbol-name sl-name)))))
+
+
+(defgeneric compute-reader-function-type (slot class)
+  (:method ((slot standard-effective-slot-definition)
+            (class standard-class))
+    `(function (,(class-name class))
+               (values ,(slot-definition-type slot) &optional))))
+
+
+(defgeneric compute-reader-lambda (slot class)
+  #+SBCL
+  (:method ((slot standard-effective-slot-definition)
+            (class standard-class))
+    (let ((typname (class-name class)))
+      (with-symbols (cls obj)
+        `(lambda (,obj)
+           (declare (type ,typname ,obj))
+           ;; FIXME: standard objects typically cannot be printed readably.
+           (let ((,cls ,class
+                   #+NIL (load-time-value (find-class (quote ,typname))
+                                          t)))
+             (declare (dynamic-extent ,cls))
+             (cond
+               ((eq (class-of ,obj) ,cls)
+                (standard-instance-access ,obj ,FIXME-TBD))
+               (t
+                (slot-value-using-class ,cls ,obj ,slot)))))))))
+
+
+(defgeneric compute-reader-documentation (slot class)
+  (:method ((slot standard-effective-slot-definition)
+            (class standard-class))
+    (format nil
+            "Machine-Generated Reader for the ~A slot value of an ~A object"
+            (slot-definition-name slot)
+            (class-name class))))
+
+
+(defgeneric print-reader-for (slot class stream)
+  ;; NB - This protocol needs to dispatch for each slot value writer
+  ;; and slot value reader, by default - without preventing that any
+  ;; extending class may specify that a slot value writer would not be
+  ;; written, or - per se - that any accessors would be "Skipped" for
+  ;; any single slot in a single, defined class.
+  ;;
+  ;; NB: If an effective method - in effect - "Skips" a slot definition,
+  ;; the effective method should return NIL. Otherwise, the effective
+  ;; method should return a stream.
+  (:method ((slot standard-effective-slot-definition)
+            (class standard-class)
+            (stream stream))
+    (let ((name (compute-reader-name slot class))
+          ;; TBD: Lambda-Printer protocol
+          (lform (compute-reader-lambda slot class))
+          (docstr (compute-reader-documentation slot class)))
+
+      ;; NB: This function does not, at present, perform any "Pretty
+      ;; Printed" indenting for printed source forms
+
+      ;; write ftype decl
+      (write-char #\( stream)
+      (princ-symbol (quote declaim) stream t)
+      (princ-space stream)
+      (write-char #\( stream)
+      (princ-symbol (quote 'ftype) stream t)
+      (princ-space stream)
+      (print (compute-reader-function-type slot class) stream)
+      (princ-symbol name stream t)
+      (write-char #\) stream)
+      (write-char #\) stream)
+      (terpri stream)
+      (terpri stream)
+
+      ;; write defun expr
+      (write-char #\( stream)
+      (princ-symbol (quote defun) stream t)
+      (princ-space stream)
+      (princ-symbol name stream t)
+      (princ-space stream)
+      ;;
+      (destructuring-bind (lsym args &body lform-body) lform
+        (declare (ignore lsym))
+        (print args stream)
+        (when docstr (print docstr stream))
+        (dolist (expr lform-body)
+          (print expr stream)))
+      ;;
+      (write-char #\) stream)
+
+      ;; NB: The method should call something like TERPRI itself,
+      ;; thus in something of an analogy to PRINT
+      (terpri stream)
+      )))
 
 (defun* write-accessors (class stream)
   (declare (type class-designator class)
@@ -229,7 +389,10 @@
 
     (dolist (sl (class-slots %class))
       (declare (type effective-slot-definition sl))
-      (write-accessor-for sl class stream))
+      (when (print-reader-for sl class stream)
+        (terpri stream))
+      (when (print-writer-for sl class stream)
+        (terpri stream)))
 
      ;; (write-char #\) stream)
      ;; (terpri stream)
