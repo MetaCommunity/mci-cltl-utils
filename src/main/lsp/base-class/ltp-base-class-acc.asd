@@ -29,7 +29,7 @@
                #:ltp-common)
 
   :components
-  (:file "acc-package")
-  (:file "acc-gen"
-         :depends-on ("acc-package"))
-  )
+  ((:file "acc-package")
+   (:file "acc-gen"
+          :depends-on ("acc-package"))
+   ))
