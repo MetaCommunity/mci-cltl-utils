@@ -17,5 +17,7 @@
   (:nicknames #:ltp.base-class.accessor)
   (:use #:ltp/common/mop #:ltp/common #:cl)
   (:export
+   #:write-accessors
+   #:write-accessors-for
    ))
 

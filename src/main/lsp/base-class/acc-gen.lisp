@@ -173,6 +173,7 @@
 
 |#
 
+#+TBD
 (defgeneric compute-accessor-ftype (slotdef class))
 
 #+TBD
@@ -189,9 +190,13 @@
   )
 
 
-(defun* define-accessors (class stream)
+(defgeneric write-accessor-for (slot class stream)
+  )
+
+(defun* write-accessors (class stream)
   (declare (type class-designator class)
-           (type stream-designator stream))
+           (type stream-designator stream)
+           (values stream &optional))
 
   ;; TBD: Folding DEFUN calls into method forms, rather than expanding
   ;; to DEFUN source forms within a macroexpansion
@@ -223,10 +228,10 @@
     ;; (princ 'progn stream)
 
     (dolist (sl (class-slots %class))
-      
-      )
+      (declare (type effective-slot-definition sl))
+      (write-accessor-for sl class stream))
 
      ;; (write-char #\) stream)
      ;; (terpri stream)
 
-    ))
+    (values %stream)))
