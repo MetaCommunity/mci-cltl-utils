@@ -158,12 +158,18 @@
         functionality, pursuant towards generalized support for a
         "DEFCLASS like DEFSTRUCT" semantics in definition of LTP
         BASE-CLASS class metaobjects. In a practical regard, forms using
-        the functions LTP/COMMON/MOP:FINALIZE-REACHABLE as within
+        the functions LTP/COMMON/MOP:FINALIZE-REACHABLE -- as within
         CHANGE-CLASS (FORWARD-REFERENCED-CLASS PROTOTYPE-CLASS) and in
-        SHARED-INITIAIZE :AFTER (SINGLETON T). The definition of
-        ALLOCATE-INSTANCE (SINGLETON) may also be reconsidered, during
-        such refactoring of the design of LTP/COMMON/SINGLETON:SINGLETON
-        and
+        SHARED-INITIAIZE :AFTER (SINGLETON T) -- may be considered for
+        subsequent update, after initial testing with regards to the
+        limitation of preventing redefinition of a finalized class for
+        any BASE-CLASS.
+
+        The definition of ALLOCATE-INSTANCE (SINGLETON) may also be
+        reconsidered, during such refactoring of the design of
+        LTP/COMMON/SINGLETON:SINGLETON and
+        LTP/COMMON/SINGLETON::PROTOTYPE-CLASS classes - both defined
+        under the LTP source system, `ltp-common-singleton`
 
 |#
 

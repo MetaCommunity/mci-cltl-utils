@@ -215,6 +215,9 @@ standard-class, in this implementation"))))
   ;; finalization, pursuant of reafctoring the definition of the classes
   ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
   ;;
+  ;; Refer to annotations, titled "Limitations on Design," in source file
+  ;; ltp-main:src/main/lsp/base-class/fdef-acc.lisp
+  ;;
   ;;;;
   ;;
   ;; Also ensure that the instance's superclasses, the instance itself,
@@ -300,10 +303,18 @@ standard-class, in this implementation"))))
 ;; -- Singleton Slot Definitions
 
 (defclass singleton-slot-definition (standard-slot-definition)
+  ;;;;
+  ;;
   ;; FIXME/TBD: Update design and implementation of
   ;; SINGLETON-SLOT-DEFINITION subclasses, pursuant of reafctoring the
   ;; definition of the classes SINGLETON and PROTOTYPE-CLASS onto LTP
   ;; BASE-CLASS
+  ;;
+  ;; Refer to annotations, titled "Limitations on Design," in source file
+  ;; ltp-main:src/main/lsp/base-class/fdef-acc.lisp
+  ;;
+  ;;;;
+
   ()
   (:default-initargs
    :allocation :class))
@@ -1191,6 +1202,9 @@ standard-class, in this implementation"))))
   ;; finalization, pursuant of reafctoring the definition of the classes
   ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
   ;;
+  ;; Refer to annotations, titled "Limitations on Design," in source file
+  ;; ltp-main:src/main/lsp/base-class/fdef-acc.lisp
+  ;;
   ;;;;
 
   (declare (ignore initargs))
@@ -1301,6 +1315,9 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
         ;; FIXME/TBD: Update design and implementation of SINGLETON class
         ;; finalization, pursuant of reafctoring the definition of the classes
         ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
+        ;;
+        ;; Refer to annotations, titled "Limitations on Design," in source file
+        ;; ltp-main:src/main/lsp/base-class/fdef-acc.lisp
         ;;
         ;;;;
 
@@ -1479,6 +1496,9 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
   ;; finalization, pursuant of reafctoring the definition of the classes
   ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
   ;;
+  ;; Refer to annotations, titled "Limitations on Design," in source file
+  ;; ltp-main:src/main/lsp/base-class/fdef-acc.lisp
+  ;;
   ;;;;
 
   (:method ((proto singleton) (use-metaclass standard-class)
@@ -1631,6 +1651,9 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
          ;; FIXME/TBD: Update design and implementation of SINGLETON class
          ;; finalization, pursuant of reafctoring the definition of the classes
          ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
+         ;;
+         ;; Refer to annotations, titled "Limitations on Design," in source file
+         ;; ltp-main:src/main/lsp/base-class/fdef-acc.lisp
          ;;
          ;;;;
 
