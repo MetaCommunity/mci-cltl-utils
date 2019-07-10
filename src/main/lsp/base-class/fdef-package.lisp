@@ -13,7 +13,7 @@
 
 (in-package #:cl-user)
 
-(defpackage #:ltp/stor/fdef
+(defpackage #:ltp/base-class/accessor
   (:nicknames #:ltp.stor.fdef)
   (:use #:ltp/common/mop #:ltp/common #:cl)
   (:export

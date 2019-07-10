@@ -11,7 +11,7 @@
 ;;
 ;;------------------------------------------------------------------------------
 
-(in-package #:ltp/stor/fdef)
+(in-package #:ltp/base-class/accessor)
 
 #+NIL
 (deftype subtype (name)
