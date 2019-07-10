@@ -23,7 +23,7 @@
 ;; These definitions are required for evaluation of the source forms, below
 ;;
 ;; These definitions may be available via the source system
-;; ltp-main:src/main/lsp/stor/ltp-stor-fdef.asd
+;; ltp-main:src/main/lsp/base-class/ltp-base-class-fdef.asd
 
 ;; --------------------
 

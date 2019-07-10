@@ -1,4 +1,4 @@
-;; ltp-sbase-class-fdef.asd - Function Definitions after DEFSTRUCT    -*-lisp-*-
+;; ltp-base-class-fdef.asd - Function Definitions after DEFSTRUCT     -*-lisp-*-
 ;;------------------------------------------------------------------------------
 ;;
 ;; Copyright (c) 2014-2019 Sean Champ and others. All rights reserved.
