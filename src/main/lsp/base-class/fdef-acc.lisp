@@ -192,6 +192,24 @@
 (defun define-direct-accessors (class)
   ;; TBD: Folding DEFUN calls into method forms, rather than expanding
   ;; to DEFUN source forms within a macroexpansion
+
+  ;; Topic: Applying functional forms within a macroexpansion, using
+  ;; MACROLET in the direct macroexpansion, such as to produce an
+  ;; effective macroexpansion derived per values returned by those
+  ;; functional forms.
+  ;;
+  ;; Alternate approach: Generating Common Lisp source files with
+  ;; functional procedures defined in Common Lisp source code - towards
+  ;; a methodology for definition and appliation of generalized source
+  ;; templates, in a manner after both CL:DEFMACRO and CL:DEFCLASS. NB:
+  ;; This approach may serve to permit for review of generalized
+  ;; "Template expansion" source files, without per se MACROEXPAND-1 or
+  ;; MACROEXPAND -- whether or not it may clearly serve to alleviate any
+  ;; concerns with regards to lexical bindings in the compiler
+  ;; environment and lexical bindings in the macroexpansion environment,
+  ;; as in applications of CL:DEFMACRO. This approach could perhaps be
+  ;; anyhow influenced with considerations after definitions in the SWIG
+  ;; system.
 )
 
 
