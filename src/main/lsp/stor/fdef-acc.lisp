@@ -77,9 +77,9 @@
                   :expecteted-type 'finalized-class
                   :datum %class)))
       (finalize ()
-        ;; ASSUMPTION: That this restart may be reached only as a result
-        ;; of the failed CLASS-FINALIZED-P condition, denoted above,
-        ;; rather than by any form resulting from CLASS-FINALIZED-P
+        ;; ASSUMPTION: That this restart will be invoked only as a
+        ;; result of the failed CLASS-FINALIZED-P condition, denoted
+        ;; above, rather than by any form resulting from CLASS-FINALIZED-P
         :report "Finalize Class"
         (finalize-inheritance %class)
         (values %class)))))
@@ -120,17 +120,5 @@
   ;; TBD: Folding DEFUN calls into method forms, rather than expanding
   ;; to DEFUN source forms within a macroexpansion
 )
-
-  (let ((class-at-now ;; FIXME
-         ))
-  (with-symbols (%class %%class)
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (let ((,%class (compute-class (quote ,class))))
-
-
-
-
-
-         )))))
 
 
