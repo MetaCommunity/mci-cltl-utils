@@ -209,6 +209,14 @@ standard-class, in this implementation"))))
       (setf (slot-value instance +direct-superclasses-slot+)
             dsup)))
 
+  ;;;;
+  ;;
+  ;; FIXME/TBD: Update design and implementation of SINGLETON class
+  ;; finalization, pursuant of reafctoring the definition of the classes
+  ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
+  ;;
+  ;;;;
+  ;;
   ;; Also ensure that the instance's superclasses, the instance itself,
   ;; and any non-forward-referenced subclasses are finalized
   (finalize-reachable instance nil))
@@ -292,6 +300,10 @@ standard-class, in this implementation"))))
 ;; -- Singleton Slot Definitions
 
 (defclass singleton-slot-definition (standard-slot-definition)
+  ;; FIXME/TBD: Update design and implementation of
+  ;; SINGLETON-SLOT-DEFINITION subclasses, pursuant of reafctoring the
+  ;; definition of the classes SINGLETON and PROTOTYPE-CLASS onto LTP
+  ;; BASE-CLASS
   ()
   (:default-initargs
    :allocation :class))
@@ -945,6 +957,7 @@ standard-class, in this implementation"))))
 ;; SINGLETON, but such that a direct superclass of that class is of
 ;; metatype SINGLETON
 
+#+NIL
 (eval-when ()
 
   ;; TO DO - TEST DEFSINGLETON w/ :default-intiargs, environment
@@ -1172,6 +1185,14 @@ standard-class, in this implementation"))))
 (defmethod change-class :after ((instance forward-referenced-class)
                                 (new prototype-class)
                                 &rest initargs &key &allow-other-keys)
+  ;;;;
+  ;;
+  ;; FIXME/TBD: Update design and implementation of SINGLETON class
+  ;; finalization, pursuant of reafctoring the definition of the classes
+  ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
+  ;;
+  ;;;;
+
   (declare (ignore initargs))
   (let* ((implc (and (slot-boundp instance 'implementation-class)
                      (prototype-implementation-class new)))
@@ -1275,6 +1296,14 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
                                                  :test #'eq)))
                         (setq initargs-updated t))))))
 
+        ;;;;
+        ;;
+        ;; FIXME/TBD: Update design and implementation of SINGLETON class
+        ;; finalization, pursuant of reafctoring the definition of the classes
+        ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
+        ;;
+        ;;;;
+
         (setq direct-superclasses (ensure-tgt-superclass))
 
         ;; NB: Not useful, if the updated value is being ignored
@@ -1286,6 +1315,7 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
 
 ;; )
 
+#+NIL
 (eval-when ()
 
   (defsingleton x-a ()
@@ -1443,6 +1473,14 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
 
 (defgeneric ensure-prototype-metaclass (proto use-metaclass for-class
                                         direct-superclasses)
+  ;;;;
+  ;;
+  ;; FIXME/TBD: Update design and implementation of SINGLETON class
+  ;; finalization, pursuant of reafctoring the definition of the classes
+  ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
+  ;;
+  ;;;;
+
   (:method ((proto singleton) (use-metaclass standard-class)
             (for-class standard-class) ;; may be #<SINGLETON>
             (direct-superclasses list))
@@ -1567,6 +1605,7 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
      ;; ^ NB: Prevent that this protocol would be, in effect, active for
      ;; definitions of SINGLETON classes outside of DEFSINGLETON and similar.
 
+
      ;; FIXME - Consider inheriting direct superclasses (filtered) from
      ;; the metaclass
 
@@ -1587,6 +1626,15 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
                (ensure-prototype-metaclass proto-spec metaclass class
                                            direct-supers)))
 
+         ;;;;
+         ;;
+         ;; FIXME/TBD: Update design and implementation of SINGLETON class
+         ;; finalization, pursuant of reafctoring the definition of the classes
+         ;; SINGLETON and PROTOTYPE-CLASS onto LTP BASE-CLASS (Metaclass)
+         ;;
+         ;;;;
+
+
          #+NIL
          (warn "ALLOCATE-INSTANCE ~s as instance of ~s" class proto-metaclass)
 
@@ -1596,6 +1644,8 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
            (apply #'allocate-instance proto-metaclass %initargs)))))
     (t (call-next-method))))
 
+
+#+NIL
 (eval-when ()
 
   (let ((s (find-class 'prototype-class)))
@@ -1611,6 +1661,7 @@ implementation class ~S for ~S~>~< during (CHANGE-CLASS ~S ~S)~>"
   ;; (class-of *the-s*)
 
   ;; (class-of (class-of *the-s*))
+
 
   ;; (class-direct-superclasses (class-of *the-s*))
 

@@ -105,7 +105,74 @@
 
 ;; ----------
 
+#|
+
+  # Remarks - Limitations on Design
+
+  ## Class Layouts and Slot Value Storage in PCL w/ Multiple Inheritance in CLOS
+
+  - Juxtapose to class layouts and slot value storage in pcl w/ single
+    inheritance onto CL:DEFSTRUCT
+
+  - Note also, multiple inheritance in CL:DEFINE-CONDITION
+
+  * In a practical regard, this may serve to denote a limitation
+    affecting definition of generally defstruct-like accessors onto
+    CLOS, if actuated singularly about direct slot definitions
+    extensionally in MOP.
+
+  * Theoretically, a program should not assume that the efective slot
+    definition S_E_1 -- by way of slot definition name -- corresponding
+    to a direct slot definition S_D_1 in a class C_1 will have the same
+    effective _layout location_ as an effective slot definition S_E_2
+    representing the slot described by S_D_1 but in a class C_2, for C_2
+    defined as a subclass of C_1.
+
+    To address this concern, In a practical regard, any accessor defined
+    after S_D_1, when applied to an instance of any class not eq to C_1,
+    may dispatch as to make an "Ordinary" call to the MOP function.
+    SLOT-VALUE-USING-CLASS (or any analogous metaobject accessor form,
+    e.g SETF form or SLOT-BOUNDP metaobject accessor form). While
+    perhaps convenient from a perspective of program design, this
+    approach may be believed to be non-optimal for access onto any slot
+    of any subclass of C_1. As such, the accessor may instead produce an
+    error of a subtype of TYPE-ERROR when provided an instance of any
+    class not EQ to the class C_1. (Note that this, in itself, does not
+    serve to provide any limitations towards accessor calls onto
+    dynamically redefined classes, while it may serve to address
+    limitations with regards to class slot layout in subclasses.)
+
+  * In order to address -- by way of an API limitation -- concerns for
+    slot location accessors, as entailed afyer dynamic redefinition of a
+    class, this source system may subsequently be defined with
+    limitation for applications onto BASE-CLASS, such that a BASE-CLASS
+    may be defined as to not permit class redefinition subsequent of
+    class finalization.
+
+      * NB: This may entail some updates to the LTP definition of the
+        class SINGLETON, pursuant of refactoring the definition of the
+        classes SINGLETON and PROTOTYPE-CLASS onto BASE-CLASS. In a
+        manner, moreover the LTP SINGLETON class definition may serve to
+        provide an initial usage case for QA about the design and
+        implementation of the slot location accessor subset of
+        functionality, pursuant towards generalized support for a
+        "DEFCLASS like DEFSTRUCT" semantics in definition of LTP
+        BASE-CLASS class metaobjects. In a practical regard, forms using
+        the functions LTP/COMMON/MOP:FINALIZE-REACHABLE as within
+        CHANGE-CLASS (FORWARD-REFERENCED-CLASS PROTOTYPE-CLASS) and in
+        SHARED-INITIAIZE :AFTER (SINGLETON T). The definition of
+        ALLOCATE-INSTANCE (SINGLETON) may also be reconsidered, during
+        such refactoring of the design of LTP/COMMON/SINGLETON:SINGLETON
+        and
+
+|#
+
 (defgeneric compute-accessor-ftype (slotdef class))
+
+#+TBD
+(defgeneric compute-accessor-lambda (slotdef class))
+;; ^ TBD Interop. w/ LAMBDA*, COMPUTE-ACCESSOR-FTYPE
+;; --> COMPUTE-ACCESSOR-DEFUM-EXPANSION
 
 #+TBD
 (defun* compute-direct-accessor-ftypes (class)
