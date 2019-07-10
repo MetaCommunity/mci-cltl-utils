@@ -55,7 +55,7 @@
              (type-error-datum c)))))
 
 
-(declaim (inline ensure-class-finalized-p))
+;; (declaim (inline ensure-class-finalized-p))
 
 (defun* ensure-class-finalized-p (class)
   ;; FIXME: Move this source definition and the corresponding type and
@@ -188,8 +188,11 @@
   (%ensure-class-finalized-p class)
   )
 
-#+TBD
-(defun define-direct-accessors (class)
+
+(defun* define-accessors (class stream)
+  (declare (type class-designator class)
+           (type stream-designator stream))
+
   ;; TBD: Folding DEFUN calls into method forms, rather than expanding
   ;; to DEFUN source forms within a macroexpansion
 
@@ -198,18 +201,32 @@
   ;; effective macroexpansion derived per values returned by those
   ;; functional forms.
   ;;
-  ;; Alternate approach: Generating Common Lisp source files with
-  ;; functional procedures defined in Common Lisp source code - towards
-  ;; a methodology for definition and appliation of generalized source
-  ;; templates, in a manner after both CL:DEFMACRO and CL:DEFCLASS. NB:
-  ;; This approach may serve to permit for review of generalized
-  ;; "Template expansion" source files, without per se MACROEXPAND-1 or
-  ;; MACROEXPAND -- whether or not it may clearly serve to alleviate any
-  ;; concerns with regards to lexical bindings in the compiler
-  ;; environment and lexical bindings in the macroexpansion environment,
-  ;; as in applications of CL:DEFMACRO. This approach could perhaps be
-  ;; anyhow influenced with considerations after definitions in the SWIG
-  ;; system.
-)
+  ;; Alternate approach: "Indirect Eval," by way of source file
+  ;; generation with functional procedures defined in Common Lisp source
+  ;; code - towards a methodology for definition and appliation of
+  ;; generalized source templates, in a manner after both CL:DEFMACRO
+  ;; and CL:DEFCLASS. NB: This approach may serve to permit for review
+  ;; of generalized "Template expansion" source files, without per se
+  ;; MACROEXPAND-1 or MACROEXPAND -- whether or not it may clearly serve
+  ;; to alleviate any concerns with regards to lexical bindings in the
+  ;; compiler environment and lexical bindings in the macroexpansion
+  ;; environment, as in applications of CL:DEFMACRO. This approach could
+  ;; perhaps be anyhow influenced with considerations after definitions
+  ;; in the SWIG system.
 
+  (let ((%class (ensure-class-finalized-p class))
+        (%stream (compute-output-stream stream)))
+    (declare (type class %class) (type stream %stream))
 
+    (terpri stream)
+    ;; (write-char #\( stream)
+    ;; (princ 'progn stream)
+
+    (dolist (sl (class-slots %class))
+      
+      )
+
+     ;; (write-char #\) stream)
+     ;; (terpri stream)
+
+    ))
