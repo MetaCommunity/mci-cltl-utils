@@ -408,22 +408,31 @@
   ;; NB: This function will not perform any name mangling, vis a vis
   ;; character case.
   ;;
-  ;; NB: When PKG-P
-  ;;  - This function will not access any packgage nicknames
-  ;;  - This function will not assume that any symbol is exported
+  ;; NB: This function - in effect, by way of PRIN1 - assumes that any
+  ;; symbol exported when this function is called will also be exported
+  ;; when the symbol name, as was printed to STREAM, is evaluated.
   ;;
   (declare (type symbol s) (type stream stream)
            (values stream &optional))
-    (let ((*package* (mk-lf (find-package '#:keyword))))
+    (let ((*package* (if pkg-p
+                         (mk-lf (find-package '#:keyword))
+                         *package*)))
       ;; FIXME/TBD: When no symbol package, write an #<N>=<SYMBOL> expr
       ;; and store the symbol for <N> within the current PRINT-ENVIRONMENT
-      (prin1 s stream)))
+      (prin1 s stream))
+    (values stream))
 
 ;; (with-output-to-string (s) (write-symbol 'frob s))
 ;; => "FROB"
 
 ;; (with-output-to-string (s) (write-symbol 'lambda s t))
-;; => "COMMON-LISP::LAMBDA"
+;; => "COMMON-LISP:LAMBDA"
+
+;; (with-output-to-string (s) (write-symbol ':keyword s t))
+;; => ":KEYWORD"
+
+;; (with-output-to-string (s) (write-symbol ':keyword s nil))
+;; => ":KEYWORD"
 
 
 (defun* write-space (stream)
@@ -444,14 +453,16 @@
   ;; - [...]
 
   (:method ((expr t) (stream symbol))
-    (write-reference-expression expr (compute-output-stream stream)))
+    (write-reference-expression expr (compute-output-stream stream))
+    (values stream))
 
   (:method ((expr t) (stream stream))
     (warn "~<WRITE-REFERENCE-EXPRESSION dispatching to use MAKE-LOAD-FORM~>~
 ~< - Objects of type ~S not yet supported by WRITE-REFERENCE-EXPRESSION:~>~
 ~< ~S~>"
      (class-of expr) expr)
-    (write-reference-expression (make-load-form expr) stream))
+    (write-reference-expression (make-load-form expr) stream)
+    (values stream))
 
   (:method ((expr symbol) (stream stream))
     ;; FIXME: Use a *PRINT-SYMBOL-PACKAGE* clause
@@ -539,7 +550,7 @@ stored definition forms:~>~< ~S~>" expr)))
     ;; encoding sufficient to represent every character and string
     ;; provided to WRITE-REFERENCE-EXPRESSION
     (princ expr stream)
-    (values stream)
+    (values stream))
 
   (:method ((expr number) (stream stream))
     (prin1 expr stream)
@@ -552,7 +563,7 @@ stored definition forms:~>~< ~S~>" expr)))
   (:method ((expr array) (stream stream))
     (multiple-value-bind (displ displ-off-t)
         (array-displacement expr)
-      #-NIL (declare ignore displ-off-t)
+      #-NIL (declare (ignore displ-off-t))
       ;; NB Refer to FIXME/TBD annotation, below
       (when displ
         (simple-program-error
