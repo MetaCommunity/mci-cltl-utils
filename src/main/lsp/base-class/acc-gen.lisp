@@ -392,15 +392,15 @@
 
 
 ;; TBD: Applciation of *PRINT-READABLY* as a default value for the PKG-P
-;; parameter to PRINC-SYMBOL, in this system - in lieu of a definition
+;; parameter to WRITE-SYMBOL, in this system - in lieu of a definition
 ;; of any additoinal globally scoped variable or generalized manner of
 ;; "Application Flag" singularly for affecting that behavior of this
 ;; system, per se.
 
-(declaim (inline princ-symbol
-                 princ-space))
+(declaim (inline write-symbol
+                 write-space))
 
-(defun* princ-symbol (s stream &optional pkg-p)
+(defun* write-symbol (s stream &optional pkg-p)
   ;; NB: If S is a string, it's assumed that any character in S such
   ;; that may have a particular interpretation in a symbol name, if
   ;; unescaped, will have already been escaped by the calling procedure.
@@ -412,38 +412,189 @@
   ;;  - This function will not access any packgage nicknames
   ;;  - This function will not assume that any symbol is exported
   ;;
-  (declare (type (or symbol string) s) (type stream stream)
+  (declare (type symbol s) (type stream stream)
            (values stream &optional))
-  (macrolet ((the-string (expr)
-               (with-symbols (%expr)
-                 `(let ((,%expr ,expr))
-                    (etypecase ,%expr
-                      (symbol (symbol-name ,%expr))
-                      (string ,%expr)))))
-             (the-pkg-string (expr)
-               (with-symbols (%expr)
-                 `(let ((,%expr ,expr))
-                    (etypecase ,%expr
-                      (symbol (package-name (symbol-package ,%expr)))
-                      (t (package-name *package*)))))))
-    (when  pkg-p
-      (princ (the-pkg-string s) stream)
-      (write-char #\: stream) (write-char #\: stream))
-    (princ (the-string s) stream)
-    (values stream)))
+    (let ((*package* (mk-lf (find-package '#:keyword))))
+      ;; FIXME/TBD: When no symbol package, write an #<N>=<SYMBOL> expr
+      ;; and store the symbol for <N> within the current PRINT-ENVIRONMENT
+      (prin1 s stream)))
 
-;; (with-output-to-string (s) (princ-symbol 'frob s))
+;; (with-output-to-string (s) (write-symbol 'frob s))
 ;; => "FROB"
 
-;; (with-output-to-string (s) (princ-symbol 'lambda s t))
+;; (with-output-to-string (s) (write-symbol 'lambda s t))
 ;; => "COMMON-LISP::LAMBDA"
 
 
-(defun* princ-space (stream)
+(defun* write-space (stream)
   (declare (type stream stream)
            (values stream &optional))
   (write-char #\Space stream)
   (values stream))
+
+
+(defgeneric write-reference-expression (expr stream)
+  ;; NB: With some exceptions - such as denoted below - these method
+  ;; definitions should not require the printed source forms to be
+  ;; evaluated with any specific source system dependencies, insofar as
+  ;; for the generic Comon Lisp expressions supported herein.
+
+  ;; TBD
+  ;; - HASH-TABLE (??)
+  ;; - [...]
+
+  (:method ((expr t) (stream symbol))
+    (write-reference-expression expr (compute-output-stream stream)))
+
+  (:method ((expr t) (stream stream))
+    (warn "~<WRITE-REFERENCE-EXPRESSION dispatching to use MAKE-LOAD-FORM~>~
+~< - Objects of type ~S not yet supported by WRITE-REFERENCE-EXPRESSION:~>~
+~< ~S~>"
+     (class-of expr) expr)
+    (write-reference-expression (make-load-form expr) stream))
+
+  (:method ((expr symbol) (stream stream))
+    ;; FIXME: Use a *PRINT-SYMBOL-PACKAGE* clause
+    ;; - e.g '(and (not #:CL) (not #:keyword)) [default]
+    (write-symbol expr stream *print-readably*)
+    (values stream))
+
+  (:method ((expr package) (stream stream))
+    ;; NB: Writing the package identity -- assumed constant -- not any
+    ;; form defining the package
+    (write-char #\# stream)
+    (write-char #\. stream)
+    (write-reference-expression `(find-package ,(package-name expr))
+                                stream)
+    (values stream))
+
+  (:method ((expr cons) (stream stream))
+    (write-char #\( stream)
+    ;; FIXME/TBD cf. *PRINT-CIRCLE*
+    (do-cons (subexpr rest expr (values))
+      (write-reference-expression subexpr stream)
+      (when rest
+        (write-space stream)
+        ;; NB If REST is not a CONS, DO-CONS will not have bound it as SUBEXPR.
+        ;; So, that's handled here - after which, DO-CONS will return.
+        (unless (consp rest)
+          (write-char #\. stream)
+          (write-space stream)
+          (write-reference-expression rest stream))))
+    (write-char #\) stream)
+    (values stream))
+
+  (:method ((expr class) (stream stream))
+    ;; Assumption: STREAM will be read with a readtable in which the
+    ;; dispatching reader macro expression "#." is bound to a form
+    ;; analogous that specified in CLtL2/CLHS
+    (write-char #\# stream)
+    (write-char #\. stream)
+    (write-reference-expression `(find-class (quote ,(class-name expr))) stream)
+    (values stream))
+
+  (:method ((expr effective-slot-definition) (stream stream))
+    ;; Assumption: The source forms will be evaluated within the same
+    ;; Common Lisp implementation as in which the source forms were
+    ;; printed. Thus, *PRINT-READABLY* will be expressly bound to T
+    ;; here, such as to ensure that the symbol package for each symbol
+    ;; in the implementation's MOP implementation will be printed as per
+    ;; the package of that symbol's availability in the calling Lisp
+    ;; environment.
+    (write-char #\# stream)
+    (write-char #\. stream)
+    (let ((*print-readably* t))
+      (print-expr `(find (quote ,(slot-defnition-name expr))
+                         (class-slots ,(slot-definition-class expr))
+                         :test #'eq :key #'slot-definition-name)
+                  stream))
+    (values stream))
+
+  (:method ((expr function) (stream stream))
+    (multiple-value-bind (lambda-expr closure-p name)
+        (function-lambda-expression (compute-function fn))
+      (declare (ignore closure-p)) ;; NB
+      ;; NB: use PRIN1 for named functions,
+      ;; Use WRITE-REFERENCE-EXPRESSION for anonymous lambda functions
+      ;; for which the defining lambda forms are available,
+      ;; and err for anonymous lambda functions with no "stored forms"
+      (labels ((write-func-macro ()
+                 (write-char #\# stream)
+                 (write-char #\' stream)))
+      (cond
+        (name
+         (write-func-macro expr stream)
+         (write-reference-expression name stream))
+        (lambda-expr
+         (write-func-macro expr stream)
+         (write-reference-expression lambda-expr stream))
+        (t (simple-program-error
+            "~<Cannot write anonymous lambda function absent of ~
+stored definition forms:~>~< ~S~>" expr)))
+      (values stream))))
+
+  (:method ((expr character) (stream stream))
+    ;; NB Ass'umption: The output stream has been initialized with an
+    ;; external format such that will serve to support a character
+    ;; encoding sufficient to represent every character and string
+    ;; provided to WRITE-REFERENCE-EXPRESSION
+    (princ expr stream)
+    (values stream)
+
+  (:method ((expr number) (stream stream))
+    (prin1 expr stream)
+    (values stream))
+
+  (:method ((expr simple-array) (stream stream))
+    (prin1 expr stream)
+    (values stream))
+
+  (:method ((expr array) (stream stream))
+    (multiple-value-bind (displ displ-off-t)
+        (array-displacement expr)
+      #-NIL (declare ignore displ-off-t)
+      ;; NB Refer to FIXME/TBD annotation, below
+      (when displ
+        (simple-program-error
+         "Displaced arrays not yet supported"))
+      (let ((fp (when (array-has-fill-pointer-p expr)
+                  (fill-pointer expr)))
+            (adj (adjustable-array-p expr))
+            (dim (array-dimensions expr))
+            (typ (array-element-type expr))
+            ;; NB: This generalized method may be fairly
+            ;; resource-intensive when printing a "large array"
+            (simple-contents (unless dipl (coerce expr 'simple-array))))
+
+        ;; NB: This application of "#." reader macro syntax, in a
+        ;; manner, may be said to to represent a specialized case of
+        ;; *PRINT-READABLY* := T
+        (write-char #\# stream)
+        (write-char #\. stream)
+        (write-reference-expression
+         `(make-array (quote ,dim)
+                      ,@(when fp `(:fill-pointer ,fp))
+                      ,@(when adj `(:adjustable ,adj))
+                      :element-type (quote ,typ)
+                      ,@(cond
+                         (displ
+                          ;; FIXME/TBD: Portable object
+                          ;; references - specification and
+                          ;; dereferencing - in this
+                          ;; generalized PRINT-EXPR
+                          ;; application
+                          ;;
+                          ;; NB *PRINT-CIRCLE* and #<N> syntax
+                          #+NIL
+                          `(:displaced-to
+                            ,displ
+                            :displaced-index-offset
+                            ,displ-off-t))
+                         (t
+                          `(:initial-contents ,simple-contents))))
+         stream)))
+    (values stream))
+  )
 
 ;; ----
 
@@ -533,32 +684,25 @@
       ;; Printed" indenting for printed source forms
 
       ;; write ftype decl
-      (write-char #\( stream)
-      (princ-symbol (quote declaim) stream t)
-      (princ-space stream)
-      (write-char #\( stream)
-      (princ-symbol (quote 'ftype) stream t)
-      (princ-space stream)
-      (print (compute-reader-function-type slot class) stream)
-      (princ-symbol name stream t)
-      (write-char #\) stream)
-      (write-char #\) stream)
-      (terpri stream)
-      (terpri stream)
+      (write-reference-expression
+       `(declaim (ftype ,(compute-reader-function-type slot class)
+                       name))
+       stream)
 
       ;; write defun expr
       (write-char #\( stream)
-      (princ-symbol (quote defun) stream t)
-      (princ-space stream)
-      (princ-symbol name stream t)
-      (princ-space stream)
+      (write-symbol (quote defun) stream t)
+      (write-space stream)
+      (write-symbol name stream t)
+      (write-space stream)
       ;;
       (destructuring-bind (lsym args &body lform-body) lform
         (declare (ignore lsym))
-        (print args stream)
+        (write-reference-expression args stream)
         (when docstr (print docstr stream))
         (dolist (expr lform-body)
-          (print expr stream)))
+          (write-reference-expression expr stream)
+          (terpri stream)))
       ;;
       (write-char #\) stream)
 
