@@ -660,13 +660,21 @@ stored definition forms:~>~< ~S~>" expr)))
   ;; Instead use a globally scoped variable, *PRINT-SYMBOL-PACKAGE*
   ;;
   ;; e.g syntax and default value:
-  ;;   (and (not #:CL) (not #:keyword))
+  ;;   (NOT (OR #:CL #:KEYWORD))
   ;;
   ;; ... indicating -- in a manner of a logical expression of a syntax
   ;;     generally analogous to a subset of DEFTYPE derived type
   ;;     expressions --, a pattern for matching against each
   ;;     symbol-package that should be printed by WRITE-SYMBOL
 
+
+  ;; NB: Consider using a similar semantics with a printer flag named,
+  ;; unambiguously, *PRINT-READER-MACRO-SHARPSIGN-DOT* but specialized
+  ;; for expressions representing type designators rather than, per se
+  ;; package designators ... in some manner specifically for handling of
+  ;; the "#." printing in WRITE-REFERENCE-EXPRESSION
+  ;;
+  ;; e.g default value (OR PACKAGE CLASS EFFECTIVE-SLOT-DEFINITION)
 
   ;; -- Test function printing - via arbitrary defun source forms
 
