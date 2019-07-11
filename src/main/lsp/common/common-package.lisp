@@ -86,6 +86,7 @@
    #:nappend
    #:npushl
    #:map-plist
+   #:do-cons
 
    #:simplify-vector
    #:do-vector

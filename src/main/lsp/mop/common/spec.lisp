@@ -28,58 +28,6 @@
 ;; TBD: Docstrings w/i a TeX environment
 
 
-(defmacro do-cons ((first rest whence &optional return) &body body)
-  ;; FIXME - move to ltp/common
-  (with-symbols (dispatch %whence)
-    `(block nil
-       (labels ((,dispatch (,%whence)
-                  ;; NB: RETURN is referenced twice, below.
-                  ;;
-                  ;; The expanded value of RETURN will only be evaluated
-                  ;; once.
-                  (cond
-                    ((consp ,%whence)
-                     (let ((,first (car ,%whence))
-                           (,rest (cdr ,%whence)))
-                       ,@body
-                       (cond
-                         ((consp ,rest) (,dispatch ,rest))
-                         (t (return ,return)))))
-                    ((null ,%whence) (return ,return))
-                    (t (error 'type-error
-                              :expected-type 'list
-                              :datum ,%whence
-                              #+SBCL :context #+SBCL "as provided to DO-CONS"))
-                    )))
-         (,dispatch ,whence)))))
-
-(eval-when ()
-
-  (do-cons (a rest (class-precedence-list (find-class 'string))
-              (values nil nil))
-    (format t "~%~S" a))
-
-
-  (do-cons (a rest '(a b . c)
-              (values nil nil))
-    (format t "~%~S : ~S" a rest))
-
-  (do-cons (a b '(a . b) (values nil nil))
-    (format t "~%~S : ~S" a b))
-
-  (do-cons (a b '(a) (values nil nil))
-    (format t "~%~S : ~S" a b))
-
-  (do-cons (a b nil (values nil nil))
-    (format t "~%~S : ~S" a b))
-
-
-  (do-cons (a b 'arbitrary (values nil nil))
-    (format t "~%~S : ~S" a b))
-
-
-)
-
 ;; --------------------
 
 ;; NB: FIXME WHILE is used only once, below

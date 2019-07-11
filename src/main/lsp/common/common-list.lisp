@@ -98,3 +98,52 @@ element becomes the LAST element of WHERE"
 ;; (map-plist #'cons '(:a 1 :b 2 :err))
 ;; (map-plist #'cons nil)
 
+;; ----
+
+
+(defmacro do-cons ((first rest whence &optional (return '(values))) &body body)
+  (with-symbols (dispatch %whence)
+    `(block nil
+       (labels ((,dispatch (,%whence)
+                  ;; NB: RETURN is referenced twice, below.
+                  ;;
+                  ;; The expanded value of RETURN will only be evaluated
+                  ;; once.
+                  (cond
+                    ((consp ,%whence)
+                     (let ((,first (car ,%whence))
+                           (,rest (cdr ,%whence)))
+                       ,@body
+                       (cond
+                         ((consp ,rest) (,dispatch ,rest))
+                         (t (return ,return)))))
+                    ((null ,%whence) (return ,return))
+                    (t (error 'type-error
+                              :expected-type 'list
+                              :datum ,%whence
+                              #+SBCL :context #+SBCL "as provided to DO-CONS"))
+                    )))
+         (,dispatch ,whence)))))
+
+#+NIL
+(eval-when ()
+
+  (do-cons (a rest (ltp/common/mop:class-precedence-list (find-class 'string)))
+    (format t "~%~S" a))
+
+  (do-cons (a rest '(a b . c))
+    (format t "~%~S , ~S" a rest))
+
+  (do-cons (a b '(a . b))
+    (format t "~%~S , ~S" a b))
+
+  (do-cons (a b '(a))
+    (format t "~%~S : ~S" a b))
+
+  (do-cons (a b nil)
+    (format t "~%~S : ~S" a b))
+
+  (do-cons (a b 'arbitrary)
+    (format t "~%~S : ~S" a b))
+
+)
