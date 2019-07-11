@@ -391,6 +391,12 @@
 ;; project.
 
 
+;; TBD: Applciation of *PRINT-READABLY* as a default value for the PKG-P
+;; parameter to PRINC-SYMBOL, in this system - in lieu of a definition
+;; of any additoinal globally scoped variable or generalized manner of
+;; "Application Flag" singularly for affecting that behavior of this
+;; system, per se.
+
 (declaim (inline princ-symbol
                  princ-space))
 
