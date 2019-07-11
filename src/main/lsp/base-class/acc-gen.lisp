@@ -515,15 +515,17 @@
     (write-char #\# stream)
     (write-char #\. stream)
     (let ((*print-readably* t))
-      (print-expr `(find (quote ,(slot-defnition-name expr))
-                         (class-slots ,(slot-definition-class expr))
-                         :test #'eq :key #'slot-definition-name)
-                  stream))
+      (write-reference-expression
+       `(find (quote ,(slot-definition-name expr))
+              ;; FIXME : 
+              (class-slots ,(slot-definition-class expr))
+              :test #'eq :key #'slot-definition-name)
+       stream))
     (values stream))
 
   (:method ((expr function) (stream stream))
     (multiple-value-bind (lambda-expr closure-p name)
-        (function-lambda-expression (compute-function fn))
+        (function-lambda-expression (compute-function expr))
       (declare (ignore closure-p)) ;; NB
       ;; NB: use PRIN1 for named functions,
       ;; Use WRITE-REFERENCE-EXPRESSION for anonymous lambda functions
@@ -534,10 +536,10 @@
                  (write-char #\' stream)))
       (cond
         (name
-         (write-func-macro expr stream)
+         (write-func-macro)
          (write-reference-expression name stream))
         (lambda-expr
-         (write-func-macro expr stream)
+         (write-func-macro)
          (write-reference-expression lambda-expr stream))
         (t (simple-program-error
             "~<Cannot write anonymous lambda function absent of ~
@@ -575,7 +577,7 @@ stored definition forms:~>~< ~S~>" expr)))
             (typ (array-element-type expr))
             ;; NB: This generalized method may be fairly
             ;; resource-intensive when printing a "large array"
-            (simple-contents (unless dipl (coerce expr 'simple-array))))
+            (simple-contents (unless displ (coerce expr 'simple-array))))
 
         ;; NB: This application of "#." reader macro syntax, in a
         ;; manner, may be said to to represent a specialized case of
