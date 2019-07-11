@@ -149,6 +149,9 @@
     may be defined as to not permit class redefinition subsequent of
     class finalization.
 
+      * This may be accomplished, in some regards, with a trivial error
+        procedure in a method REINITIALIZE-INSTANCE (BASE-CLASS)
+
       * NB: This may entail some updates to the LTP definition of the
         class SINGLETON, pursuant of refactoring the definition of the
         classes SINGLETON and PROTOTYPE-CLASS onto BASE-CLASS. In a
@@ -173,6 +176,11 @@
 
 |#
 
+;; ----
+;;
+;; General prototypes (FIXME - Redundant)
+;;
+
 #+TBD
 (defgeneric compute-accessor-ftype (slotdef class))
 
@@ -192,16 +200,204 @@
 
 ;; ----
 ;;
+;; Some implementation-specific functions
+;;
+
+#+(and SBCL TBD)
+(defun instance-slot-location (slotd)
+  ;; FIXME-TBD - cf. STANDARD-INSTANCE-ACCESS as implemented in PCL and
+  ;; subsq. in SBCL
+  )
+
+#+SBCL
+(defun instance-slot-boundp (slotd instance)
+
+  ;; utility form, may be applied in ASSERT-SLOT-BOUNDP
+
+  ;; NB: This prototypr has not, as yet, been accompanied with any
+  ;; comprehensive review of how SLOT-INFO functional members are
+  ;; initialized in a "Built" SBCL, or during SBCL cross-compile.
+
+  ;; ASSUMPTION: INSTANCE is not a FUNCALLABLE-STANDARD-INSTANCE [FIXME]
+  ;;
+  ;; See also: SBCL SLOT-BOUNDP defun
+  ;;
+  ;; ... although, in this function's definition - which differs to SBCL
+  ;; SLOT-BOUNDP in that this function allways calls the slot-info
+  ;; boundp function ... perhaps this form may be applicable for
+  ;; funcallable instances, if not also for conditions and structure
+  ;; objects, in SBCL [FIXME NEEDS TEST]
+
+  ;; ASSUMPTION: SLOTD represents a slot definition valid for the class
+  ;; of INSTANCE, throughout the duration of this function's evaluation
+
+  ;; NB: This was referenced onto the source code of SBCL SLOT-BOUNDP,
+  ;;     furthermore referenced onto the object description of the
+  ;;     SB-PCL WRAPPER object as such - denoted as a a class signature,
+  ;;     below.
+  ;;
+  ;; This may be fairly portable to CMUCL.
+  (let* ((sl-name (slot-definition-name slotd))
+         (signature (sb-pcl::valid-wrapper-of instance))
+         (sl-info (sb-pcl::find-slot-cell signature sl-name)))
+    ;; FIXME: This does not err if SL-INFO is null, as it assumes SLOTD
+    ;; will represent a slot defined in the instance's class, throughout
+    ;; the duration of this function's evaluation.
+    (funcall (sb-pcl::slot-info-boundp (cdr sl-info))
+             instance)))
+
+#+(and SBCL NIL)
+(eval-when  ()
+
+  (defclass frob ()
+    ((sl-a
+      :initarg :sl-a)
+     (sl-b
+      :allocation :class
+      :initarg :sl-b)))
+
+  (finalize-reachable (find-class 'frob) nil)
+
+  (sb-pcl::find-slot-cell (sb-pcl::valid-wrapper-of (find-class 'frob))
+                          'sl-a)
+  ;; NIL ??
+
+
+  (position 'sl-a (sb-pcl::layout-slot-list
+                   (sb-pcl::valid-wrapper-of (find-class 'frob)))
+            :key #'slot-definition-name :test #'eq)
+  ;; NIL
+
+  (describe (sb-pcl::valid-wrapper-of (class-prototype (find-class 'frob))))
+
+
+  ;; NB: CLASS-PROTOTYPE is certainly not the most effective way to find
+  ;; the class' wrapper
+
+  (sb-pcl::find-slot-cell
+   (sb-pcl::valid-wrapper-of (class-prototype (find-class 'frob)))
+   'sl-a)
+  ;; => <CONS> with FIXNUM CAR
+
+  (sb-pcl::find-slot-cell
+   (sb-pcl::valid-wrapper-of (class-prototype (find-class 'frob)))
+   'sl-b)
+  ;; => <CONS> with NIL CAR (!) / NB: Class allocated slot
+
+  (funcall (sb-pcl::slot-info-boundp
+            (cdr
+             (sb-pcl::find-slot-cell
+              (sb-pcl::valid-wrapper-of (class-prototype (find-class 'frob)))
+              'sl-b)))
+           (class-prototype (find-class 'frob)))
+  ;; => NIL
+
+
+  (funcall (sb-pcl::slot-info-boundp
+            (cdr
+             (sb-pcl::find-slot-cell
+              (sb-pcl::valid-wrapper-of (class-prototype (find-class 'frob)))
+              'sl-a)))
+           (class-prototype (find-class 'frob)))
+  ;; => NIL
+
+
+  (describe
+   (sb-pcl::slot-info-boundp
+    (cdr
+     (sb-pcl::find-slot-cell
+      (sb-pcl::valid-wrapper-of (class-prototype (find-class 'frob)))
+      'sl-b))))
+
+
+  ;; --
+
+  (instance-slot-boundp (find 'sl-a (class-slots (find-class 'frob))
+                              :test #'eq :key #'slot-definition-name)
+                        (class-prototype (find-class 'frob)))
+  ;; => NIL
+
+
+  ;; test for a class-alloated slot
+  (instance-slot-boundp (find 'sl-b (class-slots (find-class 'frob))
+                              :test #'eq :key #'slot-definition-name)
+                        (class-prototype (find-class 'frob)))
+  ;; => FIXME QUIRKS & NONSENSE
+
+  (defparameter *frob-1* (make-instance 'frob
+                                        :sl-a 1 :sl-b 2))
+
+  (instance-slot-boundp (find 'sl-a (class-slots (find-class 'frob))
+                              :test #'eq :key #'slot-definition-name)
+                        *frob-1*)
+  ;; => T
+
+  (instance-slot-boundp (find 'sl-b (class-slots (find-class 'frob))
+                              :test #'eq :key #'slot-definition-name)
+                        *frob-1*)
+  ;; => T
+
+
+)
+
+;; ----
+;;
 ;; Generalized unparser functions
 ;;
+;; NB/Design Documentation: An approach producing "Intrinsic Defun"
+;; calls within DEFMACRO may seem preferrable, in some regards, to the
+;; generalized  "Print Source" approach developed here.
+;;
+;; This "Print Source" approach -- in effect -- serves to require that
+;; at least one of an epehmeral string output stream or effective system
+;; source file ;would be created, pursuant to compiling the printed
+;; source forms, during any single "Build" in which this system may be
+;; used. Of course, the generated source forms may also be directly
+;; reviewed, in a manner generally analogous to reviewing the output of
+;; MACROEXPAND or MACROEXPAND-1 for a normative macro function call.
+;;
+;; It might be assumed that if a string output stream is used, any
+;; implementation bytecode -- i.e "FASL" information -- such as would be
+;; produced during the compilation of the printed source forms, will
+;; have been written to a file specified, through any methodology,
+;; within the calling lexical environment. Thus, assuming that the
+;; source forms have been generated in a manner suitable for any
+;; singular manner of systems specification, the FASL forms produced
+;; during the compilation could be reused during any later runtime
+;; sessions, even if the generated source forms -- e.g if having been
+;; written temporarily to any one or more of an ephemeral string output
+;; stream -- may not be in themselves immediately available, at that
+;; time.
+;;
+;; This prototype may be accompanied with an extension onto ASDF, for
+;; facilitating normal application of this system in extension to any
+;; single class definition. Of course, anyone applying this system as
+;; such should be assumed to have assumed all responsibilities
+;; contingent of distribution of software bytecode and software source
+;; code -- pursuant of any formal acceptance of licensing terms, for any
+;; software that may be, in effect, extended with such generated source
+;; code. In any formal regards, the indemnification clause put forward
+;; in this system's licensing terms should be assumed to apply.
+;;
+;; That being addressed, in hoewver, this system may endeavor to provide
+;; some utility forms such that may serve to extend ASDF for source
+;; generation in applications of this system. Ideally, such extension
+;; should serve to provide some manner of a facility for support of
+;; software systems management -- not limited to any matters as may be
+;; contingent specifically of evaluatoin of Common Lisp source code, e.g
+;; the specification of an IN-PACKAGE form in an output stream, previous
+;; to any call to PRINT-READER-FOR onto that output stream. This
+;; initiative, itself, may be furthermore continued under the CommonIDE
+;; project.
+
 
 (declaim (inline princ-symbol
                  princ-space))
 
 (defun* princ-symbol (s stream &optional pkg-p)
   ;; NB: If S is a string, it's assumed that any character in S such
-  ;; that may be "Special" for a symbol name will have already been
-  ;; escaped by the calling procedure.
+  ;; that may have a particular interpretation in a symbol name, if
+  ;; unescaped, will have already been escaped by the calling procedure.
   ;;
   ;; NB: This function will not perform any name mangling, vis a vis
   ;; character case.
@@ -277,12 +473,24 @@
         `(lambda (,obj)
            (declare (type ,typname ,obj))
            ;; FIXME: standard objects typically cannot be printed readably.
+           ;;
+           ;; NB: Symbols can be bound within the lexical environment
+           ;; in which the corresponding DEFUN form will be evaluated
+           ;;
+           ;; FIXME/TD: Bind *CLASS* and for each slot, *SLOT* in the
+           ;; lexical environment in which this lambda form's body will
+           ;; be evaluated, in the source forms produced from
+           ;; PRINT-READER-FOR (??)
+           ;; *OR* use reader macros in the printed representation
+           ;; e.g #.(find-class (quote <class-name>))
+           ;;     #.(find-slot (quote <slot-name>) (quote <class-name>))
            (let ((,cls ,class
                    #+NIL (load-time-value (find-class (quote ,typname))
                                           t)))
              (declare (dynamic-extent ,cls))
              (cond
                ((eq (class-of ,obj) ,cls)
+                (assert-slot-boundp ,the-readable-slot ,obj)
                 (standard-instance-access ,obj ,FIXME-TBD))
                (t
                 (slot-value-using-class ,cls ,obj ,slot)))))))))
@@ -389,10 +597,10 @@
 
     (dolist (sl (class-slots %class))
       (declare (type effective-slot-definition sl))
-      (when (print-reader-for sl class stream)
-        (terpri stream))
-      (when (print-writer-for sl class stream)
-        (terpri stream)))
+      ;; NB: Each of these reader, writer printer forms should also
+      ;; print an FTYPE declaration to the stream.
+      (print-reader-for sl class stream)
+      (print-writer-for sl class stream))
 
      ;; (write-char #\) stream)
      ;; (terpri stream)
