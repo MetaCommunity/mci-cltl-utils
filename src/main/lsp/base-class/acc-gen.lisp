@@ -601,8 +601,20 @@
     ;; (write-char #\( stream)
     ;; (princ 'progn stream)
 
+    ;; TBD: One of:
+    ;; A) Write forms for lexical definition of *CLASS*.
+    ;; B) Within each "Accessor printout", print a form such as
+    ;;    #.(find-class (quote <class-name>))
+    ;; .. to ensure generally static reference to the defining class,
+    ;; within the generated accessor definitoins.
+
     (dolist (sl (class-slots %class))
       (declare (type effective-slot-definition sl))
+      ;; FIXME - Similar to static class reference, ensure static slot
+      ;; reference in each reader, writer form -- assuming that the
+      ;; defining class will not be destructively redfined, subsequent
+      ;; of these generalized "Print" calls.
+
       ;; NB: Each of these reader, writer printer forms should also
       ;; print an FTYPE declaration to the stream.
       (print-reader-for sl class stream)
