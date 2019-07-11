@@ -577,7 +577,8 @@
                  (write-char #\# stream)
                  (write-char #\' stream)))
       (cond
-        (name
+        ((and name (when (consp name)
+                     (not (eq (car name) 'lambda))))
          (write-func-macro)
          (write-reference-expression name stream))
         (lambda-expr
@@ -667,18 +668,30 @@ stored definition forms:~>~< ~S~>" expr)))
   ;;     symbol-package that should be printed by WRITE-SYMBOL
 
 
+  ;; -- Test function printing - via arbitrary defun source forms
+
+  ;; test for global function objects w/o package name printing for symbols
   (let ((*print-readably* nil))
     (with-output-to-string (s)
       (write-reference-expression
-       `(defun frob () (funcall #'list 1 2 3))
+       `(defun frob () (funcall #.(function list) 1 2 3))
        s)))
 
+  ;; test for global function objects w/ package name printing for symbols
   (let ((*print-readably* t))
     (with-output-to-string (s)
       (write-reference-expression
-       `(defun frob () (funcall #'list 1 2 3))
+       `(defun frob () (funcall #.(function list) 1 2 3))
        s)))
 
+  ;; test for anonymous lambda objects
+  (let ((*print-readably* nil))
+    (with-output-to-string (s)
+      (write-reference-expression
+       `(defun frob () (funcall #.(lambda* (&rest thunk)
+                                    (apply #'list thunk))
+                                1 2 3))
+       s)))
 )
 
 ;; ----
