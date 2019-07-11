@@ -203,10 +203,38 @@
 ;; Some implementation-specific functions
 ;;
 
+;; FIXME - Pursuant of further development in defportble.lisp
+;;         provide formal specification of these implementation-
+;;         specific functions -- and also SLOT-DEFINITION-CLASS, as used
+;;         in the method
+;;            WRITE-REFERENCE-EXPRESSION (EFFECTIVE-SLOT-DEFINITION STREAM)
+;;
+;;         ... using DEFSIGNATURE and DEFIMPLEMENTATION expressions,
+;;
+;;         ... with a corresponding warning/error semantics, somehow
+;;         integrated with ASDF as a build tool, for implementations in
+;;         which any of the DEFSIGNATURE forms is not provided with an
+;;         implementation.
+;;
+;;         Furthermore, consider developing a source management utility
+;;         such that may be used with DEFSIGNATURE/DEFIMPLEMENTATION and
+;;         this source system, in a complimentary regard. This may or may
+;;         not entail development of any singular "Emacs Hacks," such as
+;;         for purposes of IDE support and generalized QA, vis a vis
+;;         Scrum development philosophy - without, per se, requiring a
+;;         complete web infrastructure at QA sites, vis a vis
+;;         Phabricator
+;;
+
 #+(and SBCL TBD)
 (defun instance-slot-location (slotd)
   ;; FIXME-TBD - cf. STANDARD-INSTANCE-ACCESS as implemented in PCL and
   ;; subsq. in SBCL
+  ;;
+  ;; NB: MOP SLOT-DEFINITION-LOCATION
+  ;;
+  ;; NB: INSTANCE-SLOT-BOUNDP as complimentary to operations using an
+  ;; implementation-specific slot definition location datum
   )
 
 #+SBCL
@@ -258,9 +286,22 @@
 
   (finalize-reachable (find-class 'frob) nil)
 
+
+  (slot-definition-location (find 'sl-b (class-slots (find-class 'frob))
+                                  :key #'slot-definition-name :test #'eq))
+  ;;  => <implementation-specific value>, a CONS in SB-PCL
+
+  (slot-definition-location (find 'sl-a (class-slots (find-class 'frob))
+                                  :key #'slot-definition-name :test #'eq))
+  ;;  => <implementation-specific value>, a FIXNUM in SB-PCL
+
+
+  ;; NB: Earlier test forms, onto SLOT-INFO and class layout information
+  ;;     in SB-PCL
+
   (sb-pcl::find-slot-cell (sb-pcl::valid-wrapper-of (find-class 'frob))
                           'sl-a)
-  ;; NIL ??
+  ;; NIL ....
 
 
   (position 'sl-a (sb-pcl::layout-slot-list
@@ -393,7 +434,7 @@
 
 ;; TBD: Applciation of *PRINT-READABLY* as a default value for the PKG-P
 ;; parameter to WRITE-SYMBOL, in this system - in lieu of a definition
-;; of any additoinal globally scoped variable or generalized manner of
+;; of any additional globally scoped variable or generalized manner of
 ;; "Application Flag" singularly for affecting that behavior of this
 ;; system, per se.
 
@@ -517,7 +558,8 @@
     (let ((*print-readably* t))
       (write-reference-expression
        `(find (quote ,(slot-definition-name expr))
-              ;; FIXME : 
+              ;; FIXME : MOP may not ensure that a slot definition is in
+              ;; effect doubly linked, to and from its defining class.
               (class-slots ,(slot-definition-class expr))
               :test #'eq :key #'slot-definition-name)
        stream))
@@ -608,6 +650,36 @@ stored definition forms:~>~< ~S~>" expr)))
          stream)))
     (values stream))
   )
+
+#+NIL
+(eval-when ()
+
+  ;; FIXME: Do not use *PRINT-READABLY* in WRITE-SYMBOL
+  ;;
+  ;; Instead use a globally scoped variable, *PRINT-SYMBOL-PACKAGE*
+  ;;
+  ;; e.g syntax and default value:
+  ;;   (and (not #:CL) (not #:keyword))
+  ;;
+  ;; ... indicating -- in a manner of a logical expression of a syntax
+  ;;     generally analogous to a subset of DEFTYPE derived type
+  ;;     expressions --, a pattern for matching against each
+  ;;     symbol-package that should be printed by WRITE-SYMBOL
+
+
+  (let ((*print-readably* nil))
+    (with-output-to-string (s)
+      (write-reference-expression
+       `(defun frob () (funcall #'list 1 2 3))
+       s)))
+
+  (let ((*print-readably* t))
+    (with-output-to-string (s)
+      (write-reference-expression
+       `(defun frob () (funcall #'list 1 2 3))
+       s)))
+
+)
 
 ;; ----
 

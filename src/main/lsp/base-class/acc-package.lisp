@@ -16,8 +16,13 @@
 (defpackage #:ltp/base-class/accessor
   (:nicknames #:ltp.base-class.accessor)
   (:use #:ltp/common/mop #:ltp/common #:cl)
+  #+SBCL
+  (:shadowing-import-from
+   ;; FIXME: Port to CMUCL, other implementations using PCL
+   ;;
+   ;; Note remarks with regards to DEFSIGNATURE, in acc-gen.lisp
+   #:sb-pcl #:slot-definition-class)
   (:export
    #:write-accessors
    #:write-accessors-for
    ))
-
