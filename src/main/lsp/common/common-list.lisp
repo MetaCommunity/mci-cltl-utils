@@ -102,6 +102,12 @@ element becomes the LAST element of WHERE"
 
 
 (defmacro do-cons ((first rest whence &optional (return '(values))) &body body)
+  ;; NB: For any dotted list, this macro's macroexpansion will return
+  ;; before trying to bind the CDR of the dotted list, itself, as FIRST.
+  ;;
+  ;; It's assumed that the BODY forms will check the type of REST and
+  ;; process accordingly, when REST may be neither NIL nor a CONS
+  ;;
   (with-symbols (dispatch %whence)
     `(block nil
        (labels ((,dispatch (,%whence)
