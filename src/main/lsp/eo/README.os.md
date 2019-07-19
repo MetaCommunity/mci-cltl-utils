@@ -1,7 +1,7 @@
 External Objects, OS Support - Thinkum Labs Lisp Tools Project
 ==============================================================
 
-## Usage Cases - Thinkum Labs
+## Usage Cases - External Objects, OS Support
 
 ### Generalized Contexts
 
@@ -48,16 +48,21 @@ External Objects, OS Support - Thinkum Labs Lisp Tools Project
 * Support for Portable Management of POSIX/UNIX filesystem permissions,
   filesystem  flags, and file extended attributes
 
-### Usage Cases, POSIX/UNIX Host Information (HostKR) Support
+### Usage Cases, POSIX/UNIX Host Information/Support
 
 * Portable Host Identity for Systems Management Tasks
+* Knowledge Representation for Host Management
+* Tooling, Interoperbility - CommonIDE
 
-### Usage Cases, POSIX/UNIX Toolchain Information (ToolKR) Support
+### Usage Cases, POSIX/UNIX Toolchain Information/Support
 
+* Portable Toolchain, Component Identity for Systems Management Tasks
+* Knowledge Representation for Toolchain Management
+* Tooling, Interoperbility - CommonIDE
 * **Ed. NB:** Syscall information library (BSD)
 * **Ed. NB:** ELF (Non-Itanium) ABI support (Implementation-Specific
   Support for Typically OS-Specific Bytecode Library Support);
-  `dlopen()` and related functions (host/other libc)
+  `dlopen()` and related functions, support for host/other libc
 
 
 ## Design Documentation - API (Notes)
@@ -87,11 +92,16 @@ External Objects, OS Support - Thinkum Labs Lisp Tools Project
 
 ## References
 
-* SUSv4, X/Open
+* [KR1988] Kernighan, Brian W., and Dennis M. Ritchie. The C Programming
+  Language. 2nd ed. Englewood Cliffs, N.J: Prentice Hall, 1988.
+* [SUSv4] [Single UNIX® Specifiation, Version 4][susv4], 2018 Edition. X/Open
 * BSD Manual Pages
-* Linux Manual Pages
+* Linux Manual Pages - GNU Compiler Collection (GCC), Linux Kernel,
+  Linux Distribution Userspace
+* Other Supporting Documentation
 
 [sp]: http://www.jclark.com/sp/
 [libxml2]: http://xmlsoft.org/
 [bmake]: http://www.crufty.net/help/sjg/bmake.html
 [gmake]: http://www.gnu.org/software/make/
+[susv4]: https://publications.opengroup.org/t101
