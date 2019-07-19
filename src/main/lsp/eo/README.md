@@ -1,11 +1,22 @@
-External Objects - Thinkum Labs Lisp Tools Project
-==================================================
+External Objects, OS Support - Thinkum Labs Lisp Tools Project
+==============================================================
 
 ## Usage Cases - Thinkum Labs
 
+### Generalized Contexts
+
+* POSIX/UNIX APIs and Implememtations
+* libc APIs and Implememtations
+* BSD, Linux, and Cygwin Environments (**Ed. NB:** Regarding Darwin as
+  approxmimately a variant of BSD) (**Ed. NB, TBD:** Support for Open
+  Solaris, subsq. IllumOS, Joyent OS dists) (**Ed. NB:** Android with
+  Android libc,  **termux**  build/userspace environment, **termux**
+  _app_ as a terminal emulator, optionally Android with Debian chroot
+  environment, I/O with **termux** as a terminal emulator)
+
 ### Usage Cases, "Forked Lisp"
 
-* Concurrent Backup and Storage for Lisp Image Sata (**Ed NB:** in
+* Concurrent Backup and Storage for Lisp Image Data (**Ed NB:** in
   forked Lisp process)
 * External Process Support (**Ed. NB:** See subsq.)
 * Generalized Concurrency for Caller-Indpendent Tasks (**Ed. NB:**
