@@ -67,10 +67,37 @@ External Objects, OS Support - Thinkum Labs Lisp Tools Project
 
 ## Design Documentation - API (Notes)
 
+### OS Process Initialization, POSIX/UNIX Hosts - `fork()` without
+  `exec()`
+
+* TBD: IPC support for "Same Lisp" processes with subprocess
+  initialization via `fork()`
+    * TBD: Model for definition of data schema and protocol forms
+        * ASN.1 (??)
+        * CORBA GIOP/IIOP Protocols (??)
+    * TBD: Implementation support for data schema and protocol
+      definitions
+        * NB: POSIX RT mqueue API
+            * OS Support - BSD, Linux (TBD: Alternatives in other OSes,
+              e.g Microsoft PC OSes)
+            * May not require special initialization for the `fork()`
+              usage case
+            * API definition may support mqueue identification, pursuant
+              to the call to `fork()`
+        * NB: ASN.1 tools for C program systems; general implementation
+          support for FFI with C languge comonents
+        * NB: ORBit support for C languge components
+            * IPC over TCP/IP and UNIX address family sockets
+                * NB filesystem permissions for UNIX sockets
+            * TBD: Object system integration and protocol support for
+              GIOP/IIOP CDR encoding with the GNOME ORBit API, independent
+              of any complete ORB environment
+            * NB: Reusable CORBA implementation (GNOME)
+
 ### OS Process Initialization, POSIX/UNIX Hosts - `fork()` and `exec()`
 
-* NB: Concerns pursuant to/after process `fork()`( **Ed. NB,** Generalized
-      Context: _Resource Management in the Forked Process_)
+* NB: Concerns pursuant to/after process `fork()` - _Resource
+  Management_ in the _Forked Process_
     * Generalized Concerns - Close I/O streams in Forked Process
       (prevent ambiguous PTY I/O)
     * Implementation-Specific Concerns - Provide Generalized "Close On
@@ -80,14 +107,31 @@ External Objects, OS Support - Thinkum Labs Lisp Tools Project
       and deallocation, resource release, and optional bytecode library
       unloading)
 
+* NB: Concerns pursuant to/after process `fork()` - Process
+  Characteristics (POSIX/UNIX host environments)
+    * Process Environment
+    * Process Group and (when applicable) Controlling Terminal (NB: stdio)
+    * Real and Effective Principal ID (UID, GID) (NB: Differing only
+      for processes with "switch user" permissions)
+    * Process I/O Descriptors (stdio, other)
+    * Process resource limits (NB: Host-specified resource limits i.e
+      "Hard Limits," and user-specified i.e "Soft Limits")
+
 * NB: Concerns pursuant to implementation of the fork/exec call form:
     * Provide string-to-temporary-file management within the forking
       process (temporary file creation, optional post-process cleanup)
-      and the forked process (open file and `du(p)` for standare/other
+      and the forked process (open file and `dup()` for standard/other
       descriptor I/O; close and delete file before normal exit)
-    * TBD: Debugger-over-IPC support (Protocol, REPL UI) for interactive
-      management of exceptional situations in the forked process (NB,
-      Usage Case: Debugger I/O before process exec)
+
+    * Provide support for monitoring the subprocess runtime state - UNIX
+      signals (i.e `SIGCHILD`, see also **siginfo(3)** noting `CLD_...`
+      code values)
+
+    * TBD: Debugger-over-IPC support (Protocol, inoke-debugger
+      intgration, and REPL UI) for interactive management of exceptional
+      situations in the forked process (NB, Usage Case: Interactive
+      programming/debugging for forked processes, before/without exec)
+
 
 
 ## References
